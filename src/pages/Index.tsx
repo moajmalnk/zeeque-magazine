@@ -4,21 +4,19 @@ import { Footer } from '@/components/Footer';
 import { HeroSection } from '@/components/HeroSection';
 import { CategoryFilter } from '@/components/CategoryFilter';
 import { PostGrid } from '@/components/PostGrid';
-import { mockPosts } from '@/data/mockPosts';
+import { usePosts } from '@/hooks/usePosts';
 import { Category } from '@/types/post';
 
 const Index = () => {
   const [selectedCategory, setSelectedCategory] = useState<Category | 'all'>('all');
+  const { publishedPosts } = usePosts();
 
   const filteredPosts = useMemo(() => {
-    const publishedPosts = mockPosts.filter(post => post.status === 'published');
-    
     if (selectedCategory === 'all') {
       return publishedPosts;
     }
-    
     return publishedPosts.filter(post => post.category === selectedCategory);
-  }, [selectedCategory]);
+  }, [selectedCategory, publishedPosts]);
 
   return (
     <div className="min-h-screen flex flex-col">
