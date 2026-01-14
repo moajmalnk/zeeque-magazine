@@ -11,7 +11,7 @@ const Submit = () => {
       <Header />
       
       <main className="flex-1 py-8 md:py-12">
-        <div className="container">
+        <div className="container max-w-7xl px-4 sm:px-6 lg:px-8">
           {/* Back link */}
           <Button asChild variant="ghost" size="sm" className="mb-6 -ml-2">
             <Link to="/">

@@ -19,7 +19,7 @@ const categoryVariants: Record<Category | 'all', string> = {
 
 export function CategoryFilter({ selectedCategory, onCategoryChange }: CategoryFilterProps) {
   return (
-    <div className="flex flex-wrap gap-2 justify-center">
+    <div className="flex flex-wrap gap-3 justify-center px-4">
       {categories.map((category) => {
         const isSelected = selectedCategory === category;
         
@@ -28,23 +28,24 @@ export function CategoryFilter({ selectedCategory, onCategoryChange }: CategoryF
             key={category}
             onClick={() => onCategoryChange(category)}
             variant="outline"
-            size="sm"
+            size="default"
             className={cn(
-              'rounded-full font-semibold transition-all duration-200 border-2',
+              'rounded-full font-semibold transition-all duration-300 border-2 px-5 py-2.5',
+              'hover:scale-105 active:scale-95',
               isSelected
-                ? cn(categoryVariants[category], 'text-white border-transparent shadow-card')
-                : 'bg-background hover:bg-muted border-border hover:border-primary/30'
+                ? cn(categoryVariants[category], 'text-white border-transparent shadow-card hover:shadow-hover')
+                : 'bg-background hover:bg-muted/50 border-border hover:border-primary/40 hover:shadow-soft'
             )}
           >
             {category === 'all' ? (
               <>
-                <span className="mr-1">🌟</span>
-                All Posts
+                <span className="mr-2 text-base">🌟</span>
+                <span>All Posts</span>
               </>
             ) : (
               <>
-                <span className="mr-1">{categoryIcons[category]}</span>
-                {categoryLabels[category]}
+                <span className="mr-2">{categoryIcons[category]}</span>
+                <span>{categoryLabels[category]}</span>
               </>
             )}
           </Button>

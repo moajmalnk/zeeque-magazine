@@ -1,10 +1,18 @@
 import { Link, useLocation } from 'react-router-dom';
+import { useTheme } from 'next-themes';
 import { Button } from '@/components/ui/button';
-import { PenLine, BookOpen } from 'lucide-react';
+import { PenLine, BookOpen, FileText, Moon, Sun } from 'lucide-react';
+import { useEffect, useState } from 'react';
 
 export function Header() {
   const location = useLocation();
-  
+  const { theme, setTheme } = useTheme();
+  const [mounted, setMounted] = useState(false);
+
+  useEffect(() => {
+    setMounted(true);
+  }, []);
+
   return (
     <header className="sticky top-0 z-50 w-full bg-background/80 backdrop-blur-lg border-b border-border/50">
       <div className="container flex h-16 items-center justify-between">
@@ -46,6 +54,36 @@ export function Header() {
               <span className="hidden sm:inline">Share Your Work</span>
               <span className="sm:hidden">Share</span>
             </Link>
+          </Button>
+          
+          <Button
+            asChild
+            variant={location.pathname === '/editorial' ? 'default' : 'ghost'}
+            size="sm"
+            className="gap-2"
+          >
+            <Link to="/editorial">
+              <FileText className="w-4 h-4" />
+              <span className="hidden sm:inline">Editorial</span>
+            </Link>
+          </Button>
+          
+          <Button
+            variant="ghost"
+            size="icon"
+            className="h-9 w-9"
+            onClick={() => setTheme(theme === 'dark' ? 'light' : 'dark')}
+            title={theme === 'dark' ? 'Switch to light mode' : 'Switch to dark mode'}
+          >
+            {mounted ? (
+              theme === 'dark' ? (
+                <Sun className="h-4 w-4" />
+              ) : (
+                <Moon className="h-4 w-4" />
+              )
+            ) : (
+              <Sun className="h-4 w-4" />
+            )}
           </Button>
         </nav>
       </div>

@@ -25,20 +25,27 @@ const Index = () => {
       <main className="flex-1">
         <HeroSection />
         
-        <section id="latest" className="py-8 md:py-12">
-          <div className="container">
+        <section id="latest" className="py-12 md:py-16 lg:py-20">
+          <div className="container max-w-7xl">
             {/* Section Header */}
-            <div className="text-center mb-8">
-              <h2 className="font-display text-2xl md:text-3xl font-bold mb-2">
+            <div className="text-center mb-12 md:mb-16">
+              <div className="inline-flex items-center justify-center gap-2 mb-4">
+                <div className="h-px w-12 bg-gradient-to-r from-transparent via-border to-transparent" />
+                <span className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
+                  Featured Content
+                </span>
+                <div className="h-px w-12 bg-gradient-to-r from-transparent via-border to-transparent" />
+              </div>
+              <h2 className="font-display text-3xl md:text-4xl lg:text-5xl font-bold mb-4 tracking-tight">
                 Latest Creations
               </h2>
-              <p className="text-muted-foreground">
-                Explore wonderful works from our talented students
+              <p className="text-base md:text-lg text-muted-foreground max-w-2xl mx-auto leading-relaxed">
+                Discover the imaginative works crafted by our talented young creators
               </p>
             </div>
             
             {/* Category Filter */}
-            <div className="mb-8">
+            <div className="mb-10 md:mb-12">
               <CategoryFilter
                 selectedCategory={selectedCategory}
                 onCategoryChange={setSelectedCategory}

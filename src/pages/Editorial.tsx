@@ -4,12 +4,16 @@ import { Footer } from '@/components/Footer';
 import { ReviewCard } from '@/components/editorial/ReviewCard';
 import { PostsTable } from '@/components/editorial/PostsTable';
 import { DashboardStats } from '@/components/editorial/DashboardStats';
+import { ViewToggle } from '@/components/editorial/ViewToggle';
 import { usePosts } from '@/hooks/usePosts';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { toast } from 'sonner';
 import { Clock, CheckCircle, XCircle } from 'lucide-react';
 
+type ViewMode = 'grid' | 'list';
+
 const Editorial = () => {
+  const [viewMode, setViewMode] = useState<ViewMode>('grid');
   const {
     pendingPosts,
     publishedPosts,
@@ -67,7 +71,8 @@ const Editorial = () => {
 
           {/* Tabs */}
           <Tabs defaultValue="pending" className="space-y-6">
-            <TabsList className="grid w-full grid-cols-3 h-auto p-1 bg-background border">
+            <div className="flex items-center justify-between gap-4">
+              <TabsList className="grid w-full grid-cols-3 h-auto p-1 bg-background border">
               <TabsTrigger
                 value="pending"
                 className="flex items-center gap-2 py-3 data-[state=active]:bg-amber-50 data-[state=active]:text-amber-700"
@@ -101,8 +106,10 @@ const Editorial = () => {
                 </span>
               </TabsTrigger>
             </TabsList>
+            <ViewToggle view={viewMode} onViewChange={setViewMode} />
+            </div>
 
-            {/* Pending Tab - Card Layout */}
+            {/* Pending Tab */}
             <TabsContent value="pending" className="space-y-4">
               {pendingPosts.length === 0 ? (
                 <div className="text-center py-16 bg-background rounded-2xl border-2 border-dashed">
@@ -114,7 +121,7 @@ const Editorial = () => {
                     No pending submissions to review
                   </p>
                 </div>
-              ) : (
+              ) : viewMode === 'grid' ? (
                 <div className="grid gap-4 md:grid-cols-2">
                   {pendingPosts.map(post => (
                     <ReviewCard
@@ -125,27 +132,80 @@ const Editorial = () => {
                     />
                   ))}
                 </div>
+              ) : (
+                <PostsTable
+                  posts={pendingPosts}
+                  onApprove={handleApprove}
+                  onReject={handleReject}
+                  onDelete={handleDelete}
+                />
               )}
             </TabsContent>
 
-            {/* Published Tab - Table Layout */}
+            {/* Published Tab */}
             <TabsContent value="published">
-              <PostsTable
-                posts={publishedPosts}
-                onReject={handleReject}
-                onRestore={handleRestore}
-                onDelete={handleDelete}
-              />
+              {publishedPosts.length === 0 ? (
+                <div className="text-center py-16 bg-background rounded-2xl border-2 border-dashed">
+                  <div className="text-4xl mb-4">📚</div>
+                  <h3 className="font-display text-xl font-semibold mb-2">
+                    No published posts
+                  </h3>
+                  <p className="text-muted-foreground">
+                    Published posts will appear here
+                  </p>
+                </div>
+              ) : viewMode === 'grid' ? (
+                <div className="grid gap-4 md:grid-cols-2">
+                  {publishedPosts.map(post => (
+                    <ReviewCard
+                      key={post.id}
+                      post={post}
+                      onApprove={handleApprove}
+                      onReject={handleReject}
+                    />
+                  ))}
+                </div>
+              ) : (
+                <PostsTable
+                  posts={publishedPosts}
+                  onReject={handleReject}
+                  onRestore={handleRestore}
+                  onDelete={handleDelete}
+                />
+              )}
             </TabsContent>
 
-            {/* Rejected Tab - Table Layout */}
+            {/* Rejected Tab */}
             <TabsContent value="rejected">
-              <PostsTable
-                posts={rejectedPosts}
-                onApprove={handleApprove}
-                onRestore={handleRestore}
-                onDelete={handleDelete}
-              />
+              {rejectedPosts.length === 0 ? (
+                <div className="text-center py-16 bg-background rounded-2xl border-2 border-dashed">
+                  <div className="text-4xl mb-4">✅</div>
+                  <h3 className="font-display text-xl font-semibold mb-2">
+                    No rejected posts
+                  </h3>
+                  <p className="text-muted-foreground">
+                    Rejected posts will appear here
+                  </p>
+                </div>
+              ) : viewMode === 'grid' ? (
+                <div className="grid gap-4 md:grid-cols-2">
+                  {rejectedPosts.map(post => (
+                    <ReviewCard
+                      key={post.id}
+                      post={post}
+                      onApprove={handleApprove}
+                      onReject={handleReject}
+                    />
+                  ))}
+                </div>
+              ) : (
+                <PostsTable
+                  posts={rejectedPosts}
+                  onApprove={handleApprove}
+                  onRestore={handleRestore}
+                  onDelete={handleDelete}
+                />
+              )}
             </TabsContent>
           </Tabs>
         </div>

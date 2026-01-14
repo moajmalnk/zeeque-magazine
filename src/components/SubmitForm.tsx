@@ -88,8 +88,8 @@ export function SubmitForm() {
   };
 
   return (
-    <Card className="border-0 shadow-card max-w-2xl mx-auto">
-      <CardHeader className="text-center pb-2">
+    <Card className="border-0 shadow-card max-w-2xl mx-auto w-full">
+      <CardHeader className="text-center pb-2 px-6 pt-6">
         <div className="w-16 h-16 rounded-2xl bg-gradient-hero flex items-center justify-center mx-auto mb-4 animate-bounce-gentle">
           <span className="text-3xl">🌟</span>
         </div>
@@ -101,7 +101,7 @@ export function SubmitForm() {
         </CardDescription>
       </CardHeader>
       
-      <CardContent>
+      <CardContent className="px-6 pb-6">
         <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
           {/* Author Name */}
           <div className="space-y-2">
@@ -124,14 +124,14 @@ export function SubmitForm() {
             <Label className="text-base font-semibold">
               What are you sharing? 🎨
             </Label>
-            <div className="grid grid-cols-2 gap-3">
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
               {categories.map((category) => (
                 <button
                   key={category}
                   type="button"
                   onClick={() => form.setValue('category', category)}
                   className={cn(
-                    'p-4 rounded-2xl border-2 text-left transition-all duration-200',
+                    'p-4 rounded-2xl border-2 text-left transition-all duration-200 w-full',
                     selectedCategory === category
                       ? cn('border-transparent shadow-card', {
                           'bg-gradient-stories': category === 'stories',
