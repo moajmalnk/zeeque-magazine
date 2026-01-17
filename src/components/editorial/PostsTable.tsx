@@ -21,7 +21,8 @@ import {
   AlertDialogTitle,
   AlertDialogTrigger,
 } from '@/components/ui/alert-dialog';
-import { Check, X, RotateCcw, Trash2 } from 'lucide-react';
+import { Check, X, RotateCcw, Trash2, Edit } from 'lucide-react';
+import { toast } from 'sonner';
 import { format } from 'date-fns';
 import {
   Dialog,
@@ -30,13 +31,16 @@ import {
   DialogTitle,
   DialogTrigger,
 } from '@/components/ui/dialog';
+import { EditPostDialog } from './EditPostDialog';
+import { ApproveDialog } from './ApproveDialog';
 
 interface PostsTableProps {
   posts: Post[];
-  onApprove?: (id: string) => void;
-  onReject?: (id: string) => void;
+  onApprove?: (id: string, featured: boolean) => { undo: () => void; postTitle: string; authorName: string } | void;
+  onReject?: (id: string) => { undo: () => void; postTitle: string; authorName: string } | void;
   onRestore?: (id: string) => void;
   onDelete: (id: string) => void;
+  onEdit?: (postId: string, updates: Partial<Post>) => void;
   showStatus?: boolean;
 }
 
@@ -45,6 +49,8 @@ const categoryStyles: Record<string, string> = {
   poems: 'bg-poems/20 text-poems border-poems/30',
   drawings: 'bg-drawings/20 text-drawings border-drawings/30',
   news: 'bg-news/20 text-news border-news/30',
+  video: 'bg-video/20 text-video border-video/30',
+  other: 'bg-other/20 text-other border-other/30',
 };
 
 const statusStyles: Record<PostStatus, string> = {
@@ -65,6 +71,7 @@ export function PostsTable({
   onReject,
   onRestore,
   onDelete,
+  onEdit,
   showStatus = false,
 }: PostsTableProps) {
   const [actionState, setActionState] = useState<{
@@ -85,6 +92,20 @@ export function PostsTable({
     open: false,
     postId: null,
   });
+  const [editDialogState, setEditDialogState] = useState<{
+    open: boolean;
+    postId: string | null;
+  }>({
+    open: false,
+    postId: null,
+  });
+  const [approveDialogState, setApproveDialogState] = useState<{
+    open: boolean;
+    postId: string | null;
+  }>({
+    open: false,
+    postId: null,
+  });
 
   const handleActionClick = (
     type: 'approve' | 'reject' | 'restore',
@@ -92,21 +113,99 @@ export function PostsTable({
     postTitle: string,
     authorName: string
   ) => {
-    setActionState({ type, postId, postTitle, authorName });
+    if (type === 'approve') {
+      setApproveDialogState({ open: true, postId });
+    } else {
+      setActionState({ type, postId, postTitle, authorName });
+    }
+  };
+
+  const handleApprove = (featured: boolean) => {
+    if (!approveDialogState.postId || !onApprove) return;
+    
+    const postId = approveDialogState.postId;
+    const post = posts.find(p => p.id === postId);
+    const postTitle = post?.title || 'Post';
+    const authorName = post?.authorName || 'Unknown';
+    
+    const result = onApprove(postId, featured);
+    setApproveDialogState({ open: false, postId: null });
+    
+    if (result && 'undo' in result) {
+      toast.success(
+        <div className="flex items-start gap-3">
+          <div className="w-10 h-10 rounded-full bg-green-500 flex items-center justify-center shrink-0">
+            <Check className="w-5 h-5 text-white" />
+          </div>
+          <div className="flex-1">
+            <p className="font-semibold">
+              {featured ? 'Post approved and featured! ⭐' : 'Post approved and published! 🎉'}
+            </p>
+            <p className="text-sm text-muted-foreground">
+              "{postTitle}" by {authorName} is now live
+              {featured && ' and featured on the home page'}
+            </p>
+          </div>
+        </div>,
+        {
+          duration: 5000,
+          action: {
+            label: 'Undo',
+            onClick: () => {
+              result.undo();
+              toast.success('Action undone', {
+                description: 'The post has been restored to its previous state',
+                duration: 3000,
+              });
+            },
+          },
+        }
+      );
+    }
   };
 
   const handleConfirmAction = () => {
     if (!actionState.postId || !actionState.type) return;
 
+    const postId = actionState.postId;
+    const postTitle = actionState.postTitle || 'Post';
+    const authorName = actionState.authorName || 'Unknown';
+
     switch (actionState.type) {
-      case 'approve':
-        onApprove?.(actionState.postId);
+      case 'reject': {
+        const result = onReject?.(postId);
+        if (result && 'undo' in result) {
+          toast.error(
+            <div className="flex items-start gap-3">
+              <div className="w-10 h-10 rounded-full bg-red-500 flex items-center justify-center shrink-0">
+                <X className="w-5 h-5 text-white" />
+              </div>
+              <div className="flex-1">
+                <p className="font-semibold">Post rejected</p>
+                <p className="text-sm text-muted-foreground">
+                  "{postTitle}" by {authorName} has been moved to rejected
+                </p>
+              </div>
+            </div>,
+            {
+              duration: 5000,
+              action: {
+                label: 'Undo',
+                onClick: () => {
+                  result.undo();
+                  toast.success('Action undone', {
+                    description: 'The post has been restored to its previous state',
+                    duration: 3000,
+                  });
+                },
+              },
+            }
+          );
+        }
         break;
-      case 'reject':
-        onReject?.(actionState.postId);
-        break;
+      }
       case 'restore':
-        onRestore?.(actionState.postId);
+        onRestore?.(postId);
         break;
     }
 
@@ -151,7 +250,17 @@ export function PostsTable({
                 <TableCell className="font-medium max-w-[200px] truncate">
                   {post.title}
                 </TableCell>
-                <TableCell>{post.authorName}</TableCell>
+                <TableCell>
+                  <div className="space-y-0.5">
+                    <div className="font-medium">{post.authorName}</div>
+                    {post.teacherName && (
+                      <div className="text-xs text-muted-foreground">Teacher: {post.teacherName}</div>
+                    )}
+                    {post.schoolName && (
+                      <div className="text-xs text-muted-foreground">School: {post.schoolName}</div>
+                    )}
+                  </div>
+                </TableCell>
                 <TableCell>
                   <Badge className={`${categoryStyles[post.category]} border text-xs`}>
                     {categoryIcons[post.category]} {categoryLabels[post.category]}
@@ -169,6 +278,20 @@ export function PostsTable({
                 </TableCell>
                 <TableCell className="text-right">
                   <div className="flex items-center justify-end gap-2" onClick={(e) => e.stopPropagation()}>
+                    {onEdit && (post.status === 'pending' || post.status === 'published') && (
+                      <Button
+                        variant="ghost"
+                        size="icon"
+                        className="h-8 w-8 text-primary hover:text-primary hover:bg-primary/10"
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          setEditDialogState({ open: true, postId: post.id });
+                        }}
+                        title="Edit"
+                      >
+                        <Edit className="h-4 w-4" />
+                      </Button>
+                    )}
                     {onApprove && post.status !== 'published' && (
                       <Button
                         variant="ghost"
@@ -213,7 +336,7 @@ export function PostsTable({
                           <Trash2 className="h-4 w-4" />
                         </Button>
                       </AlertDialogTrigger>
-                      <AlertDialogContent className="sm:max-w-md">
+                      <AlertDialogContent>
                         <AlertDialogHeader>
                           <AlertDialogTitle>Delete this post?</AlertDialogTitle>
                           <AlertDialogDescription className="space-y-2">
@@ -241,7 +364,7 @@ export function PostsTable({
                 </TableCell>
             </TableRow>
             
-            <DialogContent className="max-w-lg">
+            <DialogContent className="max-w-2xl">
               <DialogHeader>
                 <DialogTitle className="font-display">{post.title}</DialogTitle>
               </DialogHeader>
@@ -262,13 +385,52 @@ export function PostsTable({
                     </Badge>
                   )}
                 </div>
-                {post.imageUrl && (
+                {post.videoUrl ? (() => {
+                  // Helper to convert video URLs to embed format
+                  const getVideoEmbedUrl = (url: string): string | null => {
+                    try {
+                      const urlObj = new URL(url);
+                      if (urlObj.hostname.includes('youtube.com') || urlObj.hostname.includes('youtu.be')) {
+                        const videoId = urlObj.searchParams.get('v') || urlObj.pathname.split('/').pop()?.split('?')[0];
+                        if (videoId) return `https://www.youtube.com/embed/${videoId}`;
+                      }
+                      if (urlObj.hostname.includes('vimeo.com')) {
+                        const videoId = urlObj.pathname.split('/').pop();
+                        if (videoId) return `https://player.vimeo.com/video/${videoId}`;
+                      }
+                      return url;
+                    } catch {
+                      return null;
+                    }
+                  };
+                  const embedUrl = getVideoEmbedUrl(post.videoUrl);
+                  return embedUrl ? (
+                    <div className="relative w-full aspect-video rounded-xl overflow-hidden bg-black/5">
+                      <iframe
+                        src={embedUrl}
+                        title={post.title}
+                        className="w-full h-full"
+                        allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+                        allowFullScreen
+                      />
+                    </div>
+                  ) : (
+                    <a
+                      href={post.videoUrl}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="block p-4 bg-gradient-video text-white rounded-xl text-center font-semibold hover:opacity-90"
+                    >
+                      Watch Video 🎥
+                    </a>
+                  );
+                })() : post.imageUrl ? (
                   <img
                     src={post.imageUrl}
                     alt={post.title}
                     className="w-full rounded-xl"
                   />
-                )}
+                ) : null}
                 <p className="text-foreground whitespace-pre-line leading-relaxed">{post.content}</p>
                 
                 {/* Action Buttons in Preview */}
@@ -278,7 +440,10 @@ export function PostsTable({
                       <Button
                         size="default"
                         className="flex-1 bg-green-500 hover:bg-green-600 text-white"
-                        onClick={() => handleActionClick('approve', post.id, post.title, post.authorName)}
+                        onClick={() => {
+                          setPreviewDialogState({ open: false, postId: null });
+                          setApproveDialogState({ open: true, postId: post.id });
+                        }}
                       >
                         <Check className="w-4 h-4 mr-2" />
                         Approve
@@ -289,7 +454,38 @@ export function PostsTable({
                         variant="outline"
                         size="default"
                         className="flex-1 border-red-200 text-red-600 hover:bg-red-50 hover:text-red-700 hover:border-red-300"
-                        onClick={() => handleActionClick('reject', post.id, post.title, post.authorName)}
+                        onClick={() => {
+                          const result = onReject(post.id);
+                          setPreviewDialogState({ open: false, postId: null });
+                          if (result && 'undo' in result) {
+                            toast.error(
+                              <div className="flex items-start gap-3">
+                                <div className="w-10 h-10 rounded-full bg-red-500 flex items-center justify-center shrink-0">
+                                  <X className="w-5 h-5 text-white" />
+                                </div>
+                                <div className="flex-1">
+                                  <p className="font-semibold">Post rejected</p>
+                                  <p className="text-sm text-muted-foreground">
+                                    "{result.postTitle}" by {result.authorName} has been moved to rejected
+                                  </p>
+                                </div>
+                              </div>,
+                              {
+                                duration: 5000,
+                                action: {
+                                  label: 'Undo',
+                                  onClick: () => {
+                                    result.undo();
+                                    toast.success('Action undone', {
+                                      description: 'The post has been restored to its previous state',
+                                      duration: 3000,
+                                    });
+                                  },
+                                },
+                              }
+                            );
+                          }
+                        }}
                       >
                         <X className="w-4 h-4 mr-2" />
                         Reject
@@ -320,7 +516,7 @@ export function PostsTable({
         open={actionState.type === 'approve'}
         onOpenChange={(open) => !open && setActionState({ type: null, postId: null, postTitle: null, authorName: null })}
       >
-        <AlertDialogContent className="sm:max-w-md">
+        <AlertDialogContent>
           <AlertDialogHeader>
             <AlertDialogTitle>Approve and publish this post?</AlertDialogTitle>
             <AlertDialogDescription className="space-y-2">
@@ -349,7 +545,7 @@ export function PostsTable({
         open={actionState.type === 'reject'}
         onOpenChange={(open) => !open && setActionState({ type: null, postId: null, postTitle: null, authorName: null })}
       >
-        <AlertDialogContent className="sm:max-w-md">
+        <AlertDialogContent>
           <AlertDialogHeader>
             <AlertDialogTitle>Reject this post?</AlertDialogTitle>
             <AlertDialogDescription className="space-y-2">
@@ -378,7 +574,7 @@ export function PostsTable({
         open={actionState.type === 'restore'}
         onOpenChange={(open) => !open && setActionState({ type: null, postId: null, postTitle: null, authorName: null })}
       >
-        <AlertDialogContent className="sm:max-w-md">
+        <AlertDialogContent>
           <AlertDialogHeader>
             <AlertDialogTitle>Move to pending review?</AlertDialogTitle>
             <AlertDialogDescription className="space-y-2">
@@ -402,6 +598,20 @@ export function PostsTable({
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>
+
+      {/* Edit Post Dialog */}
+      {onEdit && editDialogState.postId && (() => {
+        const postToEdit = posts.find(p => p.id === editDialogState.postId);
+        return postToEdit && (postToEdit.status === 'pending' || postToEdit.status === 'published') ? (
+          <EditPostDialog
+            key={`edit-${postToEdit.id}`}
+            post={postToEdit}
+            open={editDialogState.open}
+            onOpenChange={(open) => setEditDialogState({ open, postId: open ? postToEdit.id : null })}
+            onSave={onEdit}
+          />
+        ) : null;
+      })()}
     </div>
   );
 }

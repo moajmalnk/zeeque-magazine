@@ -67,6 +67,14 @@ export default {
           DEFAULT: "hsl(var(--news))",
           foreground: "hsl(var(--news-foreground))",
         },
+        video: {
+          DEFAULT: "hsl(var(--video))",
+          foreground: "hsl(var(--video-foreground))",
+        },
+        other: {
+          DEFAULT: "hsl(var(--other))",
+          foreground: "hsl(var(--other-foreground))",
+        },
         // Status colors
         pending: {
           DEFAULT: "hsl(var(--pending))",

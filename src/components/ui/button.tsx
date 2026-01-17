@@ -20,6 +20,8 @@ const buttonVariants = cva(
         poems: "bg-gradient-poems text-white hover:scale-[1.02] active:scale-[0.98] shadow-soft",
         drawings: "bg-gradient-drawings text-white hover:scale-[1.02] active:scale-[0.98] shadow-soft",
         news: "bg-gradient-news text-white hover:scale-[1.02] active:scale-[0.98] shadow-soft",
+        video: "bg-gradient-video text-white hover:scale-[1.02] active:scale-[0.98] shadow-soft",
+        other: "bg-gradient-other text-white hover:scale-[1.02] active:scale-[0.98] shadow-soft",
       },
       size: {
         default: "h-11 px-5 py-2",

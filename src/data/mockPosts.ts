@@ -4,6 +4,8 @@ export const mockPosts: Post[] = [
   {
     id: '1',
     authorName: 'Emma',
+    teacherName: 'Ms. Johnson',
+    schoolName: 'Sunshine Elementary School',
     title: 'The Friendly Dragon',
     category: 'stories',
     content: 'Once upon a time, there was a dragon who loved to share cookies with everyone in the village. The dragon had sparkly purple scales and the biggest smile you ever saw!',
@@ -15,6 +17,8 @@ export const mockPosts: Post[] = [
   {
     id: '2',
     authorName: 'Lucas',
+    teacherName: 'Mr. Chen',
+    schoolName: 'Rainbow Primary School',
     title: 'Rainbow Butterfly',
     category: 'drawings',
     content: 'I drew a butterfly with all the colors of the rainbow! It lives in my garden and visits the flowers every morning.',
@@ -26,6 +30,8 @@ export const mockPosts: Post[] = [
   {
     id: '3',
     authorName: 'Sophia',
+    teacherName: 'Ms. Williams',
+    schoolName: 'Starlight Academy',
     title: 'The Dancing Stars',
     category: 'poems',
     content: 'Stars up high, twinkle bright,\nDancing softly through the night.\nMoon is smiling, clouds float by,\nMagic sparkles in the sky! ⭐',
@@ -36,6 +42,8 @@ export const mockPosts: Post[] = [
   {
     id: '4',
     authorName: 'Teacher Maya',
+    teacherName: 'Ms. Maya',
+    schoolName: 'Sunshine Elementary School',
     title: 'Our Garden Project! 🌱',
     category: 'news',
     content: 'This week, Class Sunshine planted sunflower seeds! We learned about how plants grow and promised to water them every day. Check back to see our sunflowers bloom!',
@@ -47,6 +55,8 @@ export const mockPosts: Post[] = [
   {
     id: '5',
     authorName: 'Oliver',
+    teacherName: 'Ms. Johnson',
+    schoolName: 'Sunshine Elementary School',
     title: 'My Best Friend Teddy',
     category: 'stories',
     content: 'Teddy is my best friend. He is brown and fluffy. We go on adventures together every night when I fall asleep. Last night we flew to the moon!',
@@ -57,6 +67,8 @@ export const mockPosts: Post[] = [
   {
     id: '6',
     authorName: 'Mia',
+    teacherName: 'Mr. Chen',
+    schoolName: 'Rainbow Primary School',
     title: 'Sunshine Song',
     category: 'poems',
     content: 'Good morning, sun so bright,\nYou fill my day with light!\nBirds are singing, flowers too,\nI want to play with you! 🌞',
@@ -68,6 +80,8 @@ export const mockPosts: Post[] = [
   {
     id: '7',
     authorName: 'Noah',
+    teacherName: 'Ms. Williams',
+    schoolName: 'Starlight Academy',
     title: 'My Pet Fish Bubbles',
     category: 'stories',
     content: 'Bubbles is my fish. He swims round and round in his bowl. I feed him every morning and he does a little happy dance!',
@@ -78,6 +92,8 @@ export const mockPosts: Post[] = [
   {
     id: '8',
     authorName: 'Ava',
+    teacherName: 'Ms. Johnson',
+    schoolName: 'Sunshine Elementary School',
     title: 'Rainy Day Fun',
     category: 'poems',
     content: 'Pitter patter on the roof,\nRaindrops dancing, that\'s the proof!\nPuddles forming everywhere,\nSplashing fun beyond compare! 🌧️',
@@ -87,6 +103,8 @@ export const mockPosts: Post[] = [
   {
     id: '9',
     authorName: 'Ethan',
+    teacherName: 'Mr. Chen',
+    schoolName: 'Rainbow Primary School',
     title: 'Space Adventure Drawing',
     category: 'drawings',
     content: 'I drew a rocket ship going to Mars! There are aliens waving hello and stars everywhere.',
@@ -97,6 +115,8 @@ export const mockPosts: Post[] = [
   {
     id: '10',
     authorName: 'Teacher Sam',
+    teacherName: 'Mr. Sam',
+    schoolName: 'Starlight Academy',
     title: 'Art Show Next Week! 🎨',
     category: 'news',
     content: 'Get ready for our annual art show! All students will display their best artwork. Parents are invited on Friday at 3pm.',
@@ -107,6 +127,8 @@ export const mockPosts: Post[] = [
   {
     id: '11',
     authorName: 'Jake',
+    teacherName: 'Ms. Williams',
+    schoolName: 'Starlight Academy',
     title: 'Untitled',
     category: 'stories',
     content: 'test test test',

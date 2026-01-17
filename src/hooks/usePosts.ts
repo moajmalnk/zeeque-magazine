@@ -43,18 +43,51 @@ export function usePosts() {
     });
   }, []);
 
-  const approvePost = useCallback((postId: string) => {
+  const approvePost = useCallback((postId: string, featured: boolean = false) => {
+    const post = posts.find(p => p.id === postId);
+    const previousStatus = post?.status;
+    const previousPublishedAt = post?.publishedAt;
+    const previousFeatured = post?.featured;
+    
     updatePost(postId, {
       status: 'published',
       publishedAt: new Date(),
+      featured: featured,
     });
-  }, [updatePost]);
+    
+    return {
+      undo: () => {
+        updatePost(postId, {
+          status: previousStatus || 'pending',
+          publishedAt: previousPublishedAt,
+          featured: previousFeatured,
+        });
+      },
+      postTitle: post?.title || 'Post',
+      authorName: post?.authorName || 'Unknown',
+    };
+  }, [updatePost, posts]);
 
   const rejectPost = useCallback((postId: string) => {
+    const post = posts.find(p => p.id === postId);
+    const previousStatus = post?.status;
+    const previousPublishedAt = post?.publishedAt;
+    
     updatePost(postId, {
       status: 'rejected',
     });
-  }, [updatePost]);
+    
+    return {
+      undo: () => {
+        updatePost(postId, {
+          status: previousStatus || 'pending',
+          publishedAt: previousPublishedAt,
+        });
+      },
+      postTitle: post?.title || 'Post',
+      authorName: post?.authorName || 'Unknown',
+    };
+  }, [updatePost, posts]);
 
   const deletePost = useCallback((postId: string) => {
     setPosts(currentPosts => {
