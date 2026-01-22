@@ -10,127 +10,139 @@
 
 @layer base {
   :root {
-    /* Core brand colors - warm and playful */
-    --background: 40 33% 98%;
-    --foreground: 20 25% 20%;
+    /* Core brand colors - Vibrant & Bolder (Harder Colors) */
+
+    /* Background: Crisp White to make colors POP */
+    --background: 0 0% 100%;
+
+    /* Foreground: Deepest Indigo/Black */
+    --foreground: 260 40% 10%;
 
     --card: 0 0% 100%;
-    --card-foreground: 20 25% 20%;
+    --card-foreground: 260 40% 10%;
 
     --popover: 0 0% 100%;
-    --popover-foreground: 20 25% 20%;
+    --popover-foreground: 260 40% 10%;
 
-    /* Primary: Warm Coral - energetic and joyful */
-    --primary: 12 76% 61%;
+    /* Primary: Electric Pink/Red - Strong and Eye-catching */
+    --primary: 340 100% 55%;
     --primary-foreground: 0 0% 100%;
 
-    /* Secondary: Soft Teal - calming balance */
-    --secondary: 174 42% 65%;
-    --secondary-foreground: 174 60% 15%;
+    /* Secondary: Vivid Cyan/Blue - Clear and Bright */
+    --secondary: 195 90% 45%;
+    --secondary-foreground: 0 0% 100%;
 
-    /* Muted: Warm gray tones */
-    --muted: 30 20% 94%;
-    --muted-foreground: 20 10% 45%;
+    /* Muted: Soft but solid Light Bluish Gray */
+    --muted: 210 30% 96%;
+    --muted-foreground: 215 25% 40%;
 
-    /* Accent: Cheerful Yellow */
-    --accent: 45 93% 70%;
-    --accent-foreground: 30 50% 20%;
+    /* Accent: Rich Marigold/Golden Yellow */
+    --accent: 45 100% 50%;
+    --accent-foreground: 45 90% 10%;
 
-    --destructive: 0 72% 51%;
+    /* Destructive: Solid Red */
+    --destructive: 0 90% 60%;
     --destructive-foreground: 0 0% 100%;
 
-    --border: 30 20% 88%;
-    --input: 30 20% 88%;
-    --ring: 12 76% 61%;
+    --border: 220 20% 90%;
+    --input: 220 20% 90%;
+    --ring: 340 100% 55%;
 
-    --radius: 1rem;
+    /* Super rounded shapes */
+    --radius: 1.5rem;
 
-    /* Extended palette for categories */
-    --stories: 280 60% 70%;
-    --stories-foreground: 280 80% 20%;
-    --poems: 200 70% 60%;
-    --poems-foreground: 200 80% 15%;
-    --drawings: 140 50% 55%;
-    --drawings-foreground: 140 60% 15%;
-    --news: 30 80% 60%;
-    --news-foreground: 30 70% 15%;
-    --video: 250 70% 60%;
-    --video-foreground: 250 80% 15%;
-    --other: 0 0% 50%;
-    --other-foreground: 0 0% 15%;
+    /* Extended vibrant palette for categories - Solid "Hard" Colors */
+    --stories: 320 85% 60%;
+    /* Rich Pink */
+    --stories-foreground: 0 0% 100%;
 
-    /* Status colors */
-    --pending: 45 90% 55%;
-    --pending-foreground: 45 90% 15%;
-    --published: 140 60% 50%;
-    --published-foreground: 0 0% 100%;
-    --rejected: 0 70% 55%;
-    --rejected-foreground: 0 0% 100%;
+    --poems: 180 100% 35%;
+    /* Deep Teal */
+    --poems-foreground: 0 0% 100%;
 
-    /* Gradients */
-    --gradient-hero: linear-gradient(135deg, hsl(12, 76%, 61%) 0%, hsl(45, 93%, 70%) 100%);
-    --gradient-card: linear-gradient(180deg, hsl(0, 0%, 100%) 0%, hsl(40, 33%, 98%) 100%);
-    --gradient-stories: linear-gradient(135deg, hsl(280, 60%, 70%) 0%, hsl(320, 60%, 75%) 100%);
-    --gradient-poems: linear-gradient(135deg, hsl(200, 70%, 60%) 0%, hsl(220, 65%, 70%) 100%);
-    --gradient-drawings: linear-gradient(135deg, hsl(140, 50%, 55%) 0%, hsl(160, 55%, 60%) 100%);
-    --gradient-news: linear-gradient(135deg, hsl(30, 80%, 60%) 0%, hsl(45, 85%, 65%) 100%);
-    --gradient-video: linear-gradient(135deg, hsl(250, 70%, 60%) 0%, hsl(270, 65%, 70%) 100%);
-    --gradient-other: linear-gradient(135deg, hsl(0, 0%, 50%) 0%, hsl(0, 0%, 65%) 100%);
+    --drawings: 150 90% 40%;
+    /* Solid Mint/Green */
+    --drawings-foreground: 0 0% 100%;
 
-    /* Shadows */
-    --shadow-soft: 0 4px 20px -4px hsl(20 25% 20% / 0.08);
-    --shadow-card: 0 8px 30px -8px hsl(20 25% 20% / 0.12);
-    --shadow-hover: 0 12px 40px -8px hsl(20 25% 20% / 0.18);
-    --shadow-glow: 0 0 40px -10px hsl(12 76% 61% / 0.3);
+    --news: 25 100% 55%;
+    /* Bright Orange */
+    --news-foreground: 0 0% 100%;
+
+    --video: 265 90% 60%;
+    /* Vivid Purple */
+    --video-foreground: 0 0% 100%;
+
+    --other: 210 90% 55%;
+    /* Strong Blue */
+    --other-foreground: 0 0% 100%;
+
+    /* Gradients - Stronger & Bolder */
+    --gradient-hero: linear-gradient(135deg, hsl(340, 100%, 55%) 0%, hsl(25, 100%, 55%) 100%);
+    --gradient-card: linear-gradient(180deg, hsl(0, 0%, 100%) 0%, hsl(210, 30%, 98%) 100%);
+
+    /* Missing Category Gradients */
+    --gradient-stories: linear-gradient(135deg, hsl(320, 85%, 60%) 0%, hsl(340, 85%, 60%) 100%);
+    --gradient-poems: linear-gradient(135deg, hsl(180, 100%, 35%) 0%, hsl(160, 100%, 35%) 100%);
+    --gradient-drawings: linear-gradient(135deg, hsl(150, 90%, 40%) 0%, hsl(130, 90%, 40%) 100%);
+    --gradient-news: linear-gradient(135deg, hsl(25, 100%, 55%) 0%, hsl(45, 100%, 55%) 100%);
+    --gradient-video: linear-gradient(135deg, hsl(265, 90%, 60%) 0%, hsl(285, 90%, 60%) 100%);
+    --gradient-other: linear-gradient(135deg, hsl(210, 90%, 55%) 0%, hsl(190, 90%, 55%) 100%);
+
+    /* Shadows - Crisper */
+    --shadow-soft: 0 4px 10px -2px hsl(220 20% 85%);
+    --shadow-card: 0 10px 25px -5px hsl(220 20% 80%);
+    --shadow-hover: 0 20px 35px -5px hsl(220 20% 75%);
+    --shadow-glow: 0 0 30px -5px hsl(340 100% 55% / 0.4);
 
     /* Sidebar */
-    --sidebar-background: 40 33% 98%;
-    --sidebar-foreground: 20 25% 30%;
-    --sidebar-primary: 12 76% 61%;
+    --sidebar-background: 0 0% 100%;
+    --sidebar-foreground: 260 40% 15%;
+    --sidebar-primary: 340 100% 55%;
     --sidebar-primary-foreground: 0 0% 100%;
-    --sidebar-accent: 45 93% 70%;
-    --sidebar-accent-foreground: 30 50% 20%;
-    --sidebar-border: 30 20% 88%;
-    --sidebar-ring: 12 76% 61%;
+    --sidebar-accent: 45 100% 50%;
+    --sidebar-accent-foreground: 45 90% 10%;
+    --sidebar-border: 220 20% 90%;
+    --sidebar-ring: 340 100% 55%;
   }
 
   .dark {
-    --background: 20 20% 10%;
-    --foreground: 40 20% 95%;
+    /* Dark Mode: "Deep Night" - High Contrast */
+    --background: 240 30% 10%;
+    --foreground: 0 0% 100%;
 
-    --card: 20 18% 14%;
-    --card-foreground: 40 20% 95%;
+    --card: 240 25% 15%;
+    --card-foreground: 0 0% 100%;
 
-    --popover: 20 18% 14%;
-    --popover-foreground: 40 20% 95%;
+    --popover: 240 25% 15%;
+    --popover-foreground: 0 0% 100%;
 
-    --primary: 12 76% 61%;
+    --primary: 340 100% 60%;
     --primary-foreground: 0 0% 100%;
 
-    --secondary: 174 35% 40%;
-    --secondary-foreground: 174 30% 95%;
+    --secondary: 195 90% 50%;
+    --secondary-foreground: 0 0% 100%;
 
-    --muted: 20 15% 20%;
-    --muted-foreground: 20 10% 60%;
+    --muted: 240 20% 20%;
+    --muted-foreground: 240 10% 70%;
 
-    --accent: 45 80% 55%;
-    --accent-foreground: 30 50% 10%;
+    --accent: 45 100% 50%;
+    --accent-foreground: 45 90% 10%;
 
-    --destructive: 0 62% 45%;
+    --destructive: 0 90% 60%;
     --destructive-foreground: 0 0% 100%;
 
-    --border: 20 15% 22%;
-    --input: 20 15% 22%;
-    --ring: 12 76% 61%;
+    --border: 240 20% 25%;
+    --input: 240 20% 25%;
+    --ring: 340 100% 60%;
 
-    --sidebar-background: 20 18% 12%;
-    --sidebar-foreground: 40 20% 90%;
-    --sidebar-primary: 12 76% 61%;
+    --sidebar-background: 240 30% 12%;
+    --sidebar-foreground: 0 0% 100%;
+    --sidebar-primary: 340 100% 60%;
     --sidebar-primary-foreground: 0 0% 100%;
-    --sidebar-accent: 45 80% 55%;
-    --sidebar-accent-foreground: 30 50% 10%;
-    --sidebar-border: 20 15% 22%;
-    --sidebar-ring: 12 76% 61%;
+    --sidebar-accent: 45 100% 50%;
+    --sidebar-accent-foreground: 45 90% 10%;
+    --sidebar-border: 240 20% 25%;
+    --sidebar-ring: 340 100% 60%;
   }
 }
 
@@ -144,7 +156,12 @@
     font-family: 'Nunito', system-ui, sans-serif;
   }
 
-  h1, h2, h3, h4, h5, h6 {
+  h1,
+  h2,
+  h3,
+  h4,
+  h5,
+  h6 {
     font-family: 'Quicksand', 'Nunito', system-ui, sans-serif;
     @apply font-bold tracking-tight;
   }
@@ -204,39 +221,91 @@
 
   /* Professional animations */
   @keyframes bounce-gentle {
-    0%, 100% { transform: translateY(0); }
-    50% { transform: translateY(-6px); }
+
+    0%,
+    100% {
+      transform: translateY(0);
+    }
+
+    50% {
+      transform: translateY(-6px);
+    }
   }
 
   @keyframes wiggle {
-    0%, 100% { transform: rotate(-2deg); }
-    50% { transform: rotate(2deg); }
+
+    0%,
+    100% {
+      transform: rotate(-2deg);
+    }
+
+    50% {
+      transform: rotate(2deg);
+    }
   }
 
   @keyframes float {
-    0%, 100% { transform: translateY(0) rotate(0deg); }
-    33% { transform: translateY(-10px) rotate(0.5deg); }
-    66% { transform: translateY(-5px) rotate(-0.5deg); }
+
+    0%,
+    100% {
+      transform: translateY(0) rotate(0deg);
+    }
+
+    33% {
+      transform: translateY(-10px) rotate(0.5deg);
+    }
+
+    66% {
+      transform: translateY(-5px) rotate(-0.5deg);
+    }
   }
 
   @keyframes sparkle {
-    0%, 100% { opacity: 1; transform: scale(1); }
-    50% { opacity: 0.85; transform: scale(1.1); }
+
+    0%,
+    100% {
+      opacity: 1;
+      transform: scale(1);
+    }
+
+    50% {
+      opacity: 0.85;
+      transform: scale(1.1);
+    }
   }
 
   @keyframes slide-up {
-    from { opacity: 0; transform: translateY(20px); }
-    to { opacity: 1; transform: translateY(0); }
+    from {
+      opacity: 0;
+      transform: translateY(20px);
+    }
+
+    to {
+      opacity: 1;
+      transform: translateY(0);
+    }
   }
 
   @keyframes fade-in {
-    from { opacity: 0; }
-    to { opacity: 1; }
+    from {
+      opacity: 0;
+    }
+
+    to {
+      opacity: 1;
+    }
   }
 
   @keyframes scale-in {
-    from { opacity: 0; transform: scale(0.98); }
-    to { opacity: 1; transform: scale(1); }
+    from {
+      opacity: 0;
+      transform: scale(0.98);
+    }
+
+    to {
+      opacity: 1;
+      transform: scale(1);
+    }
   }
 
   .animate-bounce-gentle {
@@ -268,11 +337,25 @@
   }
 
   /* Staggered animation delays */
-  .animation-delay-100 { animation-delay: 100ms; }
-  .animation-delay-200 { animation-delay: 200ms; }
-  .animation-delay-300 { animation-delay: 300ms; }
-  .animation-delay-400 { animation-delay: 400ms; }
-  .animation-delay-500 { animation-delay: 500ms; }
+  .animation-delay-100 {
+    animation-delay: 100ms;
+  }
+
+  .animation-delay-200 {
+    animation-delay: 200ms;
+  }
+
+  .animation-delay-300 {
+    animation-delay: 300ms;
+  }
+
+  .animation-delay-400 {
+    animation-delay: 400ms;
+  }
+
+  .animation-delay-500 {
+    animation-delay: 500ms;
+  }
 
   /* Professional scroll behavior */
   html {
@@ -293,31 +376,25 @@
   }
 
   ::-webkit-scrollbar-thumb {
-    background: linear-gradient(
-      180deg,
-      hsl(var(--primary) / 0.4) 0%,
-      hsl(var(--primary) / 0.3) 100%
-    );
+    background: linear-gradient(180deg,
+        hsl(var(--primary) / 0.4) 0%,
+        hsl(var(--primary) / 0.3) 100%);
     border-radius: 10px;
     border: 2px solid hsl(var(--muted));
     transition: all 0.2s ease;
   }
 
   ::-webkit-scrollbar-thumb:hover {
-    background: linear-gradient(
-      180deg,
-      hsl(var(--primary) / 0.6) 0%,
-      hsl(var(--primary) / 0.5) 100%
-    );
+    background: linear-gradient(180deg,
+        hsl(var(--primary) / 0.6) 0%,
+        hsl(var(--primary) / 0.5) 100%);
     border-color: hsl(var(--primary) / 0.2);
   }
 
   ::-webkit-scrollbar-thumb:active {
-    background: linear-gradient(
-      180deg,
-      hsl(var(--primary) / 0.8) 0%,
-      hsl(var(--primary) / 0.7) 100%
-    );
+    background: linear-gradient(180deg,
+        hsl(var(--primary) / 0.8) 0%,
+        hsl(var(--primary) / 0.7) 100%);
   }
 
   ::-webkit-scrollbar-corner {
@@ -331,29 +408,23 @@
   }
 
   .dark ::-webkit-scrollbar-thumb {
-    background: linear-gradient(
-      180deg,
-      hsl(var(--primary) / 0.5) 0%,
-      hsl(var(--primary) / 0.4) 100%
-    );
+    background: linear-gradient(180deg,
+        hsl(var(--primary) / 0.5) 0%,
+        hsl(var(--primary) / 0.4) 100%);
     border: 2px solid hsl(var(--muted));
   }
 
   .dark ::-webkit-scrollbar-thumb:hover {
-    background: linear-gradient(
-      180deg,
-      hsl(var(--primary) / 0.7) 0%,
-      hsl(var(--primary) / 0.6) 100%
-    );
+    background: linear-gradient(180deg,
+        hsl(var(--primary) / 0.7) 0%,
+        hsl(var(--primary) / 0.6) 100%);
     border-color: hsl(var(--primary) / 0.3);
   }
 
   .dark ::-webkit-scrollbar-thumb:active {
-    background: linear-gradient(
-      180deg,
-      hsl(var(--primary) / 0.9) 0%,
-      hsl(var(--primary) / 0.8) 100%
-    );
+    background: linear-gradient(180deg,
+        hsl(var(--primary) / 0.9) 0%,
+        hsl(var(--primary) / 0.8) 100%);
   }
 
   /* Firefox Scrollbar Styles */
@@ -384,22 +455,18 @@
   }
 
   .custom-scrollbar::-webkit-scrollbar-thumb {
-    background: linear-gradient(
-      180deg,
-      hsl(var(--primary) / 0.5) 0%,
-      hsl(var(--primary) / 0.4) 100%
-    );
+    background: linear-gradient(180deg,
+        hsl(var(--primary) / 0.5) 0%,
+        hsl(var(--primary) / 0.4) 100%);
     border-radius: 8px;
     border: 1px solid hsl(var(--muted));
     transition: all 0.2s ease;
   }
 
   .custom-scrollbar::-webkit-scrollbar-thumb:hover {
-    background: linear-gradient(
-      180deg,
-      hsl(var(--primary) / 0.7) 0%,
-      hsl(var(--primary) / 0.6) 100%
-    );
+    background: linear-gradient(180deg,
+        hsl(var(--primary) / 0.7) 0%,
+        hsl(var(--primary) / 0.6) 100%);
   }
 
   .dark .custom-scrollbar {
@@ -407,19 +474,15 @@
   }
 
   .dark .custom-scrollbar::-webkit-scrollbar-thumb {
-    background: linear-gradient(
-      180deg,
-      hsl(var(--primary) / 0.6) 0%,
-      hsl(var(--primary) / 0.5) 100%
-    );
+    background: linear-gradient(180deg,
+        hsl(var(--primary) / 0.6) 0%,
+        hsl(var(--primary) / 0.5) 100%);
   }
 
   .dark .custom-scrollbar::-webkit-scrollbar-thumb:hover {
-    background: linear-gradient(
-      180deg,
-      hsl(var(--primary) / 0.8) 0%,
-      hsl(var(--primary) / 0.7) 100%
-    );
+    background: linear-gradient(180deg,
+        hsl(var(--primary) / 0.8) 0%,
+        hsl(var(--primary) / 0.7) 100%);
   }
 
   /* Enhanced focus styles for accessibility */
@@ -440,9 +503,11 @@
     top: 0;
     left: 50%;
     width: 100vw;
-    height: 56.25vw; /* 16:9 aspect ratio */
+    height: 56.25vw;
+    /* 16:9 aspect ratio */
     min-height: 100vh;
-    min-width: 177.77777778vh; /* 16:9 aspect ratio */
+    min-width: 177.77777778vh;
+    /* 16:9 aspect ratio */
     transform: translateX(-50%);
     z-index: 0;
     overflow: hidden;
@@ -518,6 +583,7 @@
 
 /* Global styles to hide YouTube UI elements that appear in iframe */
 @layer utilities {
+
   /* Hide YouTube player controls, title, and branding */
   iframe[src*="youtube"] {
     /* These styles target elements inside the iframe via CSS (limited but helps) */

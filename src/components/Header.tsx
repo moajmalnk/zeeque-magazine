@@ -2,6 +2,7 @@ import { Link, useLocation, useNavigate } from 'react-router-dom';
 import { useTheme } from 'next-themes';
 import { Button } from '@/components/ui/button';
 import { PenLine, BookOpen, FileText, Moon, Sun, HelpCircle, LogIn, Users, LogOut, Menu } from 'lucide-react';
+import { motion } from 'framer-motion';
 import { useAuth } from '@/hooks/useAuth';
 import { useEffect, useState } from 'react';
 import { toast } from 'sonner';
@@ -12,12 +13,205 @@ import {
   SheetTitle,
   SheetTrigger,
 } from '@/components/ui/sheet';
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+  AlertDialogTrigger,
+} from '@/components/ui/alert-dialog';
+
+
+
+// Text-Only "Morph" Tab Component
+const NavTab = ({
+  to,
+  label,
+  isActive,
+  activeColor,
+  activeBg = 'bg-white', // Default to white
+  activeShadow,
+  hoverColor,
+  onClick,
+  mobile
+}: any) => {
+
+  return (
+    <Link
+      to={to}
+      onClick={onClick}
+      className={`
+        relative flex items-center justify-center rounded-full font-bold tracking-wide transition-all duration-300 ease-out select-none
+        ${mobile
+          ? 'w-full py-4 px-6 text-lg justify-start'
+          : 'h-10 px-6 text-sm'
+        }
+        ${isActive
+          ? `${activeColor} scale-105 z-10`
+          : `text-muted-foreground hover:bg-slate-50 ${hoverColor} hover:scale-105 hover:bg-opacity-50`
+        }
+      `}
+    >
+      {isActive && !mobile && (
+        <motion.span
+          layoutId={mobile ? "nav-pill-mobile" : "nav-pill"}
+          className={`absolute inset-0 rounded-full ${activeBg} ${activeShadow} -z-10`}
+          transition={{ type: "spring", bounce: 0.2, duration: 0.6 }}
+        />
+      )}
+
+      {/* Mobile active background (no sliding animation) */}
+      {isActive && mobile && (
+        <span className={`absolute inset-0 rounded-full ${activeBg} ${activeShadow} -z-10`} />
+      )}
+
+      <span className="relative z-10 font-bold">{label}</span>
+
+      {/* Subtle glow effect behind active tab (Only on desktop) */}
+      {isActive && !mobile && (
+        <motion.span
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 0.2 }}
+          exit={{ opacity: 0 }}
+          className={`absolute inset-0 rounded-full bg-current blur-md -z-10`}
+        />
+      )}
+    </Link>
+  );
+};
+
+const NavItems = ({ mobile = false, onItemClick, onLogout }: { mobile?: boolean; onItemClick?: () => void; onLogout: () => void }) => {
+  const location = useLocation();
+  const { isAuthenticated, role } = useAuth();
+  const { pathname } = location;
+
+  return (
+    <div className={`flex ${mobile ? 'flex-col space-y-2 p-2' : 'items-center gap-2'}`}>
+      <NavTab
+        to="/"
+        label="Read"
+        isActive={pathname === '/'}
+        activeBg="bg-gradient-to-r from-sky-400 to-blue-500"
+        activeColor="text-white"
+        activeShadow="shadow-[0_8px_16px_-6px_rgba(14,165,233,0.5)]"
+        hoverColor="hover:text-sky-500"
+        onClick={onItemClick}
+        mobile={mobile}
+      />
+
+      <NavTab
+        to="/submit"
+        label="Create"
+        isActive={pathname === '/submit'}
+        activeBg="bg-gradient-to-r from-primary to-accent" // Gradient ONLY when active
+        activeColor="text-white"
+        activeShadow="shadow-[0_8px_20px_-6px_rgba(236,72,153,0.5)]"
+        hoverColor="hover:text-pink-500"
+        onClick={onItemClick}
+        mobile={mobile}
+      />
+
+      <NavTab
+        to="/guidelines"
+        label="Rules"
+        isActive={pathname === '/guidelines'}
+        activeBg="bg-gradient-to-r from-amber-400 to-orange-500"
+        activeColor="text-white"
+        activeShadow="shadow-[0_8px_16px_-6px_rgba(245,158,11,0.5)]"
+        hoverColor="hover:text-amber-500"
+        onClick={onItemClick}
+        mobile={mobile}
+      />
+
+      {isAuthenticated ? (
+        <>
+          {!mobile && <div className="w-px h-6 bg-border/40 mx-2" />}
+
+          <NavTab
+            to="/editorial"
+            label="Editor"
+            isActive={pathname.startsWith('/editorial')}
+            activeBg="bg-gradient-to-r from-purple-400 to-violet-500"
+            activeColor="text-white"
+            activeShadow="shadow-[0_8px_16px_-6px_rgba(168,85,247,0.5)]"
+            hoverColor="hover:text-purple-500"
+            onClick={onItemClick}
+            mobile={mobile}
+          />
+
+          {role === 'ADMIN' && (
+            <NavTab
+              to="/teachers"
+              label="Teachers"
+              isActive={pathname.startsWith('/teachers')}
+              activeBg="bg-gradient-to-r from-indigo-400 to-blue-600"
+              activeColor="text-white"
+              activeShadow="shadow-[0_8px_16px_-6px_rgba(99,102,241,0.5)]"
+              hoverColor="hover:text-indigo-500"
+              onClick={onItemClick}
+              mobile={mobile}
+            />
+          )}
+
+          <AlertDialog>
+            <AlertDialogTrigger asChild>
+              <button
+                className={`
+                  relative flex items-center justify-center rounded-full font-bold tracking-wide transition-all duration-300 ease-out select-none
+                  text-slate-500 hover:text-red-500 hover:bg-red-50
+                  ${mobile
+                    ? 'w-full py-4 px-6 text-lg justify-start'
+                    : 'h-10 px-6 text-sm'
+                  }
+                `}
+              >
+                <span>Logout</span>
+              </button>
+            </AlertDialogTrigger>
+            <AlertDialogContent>
+              <AlertDialogHeader>
+                <AlertDialogTitle>Are you absolutely sure?</AlertDialogTitle>
+                <AlertDialogDescription>
+                  You are about to log out of your account.
+                </AlertDialogDescription>
+              </AlertDialogHeader>
+              <AlertDialogFooter>
+                <AlertDialogCancel>Cancel</AlertDialogCancel>
+                <AlertDialogAction onClick={() => {
+                  if (onItemClick) onItemClick();
+                  onLogout();
+                }} className="bg-red-500 hover:bg-red-600 focus:ring-red-500">
+                  Logout
+                </AlertDialogAction>
+              </AlertDialogFooter>
+            </AlertDialogContent>
+          </AlertDialog>
+        </>
+      ) : (
+        <NavTab
+          to="/login"
+          label="Login"
+          isActive={pathname === '/login'}
+          activeBg="bg-gradient-to-r from-violet-400 to-fuchsia-500"
+          activeColor="text-white"
+          activeShadow="shadow-[0_8px_16px_-6px_rgba(139,92,246,0.5)]"
+          hoverColor="hover:text-violet-500"
+          onClick={onItemClick}
+          mobile={mobile}
+        />
+      )}
+    </div>
+  );
+};
 
 export function Header() {
-  const location = useLocation();
   const navigate = useNavigate();
   const { theme, setTheme } = useTheme();
-  const { isAuthenticated, role, logout } = useAuth();
+  const { logout } = useAuth();
   const [mounted, setMounted] = useState(false);
   const [logoError, setLogoError] = useState(false);
   const [mobileOpen, setMobileOpen] = useState(false);
@@ -33,126 +227,25 @@ export function Header() {
     setMobileOpen(false);
   };
 
-  const NavItems = ({ mobile = false }: { mobile?: boolean }) => (
-    <>
-      <Button
-        asChild
-        variant={location.pathname === '/' ? 'default' : 'ghost'}
-        size={mobile ? 'lg' : 'sm'}
-        className={`${mobile ? 'w-full justify-start' : ''} gap-2 rounded-full font-medium transition-all duration-200`}
-        onClick={() => setMobileOpen(false)}
-      >
-        <Link to="/">
-          <BookOpen className="w-4 h-4" />
-          <span>Read</span>
-        </Link>
-      </Button>
-
-      <Button
-        asChild
-        variant={location.pathname === '/submit' ? 'hero' : 'outline'}
-        size={mobile ? 'lg' : 'sm'}
-        className={`${mobile ? 'w-full justify-start' : 'border-2'} gap-2 rounded-full font-medium transition-all duration-200`}
-        onClick={() => setMobileOpen(false)}
-      >
-        <Link to="/submit">
-          <PenLine className="w-4 h-4" />
-          <span>Share Your Work</span>
-        </Link>
-      </Button>
-
-      <Button
-        asChild
-        variant={location.pathname === '/guidelines' ? 'default' : 'ghost'}
-        size={mobile ? 'lg' : 'sm'}
-        className={`${mobile ? 'w-full justify-start' : ''} gap-2 rounded-full font-medium transition-all duration-200`}
-        onClick={() => setMobileOpen(false)}
-      >
-        <Link to="/guidelines">
-          <HelpCircle className="w-4 h-4" />
-          <span>Guidelines</span>
-        </Link>
-      </Button>
-
-      {isAuthenticated ? (
-        <>
-          <div className={`${mobile ? 'w-full h-px my-2 bg-border/60' : 'w-px h-6 bg-border/60 mx-1'}`} />
-
-          <Button
-            asChild
-            variant={location.pathname === '/editorial' ? 'default' : 'ghost'}
-            size={mobile ? 'lg' : 'sm'}
-            className={`${mobile ? 'w-full justify-start' : ''} gap-2 rounded-full font-medium transition-all duration-200`}
-            onClick={() => setMobileOpen(false)}
-          >
-            <Link to="/editorial">
-              <FileText className="w-4 h-4" />
-              <span>Editorial</span>
-            </Link>
-          </Button>
-
-          {role === 'ADMIN' && (
-            <Button
-              asChild
-              variant={location.pathname === '/teachers' ? 'default' : 'ghost'}
-              size={mobile ? 'lg' : 'sm'}
-              className={`${mobile ? 'w-full justify-start' : ''} gap-2 rounded-full font-medium transition-all duration-200`}
-              onClick={() => setMobileOpen(false)}
-            >
-              <Link to="/teachers">
-                <Users className="w-4 h-4" />
-                <span>Teachers</span>
-              </Link>
-            </Button>
-          )}
-
-          <Button
-            variant="ghost"
-            size={mobile ? 'lg' : 'sm'}
-            className={`${mobile ? 'w-full justify-start' : ''} gap-2 rounded-full font-medium transition-all duration-200 text-muted-foreground hover:text-destructive hover:bg-destructive/10`}
-            onClick={handleLogout}
-          >
-            <LogOut className="w-4 h-4" />
-            <span>Logout</span>
-          </Button>
-        </>
-      ) : (
-        <Button
-          asChild
-          variant={location.pathname === '/login' ? 'default' : 'ghost'}
-          size={mobile ? 'lg' : 'sm'}
-          className={`${mobile ? 'w-full justify-start' : ''} gap-2 rounded-full font-medium transition-all duration-200`}
-          onClick={() => setMobileOpen(false)}
-        >
-          <Link to="/login">
-            <LogIn className="w-4 h-4" />
-            <span>Login</span>
-          </Link>
-        </Button>
-      )}
-    </>
-  );
-
   return (
     <header className="sticky top-0 z-50 w-full bg-background/80 backdrop-blur-xl border-b border-border/40 shadow-sm">
       <div className="container flex h-16 md:h-20 items-center justify-between px-4 md:px-8">
         {/* Logo Area */}
-        <Link to="/" className="flex items-center group transition-opacity hover:opacity-80 duration-300">
-          {!logoError && mounted ? (
-            <img
-              src={theme === 'dark' ? '/favicon-dark.png' : '/favicon-light.png'}
-              alt="ZeeQue Logo"
-              className="h-10 md:h-14 w-auto object-contain transition-all duration-300"
-              onError={() => setLogoError(true)}
-            />
-          ) : (
-            <span className="font-display text-xl font-bold bg-gradient-to-r from-primary to-accent bg-clip-text text-transparent">ZeeQue</span>
-          )}
+        <Link to="/" className="flex items-center gap-3 group transition-opacity hover:opacity-80 duration-300">
+
+          <img
+            src={theme === 'dark' ? '/favicon-dark.png' : '/favicon-light.png'}
+            alt="ZeeQue Logo"
+            className="h-12 md:h-16 w-auto object-contain transition-all duration-300 filter drop-shadow-sm"
+            onError={() => setLogoError(true)}
+          />
+
+
         </Link>
 
         {/* Desktop Navigation */}
         <nav className="hidden md:flex items-center gap-2">
-          <NavItems />
+          <NavItems onLogout={handleLogout} />
 
           <Button
             variant="ghost"
@@ -200,7 +293,7 @@ export function Header() {
                 </SheetTitle>
               </SheetHeader>
               <div className="flex flex-col gap-2">
-                <NavItems mobile />
+                <NavItems mobile onItemClick={() => setMobileOpen(false)} onLogout={handleLogout} />
               </div>
             </SheetContent>
           </Sheet>

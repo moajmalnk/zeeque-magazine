@@ -56,15 +56,15 @@ export function PostCard({ post, index = 0 }: PostCardProps) {
   return (
     <Card
       className={cn(
-        'group overflow-hidden border border-border/60 shadow-sm hover:shadow-card transition-all duration-300',
-        'hover:-translate-y-1 animate-slide-up',
-        'bg-card',
+        'group overflow-hidden border-2 border-slate-100 shadow-[0_8px_30px_rgb(0,0,0,0.04)] hover:shadow-[0_8px_30px_rgba(236,72,153,0.1)] transition-all duration-300',
+        'hover:-translate-y-2 animate-slide-up bg-white/50 backdrop-blur-sm',
+        'rounded-[2rem]', // Match the form rounding
         index > 0 && `animation-delay-${Math.min(index * 100, 500)}`
       )}
       style={{ animationDelay: `${index * 80}ms` }}
     >
       {post.video_file ? (
-        <div className="relative h-48 overflow-hidden bg-black/5 rounded-t-xl">
+        <div className="relative h-56 overflow-hidden bg-black/5 border-b-2 border-slate-100">
           <video
             src={post.video_file}
             controls
@@ -74,7 +74,7 @@ export function PostCard({ post, index = 0 }: PostCardProps) {
       ) : post.video_url ? (() => {
         const embedUrl = getVideoEmbedUrl(post.video_url);
         return embedUrl ? (
-          <div className="relative h-48 overflow-hidden bg-black/5 rounded-t-xl">
+          <div className="relative h-56 overflow-hidden bg-black/5 border-b-2 border-slate-100">
             <iframe
               src={embedUrl}
               title={post.title}
@@ -84,57 +84,57 @@ export function PostCard({ post, index = 0 }: PostCardProps) {
             />
           </div>
         ) : (
-          <div className="relative h-48 overflow-hidden bg-gradient-video flex items-center justify-center">
+          <div className="relative h-56 overflow-hidden bg-gradient-video flex items-center justify-center border-b-2 border-slate-100">
             <a
               href={post.video_url}
               target="_blank"
               rel="noopener noreferrer"
-              className="text-white font-semibold hover:underline"
+              className="text-white font-bold text-lg hover:scale-105 transition-transform flex items-center gap-2"
             >
-              Watch Video 🎥
+              <span>Watch Video</span> 🎥
             </a>
           </div>
         );
       })() : post.image_url ? (
-        <div className="relative h-48 overflow-hidden">
+        <div className="relative h-56 overflow-hidden border-b-2 border-slate-100">
           <img
             src={post.image_url}
             alt={post.title}
-            className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105"
+            className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-110"
           />
-          <div className="absolute inset-0 bg-gradient-to-t from-black/20 to-transparent" />
+          <div className="absolute inset-0 bg-gradient-to-t from-black/10 to-transparent" />
         </div>
       ) : null}
 
-      <CardHeader className="pb-2">
-        <div className="flex items-center justify-between gap-2 mb-2">
+      <CardHeader className="p-6 pb-2">
+        <div className="flex items-center justify-between gap-2 mb-3">
           <Badge
             variant="secondary"
             className={cn(
-              'text-xs font-semibold px-3 py-1 rounded-full border-0',
+              'text-xs font-bold px-3 py-1.5 rounded-full border-0',
               categoryStyles[post.category],
-              'text-white shadow-soft'
+              'text-white shadow-sm group-hover:scale-105 transition-transform'
             )}
           >
-            <span className="mr-1">{categoryIcons[post.category]}</span>
+            <span className="mr-1.5 text-sm">{categoryIcons[post.category]}</span>
             {categoryLabels[post.category]}
           </Badge>
-          <span className="text-xs text-muted-foreground font-medium">
+          <span className="text-xs text-slate-400 font-bold uppercase tracking-wider">
             {formattedDate}
           </span>
         </div>
 
-        <h3 className="font-display font-bold text-xl leading-tight text-foreground group-hover:text-primary transition-colors">
+        <h3 className="font-display font-bold text-2xl leading-tight text-slate-800 group-hover:text-primary transition-colors line-clamp-2 mb-1">
           {post.title}
         </h3>
 
-        <p className="text-sm text-muted-foreground font-medium">
+        <p className="text-sm font-semibold text-slate-500">
           by <span className="text-primary">{post.author_name}</span>
         </p>
       </CardHeader>
 
-      <CardContent>
-        <p className="text-foreground/80 leading-relaxed whitespace-pre-line">
+      <CardContent className="p-6 pt-2">
+        <p className="text-slate-600 leading-relaxed whitespace-pre-line line-clamp-3 font-medium">
           {post.content}
         </p>
       </CardContent>

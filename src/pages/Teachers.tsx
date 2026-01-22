@@ -39,6 +39,8 @@ import {
     DialogDescription,
     DialogHeader,
     DialogTitle,
+    DialogTrigger,
+    DialogFooter,
 } from "@/components/ui/dialog";
 import { User, UserRole } from '@/types/user';
 import api from '@/lib/api';
@@ -207,124 +209,141 @@ export default function Teachers() {
                         </p>
                     </div>
 
-                    <Sheet open={isSheetOpen} onOpenChange={setIsSheetOpen}>
-                        <SheetTrigger asChild>
+                    <Dialog open={isSheetOpen} onOpenChange={setIsSheetOpen}>
+                        <DialogTrigger asChild>
                             <Button onClick={openAddSheet} size="lg" className="rounded-full shadow-lg hover:shadow-xl hover:scale-105 transition-all duration-300 bg-gradient-hero border-0">
                                 <UserPlus className="mr-2 h-5 w-5" />
                                 Add New Teacher
                             </Button>
-                        </SheetTrigger>
-                        <SheetContent className="w-[400px] sm:w-[540px] border-l-border/50">
-                            <SheetHeader className="mb-8">
-                                <SheetTitle className="text-2xl font-display">
-                                    {editingUser ? 'Edit Teacher' : 'Add Teacher'}
-                                </SheetTitle>
-                                <SheetDescription>
-                                    {editingUser
-                                        ? 'Update the teacher\'s information below.'
-                                        : 'Create a new teacher account. They will be able to manage student submissions.'
-                                    }
-                                </SheetDescription>
-                            </SheetHeader>
+                        </DialogTrigger>
+                        <DialogContent className="sm:max-w-[500px] rounded-[2rem] p-0 overflow-hidden border-border/60">
+                            <div className="bg-gradient-hero h-24 w-full flex items-center justify-center relative overflow-hidden">
+                                <div className="absolute inset-0 bg-white/10" />
+                                <div className="bg-white/20 backdrop-blur-md rounded-full p-4 shadow-sm z-10 border border-white/20">
+                                    <UserPlus className="h-8 w-8 text-white" />
+                                </div>
+                            </div>
 
-                            <form onSubmit={handleSubmit} className="space-y-6">
-                                <div className="space-y-2">
-                                    <Label htmlFor="email">Email Address</Label>
-                                    <div className="relative">
-                                        <Mail className="absolute left-3 top-2.5 h-4 w-4 text-muted-foreground" />
-                                        <Input
-                                            id="email"
-                                            name="email"
-                                            type="email"
-                                            placeholder="teacher@school.edu"
-                                            className="pl-9"
-                                            value={formData.email}
-                                            onChange={handleInputChange}
-                                            required
-                                        />
+                            <div className="px-8 pb-8 pt-4">
+                                <DialogHeader className="mb-6 text-center">
+                                    <DialogTitle className="text-2xl font-display text-center">
+                                        {editingUser ? 'Edit Teacher' : 'Add Teacher'}
+                                    </DialogTitle>
+                                    <DialogDescription className="text-center mx-auto max-w-[85%]">
+                                        {editingUser
+                                            ? 'Update the teacher\'s information below.'
+                                            : 'Create a new teacher account to manage student submissions.'
+                                        }
+                                    </DialogDescription>
+                                </DialogHeader>
+
+                                <form onSubmit={handleSubmit} className="space-y-5">
+                                    <div className="space-y-4">
+                                        <div className="grid grid-cols-2 gap-4">
+                                            <div className="space-y-2">
+                                                <Label htmlFor="username">Full Name</Label>
+                                                <div className="relative">
+                                                    <UserIcon className="absolute left-3 top-2.5 h-4 w-4 text-muted-foreground" />
+                                                    <Input
+                                                        id="username"
+                                                        name="username"
+                                                        placeholder="Jane Doe"
+                                                        className="pl-9 rounded-xl"
+                                                        value={formData.username}
+                                                        onChange={handleInputChange}
+                                                        required
+                                                    />
+                                                </div>
+                                            </div>
+                                            <div className="space-y-2">
+                                                <Label htmlFor="phone_number">Phone</Label>
+                                                <div className="relative">
+                                                    <Phone className="absolute left-3 top-2.5 h-4 w-4 text-muted-foreground" />
+                                                    <Input
+                                                        id="phone_number"
+                                                        name="phone_number"
+                                                        placeholder="(555) 000-0000"
+                                                        className="pl-9 rounded-xl"
+                                                        value={formData.phone_number}
+                                                        onChange={handleInputChange}
+                                                    />
+                                                </div>
+                                            </div>
+                                        </div>
+
+                                        <div className="space-y-2">
+                                            <Label htmlFor="email">Email Address</Label>
+                                            <div className="relative">
+                                                <Mail className="absolute left-3 top-2.5 h-4 w-4 text-muted-foreground" />
+                                                <Input
+                                                    id="email"
+                                                    name="email"
+                                                    type="email"
+                                                    placeholder="teacher@school.edu"
+                                                    className="pl-9 rounded-xl"
+                                                    value={formData.email}
+                                                    onChange={handleInputChange}
+                                                    required
+                                                />
+                                            </div>
+                                        </div>
+
+                                        <div className="space-y-2">
+                                            <Label htmlFor="school_name">School Name</Label>
+                                            <div className="relative">
+                                                <School className="absolute left-3 top-2.5 h-4 w-4 text-muted-foreground" />
+                                                <Input
+                                                    id="school_name"
+                                                    name="school_name"
+                                                    placeholder="Springfield Elementary"
+                                                    className="pl-9 rounded-xl"
+                                                    value={formData.school_name}
+                                                    onChange={handleInputChange}
+                                                />
+                                            </div>
+                                        </div>
+
+                                        <div className="space-y-2">
+                                            <Label htmlFor="password">
+                                                {editingUser ? 'New Password (Optional)' : 'Password'}
+                                            </Label>
+                                            <Input
+                                                id="password"
+                                                name="password"
+                                                type="password"
+                                                placeholder={editingUser ? "Leave blank to keep current" : "••••••••"}
+                                                className="rounded-xl"
+                                                value={formData.password}
+                                                onChange={handleInputChange}
+                                                required={!editingUser}
+                                            />
+                                            {!editingUser && (
+                                                <p className="text-[10px] text-muted-foreground ml-1">
+                                                    Must be at least 8 characters.
+                                                </p>
+                                            )}
+                                        </div>
                                     </div>
-                                </div>
 
-                                <div className="space-y-2">
-                                    <Label htmlFor="username">Full Name (Username)</Label>
-                                    <div className="relative">
-                                        <UserIcon className="absolute left-3 top-2.5 h-4 w-4 text-muted-foreground" />
-                                        <Input
-                                            id="username"
-                                            name="username"
-                                            placeholder="Ms. Jane Doe"
-                                            className="pl-9"
-                                            value={formData.username}
-                                            onChange={handleInputChange}
-                                            required
-                                        />
-                                    </div>
-                                </div>
-
-                                <div className="space-y-2">
-                                    <Label htmlFor="school_name">School Name</Label>
-                                    <div className="relative">
-                                        <School className="absolute left-3 top-2.5 h-4 w-4 text-muted-foreground" />
-                                        <Input
-                                            id="school_name"
-                                            name="school_name"
-                                            placeholder="Springfield Elementary"
-                                            className="pl-9"
-                                            value={formData.school_name}
-                                            onChange={handleInputChange}
-                                        />
-                                    </div>
-                                </div>
-
-                                <div className="space-y-2">
-                                    <Label htmlFor="phone_number">Phone Number</Label>
-                                    <div className="relative">
-                                        <Phone className="absolute left-3 top-2.5 h-4 w-4 text-muted-foreground" />
-                                        <Input
-                                            id="phone_number"
-                                            name="phone_number"
-                                            placeholder="+1 (555) 000-0000"
-                                            className="pl-9"
-                                            value={formData.phone_number}
-                                            onChange={handleInputChange}
-                                        />
-                                    </div>
-                                </div>
-
-                                <div className="space-y-2">
-                                    <Label htmlFor="password">
-                                        {editingUser ? 'New Password (Optional)' : 'Password'}
-                                    </Label>
-                                    <Input
-                                        id="password"
-                                        name="password"
-                                        type="password"
-                                        placeholder={editingUser ? "Leave blank to keep current" : "••••••••"}
-                                        value={formData.password}
-                                        onChange={handleInputChange}
-                                        required={!editingUser}
-                                    />
-                                    <p className="text-xs text-muted-foreground">
-                                        Must be at least 8 characters.
-                                    </p>
-                                </div>
-
-                                <SheetFooter className="mt-8">
-                                    <Button variant="outline" type="button" onClick={closeSheet} className="mr-2">Cancel</Button>
-                                    <Button
-                                        type="submit"
-                                        disabled={createTeacherMutation.isPending || updateTeacherMutation.isPending}
-                                        className="bg-gradient-hero border-0"
-                                    >
-                                        {(createTeacherMutation.isPending || updateTeacherMutation.isPending) && (
-                                            <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                                        )}
-                                        {editingUser ? 'Update Account' : 'Create Account'}
-                                    </Button>
-                                </SheetFooter>
-                            </form>
-                        </SheetContent>
-                    </Sheet>
+                                    <DialogFooter className="mt-8 gap-3 sm:gap-0">
+                                        <Button variant="outline" type="button" onClick={closeSheet} className="flex-1 rounded-full border-border/60 hover:bg-muted">
+                                            Cancel
+                                        </Button>
+                                        <Button
+                                            type="submit"
+                                            disabled={createTeacherMutation.isPending || updateTeacherMutation.isPending}
+                                            className="flex-[2] rounded-full bg-gradient-hero border-0 shadow-md hover:shadow-lg transition-all"
+                                        >
+                                            {(createTeacherMutation.isPending || updateTeacherMutation.isPending) && (
+                                                <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                                            )}
+                                            {editingUser ? 'Update Account' : 'Create Account'}
+                                        </Button>
+                                    </DialogFooter>
+                                </form>
+                            </div>
+                        </DialogContent>
+                    </Dialog>
                 </div>
 
                 {/* Search Bar */}
