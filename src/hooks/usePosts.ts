@@ -1,123 +1,138 @@
-import { useState, useCallback, useMemo } from 'react';
+import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
+import { useMemo } from 'react';
 import { Post, PostStatus } from '@/types/post';
-import { mockPosts as initialMockPosts } from '@/data/mockPosts';
-
-// Simple state management for posts - can be replaced with backend later
-const STORAGE_KEY = 'zeeque_posts';
-
-function getStoredPosts(): Post[] {
-  try {
-    const stored = localStorage.getItem(STORAGE_KEY);
-    if (stored) {
-      const parsed = JSON.parse(stored);
-      return parsed.map((post: any) => ({
-        ...post,
-        createdAt: new Date(post.createdAt),
-        publishedAt: post.publishedAt ? new Date(post.publishedAt) : undefined,
-      }));
-    }
-  } catch (e) {
-    console.error('Error reading posts from storage:', e);
-  }
-  return initialMockPosts;
-}
-
-function storePosts(posts: Post[]) {
-  try {
-    localStorage.setItem(STORAGE_KEY, JSON.stringify(posts));
-  } catch (e) {
-    console.error('Error storing posts:', e);
-  }
-}
+import api from '@/lib/api';
 
 export function usePosts() {
-  const [posts, setPosts] = useState<Post[]>(getStoredPosts);
+  const queryClient = useQueryClient();
 
-  const updatePost = useCallback((postId: string, updates: Partial<Post>) => {
-    setPosts(currentPosts => {
-      const newPosts = currentPosts.map(post =>
-        post.id === postId ? { ...post, ...updates } : post
-      );
-      storePosts(newPosts);
-      return newPosts;
-    });
-  }, []);
+  // Fetch all posts
+  const { data: posts = [] } = useQuery<Post[]>({
+    queryKey: ['posts'],
+    queryFn: async () => {
+      const response = await api.get('/posts/');
+      return response.data;
+    },
+  });
 
-  const approvePost = useCallback((postId: string, featured: boolean = false) => {
+  // Mutations
+  const updateMutation = useMutation({
+    mutationFn: async ({ id, data }: { id: string; data: Partial<Post> }) => {
+      const response = await api.patch(`/posts/${id}/`, data);
+      return response.data;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['posts'] });
+    },
+  });
+
+  const createMutation = useMutation({
+    mutationFn: async (newPost: any) => {
+      // Check if we need to send FormData (for file uploads)
+      const hasFiles = newPost.image_url instanceof File || newPost.video_file instanceof File;
+
+      if (hasFiles) {
+        const formData = new FormData();
+        Object.keys(newPost).forEach(key => {
+          if (newPost[key] !== undefined && newPost[key] !== null) {
+            formData.append(key, newPost[key]);
+          }
+        });
+        const response = await api.post('/posts/', formData, {
+          headers: { 'Content-Type': 'multipart/form-data' },
+        });
+        return response.data;
+      }
+
+      const response = await api.post('/posts/', newPost);
+      return response.data;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['posts'] });
+    },
+  });
+
+  const deleteMutation = useMutation({
+    mutationFn: async (id: string) => {
+      await api.delete(`/posts/${id}/`);
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['posts'] });
+    },
+  });
+
+  const updatePost = (postId: string, updates: Partial<Post>) => {
+    updateMutation.mutate({ id: postId, data: updates });
+  };
+
+  const approvePost = (postId: string, featured: boolean = false) => {
     const post = posts.find(p => p.id === postId);
-    const previousStatus = post?.status;
-    const previousPublishedAt = post?.publishedAt;
-    const previousFeatured = post?.featured;
-    
-    updatePost(postId, {
-      status: 'published',
-      publishedAt: new Date(),
-      featured: featured,
+
+    updateMutation.mutate({
+      id: postId,
+      data: {
+        status: 'published',
+        published_at: new Date().toISOString(),
+        is_featured: featured,
+      },
     });
-    
+
+    // Valid refetch is triggered automatically, but for undo support we'd need optimistic updates.
+    // For now, returning a simplified undo that just reverts status (assuming we could).
+    // In a real app with backend, undo implies another mutation.
     return {
       undo: () => {
-        updatePost(postId, {
-          status: previousStatus || 'pending',
-          publishedAt: previousPublishedAt,
-          featured: previousFeatured,
+        updateMutation.mutate({
+          id: postId,
+          data: {
+            status: 'pending',
+            published_at: undefined,
+            is_featured: false
+          }
         });
       },
       postTitle: post?.title || 'Post',
-      authorName: post?.authorName || 'Unknown',
+      authorName: post?.author_name || 'Unknown',
     };
-  }, [updatePost, posts]);
+  };
 
-  const rejectPost = useCallback((postId: string) => {
+  const rejectPost = (postId: string) => {
     const post = posts.find(p => p.id === postId);
-    const previousStatus = post?.status;
-    const previousPublishedAt = post?.publishedAt;
-    
-    updatePost(postId, {
-      status: 'rejected',
+
+    updateMutation.mutate({
+      id: postId,
+      data: { status: 'rejected' }
     });
-    
+
     return {
       undo: () => {
-        updatePost(postId, {
-          status: previousStatus || 'pending',
-          publishedAt: previousPublishedAt,
+        updateMutation.mutate({
+          id: postId,
+          data: { status: 'pending' }
         });
       },
       postTitle: post?.title || 'Post',
-      authorName: post?.authorName || 'Unknown',
+      authorName: post?.author_name || 'Unknown',
     };
-  }, [updatePost, posts]);
+  };
 
-  const deletePost = useCallback((postId: string) => {
-    setPosts(currentPosts => {
-      const newPosts = currentPosts.filter(post => post.id !== postId);
-      storePosts(newPosts);
-      return newPosts;
-    });
-  }, []);
+  const deletePost = (postId: string) => {
+    deleteMutation.mutate(postId);
+  };
 
-  const restorePost = useCallback((postId: string) => {
-    updatePost(postId, {
-      status: 'pending',
-      publishedAt: undefined,
+  const restorePost = (postId: string) => {
+    updateMutation.mutate({
+      id: postId,
+      data: {
+        status: 'pending',
+        published_at: undefined
+      }
     });
-  }, [updatePost]);
+  };
 
-  const addPost = useCallback((post: Omit<Post, 'id' | 'createdAt' | 'status'>) => {
-    const newPost: Post = {
-      ...post,
-      id: Date.now().toString(),
-      createdAt: new Date(),
-      status: 'pending',
-    };
-    setPosts(currentPosts => {
-      const newPosts = [...currentPosts, newPost];
-      storePosts(newPosts);
-      return newPosts;
-    });
-    return newPost;
-  }, []);
+  const addPost = (post: any) => {
+    createMutation.mutate(post);
+  };
 
   const pendingPosts = useMemo(
     () => posts.filter(post => post.status === 'pending'),

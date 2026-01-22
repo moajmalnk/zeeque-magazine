@@ -17,7 +17,7 @@ const Index = () => {
 
   // Show only featured posts on home page (limit to 6)
   const featuredPosts = useMemo(() => {
-    return publishedPosts.filter(post => post.featured).slice(0, 6);
+    return publishedPosts.filter(post => post.is_featured).slice(0, 6);
   }, [publishedPosts]);
 
   const filteredPosts = useMemo(() => {
@@ -30,14 +30,14 @@ const Index = () => {
   return (
     <div className="min-h-screen flex flex-col bg-background">
       <Header />
-      
+
       <main className="flex-1" style={{ marginTop: 0, paddingTop: 0 }}>
         <HeroSection />
-        
+
         <section id="latest" className="relative pt-12 md:pt-16 lg:pt-20 pb-20 md:pb-24 lg:pb-28 bg-background">
           {/* Minimal background pattern */}
           <div className="absolute inset-0 bg-[linear-gradient(to_right,#80808005_1px,transparent_1px),linear-gradient(to_bottom,#80808005_1px,transparent_1px)] bg-[size:32px_32px] opacity-20" />
-          
+
           <div className="container max-w-7xl relative z-10">
             {/* Professional Section Header */}
             <div className="text-center mb-20 md:mb-24">
@@ -55,16 +55,16 @@ const Index = () => {
                 Discover the imaginative works crafted by our talented young creators
               </p>
             </div>
-            
+
             {/* Category Filter with refined styling */}
             <div className="mb-12 md:mb-16">
               <CategoryFilter
                 selectedCategory={selectedCategory}
                 onCategoryChange={setSelectedCategory}
-                posts={publishedPosts}
+                posts={featuredPosts}
               />
             </div>
-            
+
             {/* Posts Grid */}
             <PostGrid
               posts={filteredPosts}
@@ -101,7 +101,7 @@ const Index = () => {
         {/* FAQ Section */}
         <FAQSection />
       </main>
-      
+
       <Footer />
     </div>
   );

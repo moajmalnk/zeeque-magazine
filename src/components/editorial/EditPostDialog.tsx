@@ -45,13 +45,13 @@ export function EditPostDialog({ post, open, onOpenChange, onSave }: EditPostDia
   const form = useForm<EditPostFormData>({
     resolver: zodResolver(editPostSchema),
     defaultValues: {
-      authorName: post.authorName,
-      teacherName: post.teacherName || '',
-      schoolName: post.schoolName || '',
+      authorName: post.author_name,
+      teacherName: post.teacher_name || '',
+      schoolName: post.school_name || '',
       title: post.title,
       category: post.category,
       content: post.content,
-      videoUrl: post.videoUrl || '',
+      videoUrl: post.video_url || '',
     },
   });
 
@@ -59,13 +59,13 @@ export function EditPostDialog({ post, open, onOpenChange, onSave }: EditPostDia
   useEffect(() => {
     if (open && post) {
       form.reset({
-        authorName: post.authorName,
-        teacherName: post.teacherName || '',
-        schoolName: post.schoolName || '',
+        authorName: post.author_name,
+        teacherName: post.teacher_name || '',
+        schoolName: post.school_name || '',
         title: post.title,
         category: post.category,
         content: post.content,
-        videoUrl: post.videoUrl || '',
+        videoUrl: post.video_url || '',
       });
     }
   }, [open, post, form]);
@@ -74,20 +74,20 @@ export function EditPostDialog({ post, open, onOpenChange, onSave }: EditPostDia
 
   const onSubmit = (data: EditPostFormData) => {
     onSave(post.id, {
-      authorName: data.authorName,
-      teacherName: data.teacherName,
-      schoolName: data.schoolName,
+      author_name: data.authorName,
+      teacher_name: data.teacherName,
+      school_name: data.schoolName,
       title: data.title,
       category: data.category,
       content: data.content,
-      videoUrl: data.videoUrl || undefined,
+      video_url: data.videoUrl || undefined,
     });
-    
+
     toast.success('Post updated successfully!', {
       description: `"${data.title}" has been updated`,
       duration: 3000,
     });
-    
+
     onOpenChange(false);
   };
 
@@ -162,13 +162,13 @@ export function EditPostDialog({ post, open, onOpenChange, onSave }: EditPostDia
                     'p-4 rounded-2xl border-2 text-left transition-all duration-200 w-full',
                     selectedCategory === category
                       ? cn('border-transparent shadow-card', {
-                          'bg-gradient-stories': category === 'stories',
-                          'bg-gradient-poems': category === 'poems',
-                          'bg-gradient-drawings': category === 'drawings',
-                          'bg-gradient-news': category === 'news',
-                          'bg-gradient-video': category === 'video',
-                          'bg-gradient-other': category === 'other',
-                        })
+                        'bg-gradient-stories': category === 'stories',
+                        'bg-gradient-poems': category === 'poems',
+                        'bg-gradient-drawings': category === 'drawings',
+                        'bg-gradient-news': category === 'news',
+                        'bg-gradient-video': category === 'video',
+                        'bg-gradient-other': category === 'other',
+                      })
                       : 'border-border hover:border-primary/30 bg-background hover:bg-muted/50'
                   )}
                 >

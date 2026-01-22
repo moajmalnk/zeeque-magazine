@@ -5,30 +5,20 @@ interface ProtectedRouteProps {
   children: React.ReactNode;
 }
 
-const AUTH_KEY = 'zeeque_editorial_auth';
+const AUTH_KEY = 'zeeque_auth_tokens';
 
 export function ProtectedRoute({ children }: ProtectedRouteProps) {
-  const { isAuthenticated } = useAuth();
+  const { isAuthenticated, isLoading } = useAuth();
   const location = useLocation();
 
-  // Check localStorage directly for immediate authentication verification
-  // This ensures we check the most up-to-date auth state
-  const checkAuth = () => {
-    try {
-      const stored = localStorage.getItem(AUTH_KEY);
-      if (stored) {
-        const parsed = JSON.parse(stored);
-        if (parsed.isAuthenticated && parsed.email === 'zeeque@gmail.com') {
-          return true;
-        }
-      }
-    } catch {
-      // Invalid auth data
-    }
-    return false;
-  };
+  if (isLoading) {
+    return <div className="min-h-screen flex items-center justify-center">
+      <div className="w-8 h-8 border-4 border-primary border-t-transparent rounded-full animate-spin" />
+    </div>;
+  }
 
-  const isAuth = isAuthenticated || checkAuth();
+  // Check localStorage directly for immediate authentication verification
+  const isAuth = isAuthenticated || !!localStorage.getItem(AUTH_KEY);
 
   if (!isAuth) {
     // Redirect to login page, saving the current location

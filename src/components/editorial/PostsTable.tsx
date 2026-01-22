@@ -122,15 +122,15 @@ export function PostsTable({
 
   const handleApprove = (featured: boolean) => {
     if (!approveDialogState.postId || !onApprove) return;
-    
+
     const postId = approveDialogState.postId;
     const post = posts.find(p => p.id === postId);
     const postTitle = post?.title || 'Post';
-    const authorName = post?.authorName || 'Unknown';
-    
+    const authorName = post?.author_name || 'Unknown';
+
     const result = onApprove(postId, featured);
     setApproveDialogState({ open: false, postId: null });
-    
+
     if (result && 'undo' in result) {
       toast.success(
         <div className="flex items-start gap-3">
@@ -252,12 +252,12 @@ export function PostsTable({
                 </TableCell>
                 <TableCell>
                   <div className="space-y-0.5">
-                    <div className="font-medium">{post.authorName}</div>
-                    {post.teacherName && (
-                      <div className="text-xs text-muted-foreground">Teacher: {post.teacherName}</div>
+                    <div className="font-medium">{post.author_name}</div>
+                    {post.teacher_name && (
+                      <div className="text-xs text-muted-foreground">Teacher: {post.teacher_name}</div>
                     )}
-                    {post.schoolName && (
-                      <div className="text-xs text-muted-foreground">School: {post.schoolName}</div>
+                    {post.school_name && (
+                      <div className="text-xs text-muted-foreground">School: {post.school_name}</div>
                     )}
                   </div>
                 </TableCell>
@@ -274,7 +274,7 @@ export function PostsTable({
                   </TableCell>
                 )}
                 <TableCell className="text-muted-foreground text-sm">
-                  {format(post.publishedAt || post.createdAt, 'MMM d, yyyy')}
+                  {format(new Date(post.published_at || post.created_at), 'MMM d, yyyy')}
                 </TableCell>
                 <TableCell className="text-right">
                   <div className="flex items-center justify-end gap-2" onClick={(e) => e.stopPropagation()}>
@@ -297,7 +297,7 @@ export function PostsTable({
                         variant="ghost"
                         size="icon"
                         className="h-8 w-8 text-green-600 hover:text-green-700 hover:bg-green-50"
-                        onClick={() => handleActionClick('approve', post.id, post.title, post.authorName)}
+                        onClick={() => handleActionClick('approve', post.id, post.title, post.author_name)}
                         title="Approve"
                       >
                         <Check className="h-4 w-4" />
@@ -308,7 +308,7 @@ export function PostsTable({
                         variant="ghost"
                         size="icon"
                         className="h-8 w-8 text-red-600 hover:text-red-700 hover:bg-red-50"
-                        onClick={() => handleActionClick('reject', post.id, post.title, post.authorName)}
+                        onClick={() => handleActionClick('reject', post.id, post.title, post.author_name)}
                         title="Reject"
                       >
                         <X className="h-4 w-4" />
@@ -319,7 +319,7 @@ export function PostsTable({
                         variant="ghost"
                         size="icon"
                         className="h-8 w-8 hover:bg-muted"
-                        onClick={() => handleActionClick('restore', post.id, post.title, post.authorName)}
+                        onClick={() => handleActionClick('restore', post.id, post.title, post.author_name)}
                         title="Move to Pending"
                       >
                         <RotateCcw className="h-4 w-4" />
@@ -341,7 +341,7 @@ export function PostsTable({
                           <AlertDialogTitle>Delete this post?</AlertDialogTitle>
                           <AlertDialogDescription className="space-y-2">
                             <p>
-                              Are you sure you want to permanently delete <strong>"{post.title}"</strong> by {post.authorName}?
+                              Are you sure you want to permanently delete <strong>"{post.title}"</strong> by {post.author_name}?
                             </p>
                             <p className="text-xs text-muted-foreground">
                               This action cannot be undone. The post will be permanently removed from the system.
@@ -362,151 +362,159 @@ export function PostsTable({
                     </AlertDialog>
                   </div>
                 </TableCell>
-            </TableRow>
-            
-            <DialogContent className="max-w-2xl">
-              <DialogHeader>
-                <DialogTitle className="font-display">{post.title}</DialogTitle>
-              </DialogHeader>
-              <div className="space-y-4">
-                <div className="flex items-center gap-2 flex-wrap">
-                  <Badge className={`${categoryStyles[post.category]} border`}>
-                    {categoryIcons[post.category]} {categoryLabels[post.category]}
-                  </Badge>
-                  <span className="text-sm text-muted-foreground">
-                    by {post.authorName}
-                  </span>
-                  <span className="text-xs text-muted-foreground ml-auto">
-                    {format(post.publishedAt || post.createdAt, 'MMM d, yyyy')}
-                  </span>
-                  {showStatus && (
-                    <Badge className={`${statusStyles[post.status]} border text-xs w-full sm:w-auto`}>
-                      {statusLabels[post.status]}
+              </TableRow>
+
+              <DialogContent className="max-w-2xl">
+                <DialogHeader>
+                  <DialogTitle className="font-display">{post.title}</DialogTitle>
+                </DialogHeader>
+                <div className="space-y-4">
+                  <div className="flex items-center gap-2 flex-wrap">
+                    <Badge className={`${categoryStyles[post.category]} border`}>
+                      {categoryIcons[post.category]} {categoryLabels[post.category]}
                     </Badge>
-                  )}
-                </div>
-                {post.videoUrl ? (() => {
-                  // Helper to convert video URLs to embed format
-                  const getVideoEmbedUrl = (url: string): string | null => {
-                    try {
-                      const urlObj = new URL(url);
-                      if (urlObj.hostname.includes('youtube.com') || urlObj.hostname.includes('youtu.be')) {
-                        const videoId = urlObj.searchParams.get('v') || urlObj.pathname.split('/').pop()?.split('?')[0];
-                        if (videoId) return `https://www.youtube.com/embed/${videoId}`;
-                      }
-                      if (urlObj.hostname.includes('vimeo.com')) {
-                        const videoId = urlObj.pathname.split('/').pop();
-                        if (videoId) return `https://player.vimeo.com/video/${videoId}`;
-                      }
-                      return url;
-                    } catch {
-                      return null;
-                    }
-                  };
-                  const embedUrl = getVideoEmbedUrl(post.videoUrl);
-                  return embedUrl ? (
-                    <div className="relative w-full aspect-video rounded-xl overflow-hidden bg-black/5">
-                      <iframe
-                        src={embedUrl}
-                        title={post.title}
-                        className="w-full h-full"
-                        allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
-                        allowFullScreen
-                      />
-                    </div>
-                  ) : (
-                    <a
-                      href={post.videoUrl}
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      className="block p-4 bg-gradient-video text-white rounded-xl text-center font-semibold hover:opacity-90"
-                    >
-                      Watch Video 🎥
-                    </a>
-                  );
-                })() : post.imageUrl ? (
-                  <img
-                    src={post.imageUrl}
-                    alt={post.title}
-                    className="w-full rounded-xl"
-                  />
-                ) : null}
-                <p className="text-foreground whitespace-pre-line leading-relaxed">{post.content}</p>
-                
-                {/* Action Buttons in Preview */}
-                {(onApprove || onReject || onRestore) && (
-                  <div className="flex gap-3 pt-4 border-t">
-                    {onApprove && post.status !== 'published' && (
-                      <Button
-                        size="default"
-                        className="flex-1 bg-green-500 hover:bg-green-600 text-white"
-                        onClick={() => {
-                          setPreviewDialogState({ open: false, postId: null });
-                          setApproveDialogState({ open: true, postId: post.id });
-                        }}
-                      >
-                        <Check className="w-4 h-4 mr-2" />
-                        Approve
-                      </Button>
-                    )}
-                    {onReject && post.status !== 'rejected' && (
-                      <Button
-                        variant="outline"
-                        size="default"
-                        className="flex-1 border-red-200 text-red-600 hover:bg-red-50 hover:text-red-700 hover:border-red-300"
-                        onClick={() => {
-                          const result = onReject(post.id);
-                          setPreviewDialogState({ open: false, postId: null });
-                          if (result && 'undo' in result) {
-                            toast.error(
-                              <div className="flex items-start gap-3">
-                                <div className="w-10 h-10 rounded-full bg-red-500 flex items-center justify-center shrink-0">
-                                  <X className="w-5 h-5 text-white" />
-                                </div>
-                                <div className="flex-1">
-                                  <p className="font-semibold">Post rejected</p>
-                                  <p className="text-sm text-muted-foreground">
-                                    "{result.postTitle}" by {result.authorName} has been moved to rejected
-                                  </p>
-                                </div>
-                              </div>,
-                              {
-                                duration: 5000,
-                                action: {
-                                  label: 'Undo',
-                                  onClick: () => {
-                                    result.undo();
-                                    toast.success('Action undone', {
-                                      description: 'The post has been restored to its previous state',
-                                      duration: 3000,
-                                    });
-                                  },
-                                },
-                              }
-                            );
-                          }
-                        }}
-                      >
-                        <X className="w-4 h-4 mr-2" />
-                        Reject
-                      </Button>
-                    )}
-                    {onRestore && (
-                      <Button
-                        variant="outline"
-                        size="default"
-                        className="flex-1"
-                        onClick={() => handleActionClick('restore', post.id, post.title, post.authorName)}
-                      >
-                        <RotateCcw className="w-4 h-4 mr-2" />
-                        Restore
-                      </Button>
+                    <span className="text-sm text-muted-foreground">
+                      by {post.author_name}
+                    </span>
+                    <span className="text-xs text-muted-foreground ml-auto">
+                      {format(new Date(post.published_at || post.created_at), 'MMM d, yyyy')}
+                    </span>
+                    {showStatus && (
+                      <Badge className={`${statusStyles[post.status]} border text-xs w-full sm:w-auto`}>
+                        {statusLabels[post.status]}
+                      </Badge>
                     )}
                   </div>
-                )}
-              </div>
-            </DialogContent>
-          </Dialog>
+                  {post.video_file ? (
+                    <div className="relative w-full aspect-video rounded-xl overflow-hidden bg-black/5">
+                      <video
+                        src={post.video_file}
+                        controls
+                        className="w-full h-full object-contain"
+                      />
+                    </div>
+                  ) : post.video_url ? (() => {
+                    // Helper to convert video URLs to embed format
+                    const getVideoEmbedUrl = (url: string): string | null => {
+                      try {
+                        const urlObj = new URL(url);
+                        if (urlObj.hostname.includes('youtube.com') || urlObj.hostname.includes('youtu.be')) {
+                          const videoId = urlObj.searchParams.get('v') || urlObj.pathname.split('/').pop()?.split('?')[0];
+                          if (videoId) return `https://www.youtube.com/embed/${videoId}`;
+                        }
+                        if (urlObj.hostname.includes('vimeo.com')) {
+                          const videoId = urlObj.pathname.split('/').pop();
+                          if (videoId) return `https://player.vimeo.com/video/${videoId}`;
+                        }
+                        return url;
+                      } catch {
+                        return null;
+                      }
+                    };
+                    const embedUrl = getVideoEmbedUrl(post.video_url);
+                    return embedUrl ? (
+                      <div className="relative w-full aspect-video rounded-xl overflow-hidden bg-black/5">
+                        <iframe
+                          src={embedUrl}
+                          title={post.title}
+                          className="w-full h-full"
+                          allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+                          allowFullScreen
+                        />
+                      </div>
+                    ) : (
+                      <a
+                        href={post.video_url}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="block p-4 bg-gradient-video text-white rounded-xl text-center font-semibold hover:opacity-90"
+                      >
+                        Watch Video 🎥
+                      </a>
+                    );
+                  })() : post.image_url ? (
+                    <img
+                      src={post.image_url}
+                      alt={post.title}
+                      className="w-full rounded-xl"
+                    />
+                  ) : null}
+                  <p className="text-foreground whitespace-pre-line leading-relaxed">{post.content}</p>
+
+                  {/* Action Buttons in Preview */}
+                  {(onApprove || onReject || onRestore) && (
+                    <div className="flex gap-3 pt-4 border-t">
+                      {onApprove && post.status !== 'published' && (
+                        <Button
+                          size="default"
+                          className="flex-1 bg-green-500 hover:bg-green-600 text-white"
+                          onClick={() => {
+                            setPreviewDialogState({ open: false, postId: null });
+                            setApproveDialogState({ open: true, postId: post.id });
+                          }}
+                        >
+                          <Check className="w-4 h-4 mr-2" />
+                          Approve
+                        </Button>
+                      )}
+                      {onReject && post.status !== 'rejected' && (
+                        <Button
+                          variant="outline"
+                          size="default"
+                          className="flex-1 border-red-200 text-red-600 hover:bg-red-50 hover:text-red-700 hover:border-red-300"
+                          onClick={() => {
+                            const result = onReject(post.id);
+                            setPreviewDialogState({ open: false, postId: null });
+                            if (result && 'undo' in result) {
+                              toast.error(
+                                <div className="flex items-start gap-3">
+                                  <div className="w-10 h-10 rounded-full bg-red-500 flex items-center justify-center shrink-0">
+                                    <X className="w-5 h-5 text-white" />
+                                  </div>
+                                  <div className="flex-1">
+                                    <p className="font-semibold">Post rejected</p>
+                                    <p className="text-sm text-muted-foreground">
+                                      "{result.postTitle}" by {result.authorName} has been moved to rejected
+                                    </p>
+                                  </div>
+                                </div>,
+                                {
+                                  duration: 5000,
+                                  action: {
+                                    label: 'Undo',
+                                    onClick: () => {
+                                      result.undo();
+                                      toast.success('Action undone', {
+                                        description: 'The post has been restored to its previous state',
+                                        duration: 3000,
+                                      });
+                                    },
+                                  },
+                                }
+                              );
+                            }
+                          }}
+                        >
+                          <X className="w-4 h-4 mr-2" />
+                          Reject
+                        </Button>
+                      )}
+                      {onRestore && (
+                        <Button
+                          variant="outline"
+                          size="default"
+                          className="flex-1"
+                          onClick={() => handleActionClick('restore', post.id, post.title, post.author_name)}
+                        >
+                          <RotateCcw className="w-4 h-4 mr-2" />
+                          Restore
+                        </Button>
+                      )}
+                    </div>
+                  )}
+                </div>
+              </DialogContent>
+            </Dialog>
           ))}
         </TableBody>
       </Table>

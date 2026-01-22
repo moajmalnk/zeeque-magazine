@@ -10,6 +10,7 @@ import Editorial from "./pages/Editorial";
 import Login from "./pages/Login";
 import Guidelines from "./pages/Guidelines";
 import AllCreatives from "./pages/AllCreatives";
+import Teachers from "./pages/Teachers";
 import NotFound from "./pages/NotFound";
 import { ProtectedRoute } from "./components/ProtectedRoute";
 
@@ -20,8 +21,8 @@ const App = () => (
     <ThemeProvider attribute="class" defaultTheme="light" enableSystem={false}>
       <TooltipProvider>
         <Toaster />
-        <Sonner 
-          position="top-center"
+        <Sonner
+          position="bottom-right"
           toastOptions={{
             className: 'rounded-2xl shadow-card border-0',
           }}
@@ -33,13 +34,21 @@ const App = () => (
             <Route path="/guidelines" element={<Guidelines />} />
             <Route path="/all-creatives" element={<AllCreatives />} />
             <Route path="/login" element={<Login />} />
-            <Route 
-              path="/editorial" 
+            <Route
+              path="/editorial"
               element={
                 <ProtectedRoute>
                   <Editorial />
                 </ProtectedRoute>
-              } 
+              }
+            />
+            <Route
+              path="/teachers"
+              element={
+                <ProtectedRoute>
+                  <Teachers />
+                </ProtectedRoute>
+              }
             />
             {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
             <Route path="*" element={<NotFound />} />

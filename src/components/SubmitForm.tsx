@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
@@ -12,6 +12,7 @@ import { toast } from 'sonner';
 import { Send, Upload, Sparkles, Video, Link } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { usePosts } from '@/hooks/usePosts';
+import { useAuth } from '@/hooks/useAuth';
 
 const submitSchema = z.object({
   authorName: z.string().min(1, "Please tell us your name!").max(50, "Name is too long"),
@@ -41,12 +42,16 @@ const categoryDescriptions: Record<Category, string> = {
 
 export function SubmitForm() {
   const { addPost } = usePosts();
+  const { role, username, school_name } = useAuth();
   const [selectedImage, setSelectedImage] = useState<File | null>(null);
   const [imagePreview, setImagePreview] = useState<string | null>(null);
   const [selectedVideo, setSelectedVideo] = useState<File | null>(null);
   const [videoPreview, setVideoPreview] = useState<string | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
-  
+
+  // Check if current user is a teacher
+  const isTeacher = role === 'TEACHER' || role === 'ADMIN';
+
   const form = useForm<SubmitFormData>({
     resolver: zodResolver(submitSchema),
     defaultValues: {
@@ -59,6 +64,14 @@ export function SubmitForm() {
       videoUrl: '',
     },
   });
+
+  // Effect to pre-fill teacher info if logged in as teacher
+  useEffect(() => {
+    if (isTeacher) {
+      if (username) form.setValue('teacherName', username);
+      if (school_name) form.setValue('schoolName', school_name);
+    }
+  }, [isTeacher, username, school_name, form]);
 
   const selectedCategory = form.watch('category');
 
@@ -103,40 +116,54 @@ export function SubmitForm() {
       setIsSubmitting(false);
       return;
     }
-    
+
     setIsSubmitting(true);
-    
+
     // Simulate submission (will be replaced with actual API call)
     // In a real implementation, you would upload the video file here
     await new Promise(resolve => setTimeout(resolve, 1500));
-    
+
     // Create the post with all fields including teacher and school name
     addPost({
-      authorName: data.authorName,
-      teacherName: data.teacherName,
-      schoolName: data.schoolName,
+      author_name: data.authorName,
+      teacher_name: data.teacherName,
+      school_name: data.schoolName,
       title: data.title,
       category: data.category,
       content: data.content,
-      imageUrl: imagePreview || undefined,
-      videoUrl: data.videoUrl || undefined,
+      image_url: selectedImage || undefined, // Send File as image_url for serializer mapping
+      video_file: selectedVideo || undefined,
+      // If we have a video URL but no file, send that.
+      video_url: (!selectedVideo && data.videoUrl) ? data.videoUrl : undefined,
     });
-    
+
     toast.success(
       <div className="flex items-start gap-3">
         <div className="w-10 h-10 rounded-full bg-published flex items-center justify-center shrink-0">
           <Sparkles className="w-5 h-5 text-published-foreground" />
         </div>
         <div>
-          <p className="font-semibold">Wonderful! 🎉</p>
+          <p className="font-semibold">{isTeacher ? "Submission Received! 🎉" : "Wonderful! 🎉"}</p>
           <p className="text-sm text-muted-foreground">
-            Your work has been sent for review. A teacher will look at it soon!
+            {isTeacher
+              ? `Thank you for submitting ${data.authorName}'s work.`
+              : "Your work has been sent for review. A teacher will look at it soon!"
+            }
           </p>
         </div>
       </div>
     );
-    
-    form.reset();
+
+    form.reset({
+      authorName: '',
+      title: '',
+      content: '',
+      videoUrl: '',
+      // Maintain teacher info across submissions for convenience
+      teacherName: isTeacher && username ? username : '',
+      schoolName: isTeacher && school_name ? school_name : '',
+      category: 'stories',
+    });
     setSelectedImage(null);
     setImagePreview(null);
     setSelectedVideo(null);
@@ -151,23 +178,26 @@ export function SubmitForm() {
           <span className="text-3xl">🌟</span>
         </div>
         <CardTitle className="font-display text-2xl md:text-3xl">
-          Share Your Amazing Work!
+          {isTeacher ? "Submit Student Work" : "Share Your Amazing Work!"}
         </CardTitle>
         <CardDescription className="text-base">
-          We can't wait to see what you've created. Fill in the form below and a teacher will review it.
+          {isTeacher
+            ? "Upload and submit creative works on behalf of your students."
+            : "We can't wait to see what you've created. Fill in the form below and a teacher will review it."
+          }
         </CardDescription>
       </CardHeader>
-      
+
       <CardContent className="px-6 pb-6">
         <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
           {/* Author Name */}
           <div className="space-y-2">
             <Label htmlFor="authorName" className="text-base font-semibold">
-              Your Name 👋
+              {isTeacher ? "Student Name 🎓" : "Your Name 👋"}
             </Label>
             <Input
               id="authorName"
-              placeholder="What should we call you?"
+              placeholder={isTeacher ? "Enter student's full name" : "What should we call you?"}
               {...form.register('authorName')}
               className="h-12 text-base rounded-xl"
             />
@@ -176,8 +206,8 @@ export function SubmitForm() {
             )}
           </div>
 
-          {/* Teacher Name */}
-          <div className="space-y-2">
+          {/* Teacher Name - Hidden for Teachers, Visible for Students */}
+          <div className={cn("space-y-2", isTeacher && "hidden")}>
             <Label htmlFor="teacherName" className="text-base font-semibold">
               Teacher Name 👨‍🏫
             </Label>
@@ -186,14 +216,15 @@ export function SubmitForm() {
               placeholder="What's your teacher's name?"
               {...form.register('teacherName')}
               className="h-12 text-base rounded-xl"
+              readOnly={isTeacher} // Extra safety
             />
             {form.formState.errors.teacherName && (
               <p className="text-sm text-destructive">{form.formState.errors.teacherName.message}</p>
             )}
           </div>
 
-          {/* School Name */}
-          <div className="space-y-2">
+          {/* School Name - Hidden for Teachers, Visible for Students */}
+          <div className={cn("space-y-2", isTeacher && "hidden")}>
             <Label htmlFor="schoolName" className="text-base font-semibold">
               School Name 🏫
             </Label>
@@ -202,6 +233,7 @@ export function SubmitForm() {
               placeholder="Which school are you from?"
               {...form.register('schoolName')}
               className="h-12 text-base rounded-xl"
+              readOnly={isTeacher} // Extra safety
             />
             {form.formState.errors.schoolName && (
               <p className="text-sm text-destructive">{form.formState.errors.schoolName.message}</p>
@@ -223,13 +255,13 @@ export function SubmitForm() {
                     'p-4 rounded-2xl border-2 text-left transition-all duration-200 w-full',
                     selectedCategory === category
                       ? cn('border-transparent shadow-card', {
-                          'bg-gradient-stories': category === 'stories',
-                          'bg-gradient-poems': category === 'poems',
-                          'bg-gradient-drawings': category === 'drawings',
-                          'bg-gradient-news': category === 'news',
-                          'bg-gradient-video': category === 'video',
-                          'bg-gradient-other': category === 'other',
-                        })
+                        'bg-gradient-stories': category === 'stories',
+                        'bg-gradient-poems': category === 'poems',
+                        'bg-gradient-drawings': category === 'drawings',
+                        'bg-gradient-news': category === 'news',
+                        'bg-gradient-video': category === 'video',
+                        'bg-gradient-other': category === 'other',
+                      })
                       : 'border-border hover:border-primary/30 bg-background hover:bg-muted/50'
                   )}
                 >
@@ -471,7 +503,7 @@ export function SubmitForm() {
               </>
             )}
           </Button>
-          
+
           <p className="text-center text-sm text-muted-foreground">
             A teacher will review your work before it appears in the magazine. 📚
           </p>

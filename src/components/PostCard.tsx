@@ -7,7 +7,7 @@ import { cn } from '@/lib/utils';
 function getVideoEmbedUrl(url: string): string | null {
   try {
     const urlObj = new URL(url);
-    
+
     // YouTube
     if (urlObj.hostname.includes('youtube.com') || urlObj.hostname.includes('youtu.be')) {
       const videoId = urlObj.searchParams.get('v') || urlObj.pathname.split('/').pop()?.split('?')[0];
@@ -15,7 +15,7 @@ function getVideoEmbedUrl(url: string): string | null {
         return `https://www.youtube.com/embed/${videoId}`;
       }
     }
-    
+
     // Vimeo
     if (urlObj.hostname.includes('vimeo.com')) {
       const videoId = urlObj.pathname.split('/').pop();
@@ -23,7 +23,7 @@ function getVideoEmbedUrl(url: string): string | null {
         return `https://player.vimeo.com/video/${videoId}`;
       }
     }
-    
+
     // Return original URL if not YouTube/Vimeo (for other video platforms)
     return url;
   } catch {
@@ -46,11 +46,11 @@ const categoryStyles = {
 };
 
 export function PostCard({ post, index = 0 }: PostCardProps) {
-  const formattedDate = post.publishedAt
+  const formattedDate = post.published_at
     ? new Intl.DateTimeFormat('en-US', {
-        month: 'short',
-        day: 'numeric',
-      }).format(post.publishedAt)
+      month: 'short',
+      day: 'numeric',
+    }).format(new Date(post.published_at))
     : '';
 
   return (
@@ -63,8 +63,16 @@ export function PostCard({ post, index = 0 }: PostCardProps) {
       )}
       style={{ animationDelay: `${index * 80}ms` }}
     >
-      {post.videoUrl ? (() => {
-        const embedUrl = getVideoEmbedUrl(post.videoUrl);
+      {post.video_file ? (
+        <div className="relative h-48 overflow-hidden bg-black/5 rounded-t-xl">
+          <video
+            src={post.video_file}
+            controls
+            className="w-full h-full object-contain"
+          />
+        </div>
+      ) : post.video_url ? (() => {
+        const embedUrl = getVideoEmbedUrl(post.video_url);
         return embedUrl ? (
           <div className="relative h-48 overflow-hidden bg-black/5 rounded-t-xl">
             <iframe
@@ -78,7 +86,7 @@ export function PostCard({ post, index = 0 }: PostCardProps) {
         ) : (
           <div className="relative h-48 overflow-hidden bg-gradient-video flex items-center justify-center">
             <a
-              href={post.videoUrl}
+              href={post.video_url}
               target="_blank"
               rel="noopener noreferrer"
               className="text-white font-semibold hover:underline"
@@ -87,17 +95,17 @@ export function PostCard({ post, index = 0 }: PostCardProps) {
             </a>
           </div>
         );
-      })() : post.imageUrl ? (
+      })() : post.image_url ? (
         <div className="relative h-48 overflow-hidden">
           <img
-            src={post.imageUrl}
+            src={post.image_url}
             alt={post.title}
             className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105"
           />
           <div className="absolute inset-0 bg-gradient-to-t from-black/20 to-transparent" />
         </div>
       ) : null}
-      
+
       <CardHeader className="pb-2">
         <div className="flex items-center justify-between gap-2 mb-2">
           <Badge
@@ -115,16 +123,16 @@ export function PostCard({ post, index = 0 }: PostCardProps) {
             {formattedDate}
           </span>
         </div>
-        
+
         <h3 className="font-display font-bold text-xl leading-tight text-foreground group-hover:text-primary transition-colors">
           {post.title}
         </h3>
-        
+
         <p className="text-sm text-muted-foreground font-medium">
-          by <span className="text-primary">{post.authorName}</span>
+          by <span className="text-primary">{post.author_name}</span>
         </p>
       </CardHeader>
-      
+
       <CardContent>
         <p className="text-foreground/80 leading-relaxed whitespace-pre-line">
           {post.content}

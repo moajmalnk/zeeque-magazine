@@ -22,20 +22,33 @@ const categoryVariants: Record<Category | 'all', string> = {
 export function CategoryFilter({ selectedCategory, onCategoryChange, posts }: CategoryFilterProps) {
   // Calculate which categories have posts
   const availableCategories = useMemo(() => {
+    // If no posts, return empty to hide everything
+    if (posts.length === 0) return [];
+
     const categoryCounts = posts.reduce((acc, post) => {
       acc[post.category] = (acc[post.category] || 0) + 1;
       return acc;
     }, {} as Record<Category, number>);
 
-    // Always include 'all', and only include categories that have at least one post
-    const available: (Category | 'all')[] = ['all'];
-    
+    // Only include categories that have at least one post
+    const available: (Category | 'all')[] = [];
+
+    // Only add 'All Posts' if we have more than one category or if explicitely desired, 
+    // but typically it's nice to always have it if we have any posts at all.
+    // However, the user request "if there is no post then no need all post tab" implies 
+    // we shouldn't show the filter bar at all if empty.
+    available.push('all');
+
     const allCategories: Category[] = ['stories', 'poems', 'drawings', 'news', 'video', 'other'];
     allCategories.forEach(category => {
       if (categoryCounts[category] > 0) {
         available.push(category);
       }
     });
+
+    // If we only have 'all' (meaning no specific categories found - shouldn't happen if posts > 0)
+    // or just one category + all, maybe we still want to show it. 
+    // But strictly following "no post -> no tab", the check at the top handles it.
 
     return available;
   }, [posts]);
@@ -51,7 +64,7 @@ export function CategoryFilter({ selectedCategory, onCategoryChange, posts }: Ca
     <div className="flex flex-wrap gap-3 justify-center px-4">
       {availableCategories.map((category) => {
         const isSelected = selectedCategory === category;
-        
+
         return (
           <Button
             key={category}

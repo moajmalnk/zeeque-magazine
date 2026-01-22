@@ -47,7 +47,7 @@ export function ApproveDialog({ open, onOpenChange, post, onApprove }: ApproveDi
           <AlertDialogDescription className="space-y-3 pt-2">
             <div>
               <p className="text-sm font-medium text-foreground mb-1">
-                "{post.title}" by {post.authorName}
+                "{post.title}" by {post.author_name}
               </p>
               <p className="text-xs text-muted-foreground">
                 This submission will be published and visible to all readers in the magazine.
@@ -68,8 +68,8 @@ export function ApproveDialog({ open, onOpenChange, post, onApprove }: ApproveDi
                     )} />
                   </div>
                   <div className="flex-1 space-y-1">
-                    <Label 
-                      htmlFor="featured-toggle" 
+                    <Label
+                      htmlFor="featured-toggle"
                       className="text-sm font-semibold text-foreground cursor-pointer"
                     >
                       Feature this post
