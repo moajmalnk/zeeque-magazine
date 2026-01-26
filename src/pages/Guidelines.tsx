@@ -162,11 +162,11 @@ export default function Guidelines() {
               Everything you need to know about sharing your magical creations with the world!
             </p>
 
-            <div className="flex justify-center gap-4 mt-8">
-              <Button asChild size="lg" className="rounded-full px-8 h-14 text-lg bg-primary hover:bg-primary/90 shadow-lg shadow-primary/25">
+            <div className="flex flex-col sm:flex-row items-center justify-center gap-4 mt-8 w-full px-4 sm:px-0">
+              <Button asChild size="lg" className="w-full sm:w-auto rounded-full px-8 h-14 text-lg bg-primary hover:bg-primary/90 shadow-lg shadow-primary/25">
                 <Link to="/submit">Submit Your Work 🚀</Link>
               </Button>
-              <Button asChild variant="outline" size="lg" className="rounded-full px-8 h-14 text-lg border-2 hover:bg-secondary/50">
+              <Button asChild variant="outline" size="lg" className="w-full sm:w-auto rounded-full px-8 h-14 text-lg border-2 hover:bg-secondary/50">
                 <Link to="/">Back to Home</Link>
               </Button>
             </div>
