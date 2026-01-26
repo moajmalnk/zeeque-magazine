@@ -57,7 +57,7 @@ export function useAuth() {
   const login = useCallback(async (email: string, password: string): Promise<boolean> => {
     try {
       // 1. Get Tokens
-      const response = await axios.post('/api/token/', {
+      const response = await api.post('/token/', {
         email,
         password
       });
