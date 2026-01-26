@@ -30,3 +30,32 @@ api.interceptors.request.use(
         return Promise.reject(error);
     }
 );
+
+// Response Interceptor for global error handling
+api.interceptors.response.use(
+    (response) => response,
+    async (error) => {
+        const originalRequest = error.config;
+
+        // If error is 401 and we haven't retried yet
+        if (error.response && error.response.status === 401 && !originalRequest._retry) {
+            originalRequest._retry = true; // Mark as retried
+
+            // Clear invalid credentials
+            localStorage.removeItem('zeeque_auth_tokens');
+            localStorage.removeItem('zeeque_user_data');
+
+            // Remove the Authorization header from the retry
+            delete originalRequest.headers['Authorization'];
+
+            // Retry the request anonymously
+            try {
+                return await api(originalRequest);
+            } catch (retryError) {
+                return Promise.reject(retryError);
+            }
+        }
+
+        return Promise.reject(error);
+    }
+);

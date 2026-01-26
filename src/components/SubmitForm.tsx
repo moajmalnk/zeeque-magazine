@@ -146,25 +146,45 @@ export function SubmitForm() {
   };
 
   const onSubmit = async (data: SubmitFormData) => {
+    // PREVENT PREMATURE SUBMISSION:
+    // If we are not on the last step, legitimate "Enter" key presses might trigger this.
+    // We should treat "Enter" as "Next" if not done.
+    if (currentStep < TOTAL_STEPS) {
+      handleNext();
+      return;
+    }
+
     if (data.category === 'video' && !data.videoUrl && !selectedVideo) {
       toast.error("Please add a video link or file!");
       return;
     }
+
     setIsSubmitting(true);
-    await new Promise(resolve => setTimeout(resolve, 1500));
-    await addPost({
-      author_name: data.authorName,
-      teacher_name: data.teacherName,
-      school_name: data.schoolName,
-      title: data.title,
-      category: data.category,
-      content: data.content,
-      image_url: selectedImage || undefined,
-      video_file: selectedVideo || undefined,
-      video_url: (!selectedVideo && data.videoUrl) ? data.videoUrl : undefined,
-    });
-    setIsSuccess(true);
-    setIsSubmitting(false);
+
+    try {
+      // Artificial delay for UX (optional, but nice)
+      await new Promise(resolve => setTimeout(resolve, 1000));
+
+      await addPost({
+        author_name: data.authorName,
+        teacher_name: data.teacherName,
+        school_name: data.schoolName,
+        title: data.title,
+        category: data.category,
+        content: data.content,
+        // Ensure we send null/undefined correctly for optional files
+        image_url: selectedImage || undefined,
+        video_file: selectedVideo || undefined,
+        video_url: (!selectedVideo && data.videoUrl) ? data.videoUrl : undefined,
+      });
+
+      setIsSuccess(true);
+    } catch (error) {
+      console.error("Submission error:", error);
+      toast.error("Something went wrong! Please try again.");
+    } finally {
+      setIsSubmitting(false);
+    }
   };
 
   if (isSuccess) {
@@ -345,6 +365,7 @@ export function SubmitForm() {
               )}
 
               <Button
+                key={`btn-step-${currentStep}`}
                 type={currentStep < TOTAL_STEPS ? "button" : "submit"}
                 onClick={currentStep < TOTAL_STEPS ? handleNext : undefined}
                 disabled={isSubmitting}

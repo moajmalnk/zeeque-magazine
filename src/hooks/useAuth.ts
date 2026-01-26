@@ -44,7 +44,7 @@ export function useAuth() {
 
         // Ensure tokens are attached to API
         const { access } = JSON.parse(tokens);
-        api.defaults.headers.common['Authorization'] = `Bearer ${access}`;
+        // api.defaults.headers.common['Authorization'] = `Bearer ${access}`; // Removed: Interceptor handles this.
       } catch {
         // Corrupt data
         logout();
@@ -69,7 +69,8 @@ export function useAuth() {
       localStorage.setItem(USER_KEY, JSON.stringify({ email, role, username, school_name }));
 
       // 3. Update API defaults
-      api.defaults.headers.common['Authorization'] = `Bearer ${access}`;
+      // 3. Update API defaults (Handled by interceptor now)
+      // api.defaults.headers.common['Authorization'] = `Bearer ${access}`;
 
       // 4. Update State
       setAuthState({

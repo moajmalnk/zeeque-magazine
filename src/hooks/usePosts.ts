@@ -130,8 +130,8 @@ export function usePosts() {
     });
   };
 
-  const addPost = (post: any) => {
-    createMutation.mutate(post);
+  const addPost = async (post: any) => {
+    return createMutation.mutateAsync(post);
   };
 
   const pendingPosts = useMemo(
