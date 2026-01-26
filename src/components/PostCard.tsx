@@ -56,9 +56,9 @@ export function PostCard({ post, index = 0 }: PostCardProps) {
   return (
     <Card
       className={cn(
-        'group overflow-hidden border-2 border-slate-100 shadow-[0_8px_30px_rgb(0,0,0,0.04)] hover:shadow-[0_8px_30px_rgba(236,72,153,0.1)] transition-all duration-300',
-        'hover:-translate-y-2 animate-slide-up bg-white/50 backdrop-blur-sm',
-        'rounded-[2rem]', // Match the form rounding
+        'group overflow-hidden border-2 border-slate-100 dark:border-slate-800 shadow-[0_8px_30px_rgb(0,0,0,0.04)] hover:shadow-[0_8px_30px_rgba(236,72,153,0.1)] transition-all duration-300',
+        'hover:-translate-y-2 animate-slide-up bg-white/50 dark:bg-slate-900/50 backdrop-blur-sm',
+        'rounded-[2rem] h-full flex flex-col', // Added h-full flex flex-col
         index > 0 && `animation-delay-${Math.min(index * 100, 500)}`
       )}
       style={{ animationDelay: `${index * 80}ms` }}
@@ -106,7 +106,7 @@ export function PostCard({ post, index = 0 }: PostCardProps) {
         </div>
       ) : null}
 
-      <CardHeader className="p-6 pb-2">
+      <CardHeader className="p-6 pb-2 flex-grow-0">
         <div className="flex items-center justify-between gap-2 mb-3">
           <Badge
             variant="secondary"
@@ -124,17 +124,21 @@ export function PostCard({ post, index = 0 }: PostCardProps) {
           </span>
         </div>
 
-        <h3 className="font-display font-bold text-2xl leading-tight text-slate-800 group-hover:text-primary transition-colors line-clamp-2 mb-1">
+        <h3 className="font-display font-bold text-2xl leading-tight text-slate-800 dark:text-slate-100 group-hover:text-primary transition-colors line-clamp-2 mb-1">
           {post.title}
         </h3>
 
-        <p className="text-sm font-semibold text-slate-500">
+        <p className="text-sm font-semibold text-slate-500 dark:text-slate-400">
           by <span className="text-primary">{post.author_name}</span>
+        </p>
+        <p className="text-xs text-slate-400 dark:text-slate-500 mt-1">
+          Teacher: {post.teacher_name || 'N/A'} <br />
+          School: {post.school_name || 'N/A'}
         </p>
       </CardHeader>
 
-      <CardContent className="p-6 pt-2">
-        <p className="text-slate-600 leading-relaxed whitespace-pre-line line-clamp-3 font-medium">
+      <CardContent className="p-6 pt-2 flex-grow">
+        <p className="text-slate-600 dark:text-slate-300 leading-relaxed whitespace-pre-line line-clamp-3 font-medium">
           {post.content}
         </p>
       </CardContent>

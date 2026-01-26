@@ -143,9 +143,10 @@ export default function Guidelines() {
         <section className="relative py-20 pb-32 overflow-hidden">
           <div className="absolute top-0 right-0 w-[500px] h-[500px] bg-secondary/20 rounded-full blur-[100px] -translate-y-1/2 translate-x-1/2" />
           <div className="absolute bottom-0 left-0 w-[400px] h-[400px] bg-primary/20 rounded-full blur-[80px] translate-y-1/2 -translate-x-1/2" />
+          <div className="absolute inset-0 bg-[linear-gradient(to_right,#80808005_1px,transparent_1px),linear-gradient(to_bottom,#80808005_1px,transparent_1px)] bg-[size:32px_32px] opacity-20" />
 
           <div className="container max-w-5xl relative z-10 text-center">
-            <div className="inline-flex items-center gap-2 bg-white/80 backdrop-blur-sm border-2 border-primary/20 px-4 py-2 rounded-full shadow-sm animate-fade-in mb-8">
+            <div className="inline-flex items-center gap-2 bg-white/80 dark:bg-slate-900/80 backdrop-blur-sm border-2 border-primary/20 px-4 py-2 rounded-full shadow-sm animate-fade-in mb-8">
               <span className="text-xl">📚</span>
               <span className="font-bold text-primary tracking-wide text-sm">Submission Guide</span>
             </div>
@@ -179,13 +180,13 @@ export default function Guidelines() {
             {/* General Guidelines Cards */}
             <div className="grid md:grid-cols-2 gap-6 mb-20">
               {generalGuidelines.map((section, index) => (
-                <Card key={index} className="border-0 shadow-[0_8px_30px_rgb(0,0,0,0.04)] bg-white/80 backdrop-blur-md rounded-[2rem] overflow-hidden">
+                <Card key={index} className="border-0 shadow-[0_8px_30px_rgb(0,0,0,0.04)] bg-white/80 dark:bg-slate-900/80 backdrop-blur-md rounded-[2rem] overflow-hidden">
                   <CardHeader className="p-8 pb-4">
                     <div className="flex items-center gap-4 mb-2">
-                      <div className={`p-3 rounded-2xl ${section.icon === CheckCircle ? 'bg-green-100 text-green-600' : 'bg-red-100 text-red-600'}`}>
+                      <div className={`p-3 rounded-2xl ${section.icon === CheckCircle ? 'bg-green-100 text-green-600 dark:bg-green-900/30 dark:text-green-400' : 'bg-red-100 text-red-600 dark:bg-red-900/30 dark:text-red-400'}`}>
                         <section.icon className="w-8 h-8" />
                       </div>
-                      <CardTitle className="font-display text-2xl font-bold">{section.title}</CardTitle>
+                      <CardTitle className="font-display text-2xl font-bold dark:text-white">{section.title}</CardTitle>
                     </div>
                   </CardHeader>
                   <CardContent className="p-8 pt-2">
@@ -193,9 +194,9 @@ export default function Guidelines() {
                       {section.items.map((item, i) => (
                         <li key={i} className="flex items-start gap-3">
                           <span className={`mt-1 font-bold ${section.icon === CheckCircle ? 'text-green-500' : 'text-red-500'}`}>
-                            {section.icon === CheckCircle ? '✓' : 'aaa'}
+                            {section.icon === CheckCircle ? '✓' : '✖'}
                           </span>
-                          <span className="text-lg text-slate-600 font-medium">{item}</span>
+                          <span className="text-lg text-slate-600 dark:text-slate-300 font-medium">{item}</span>
                         </li>
                       ))}
                     </ul>
@@ -205,45 +206,45 @@ export default function Guidelines() {
             </div>
 
             {/* Category Guidelines */}
-            <h2 className="font-display text-4xl md:text-5xl font-bold mb-12 text-center text-slate-800">
+            <h2 className="font-display text-4xl md:text-5xl font-bold mb-12 text-center text-slate-800 dark:text-white">
               Category Rules
             </h2>
             <div className="space-y-8">
               {guidelines.map((category, index) => {
                 const Icon = category.icon;
                 return (
-                  <Card key={index} className="group border-2 border-slate-100 shadow-sm hover:shadow-xl transition-all duration-300 rounded-[2.5rem] bg-white hover:-translate-y-1">
+                  <Card key={index} className="group border-2 border-slate-100 dark:border-slate-800 shadow-sm hover:shadow-xl transition-all duration-300 rounded-[2.5rem] bg-white dark:bg-slate-900/50 hover:-translate-y-1">
                     <CardContent className="p-0 flex flex-col md:flex-row">
                       {/* Icon Side */}
-                      <div className="p-8 md:p-12 flex flex-col items-center justify-center bg-slate-50/50 md:w-1/3 text-center border-b md:border-b-0 md:border-r border-slate-100">
-                        <div className="p-6 bg-white rounded-3xl shadow-sm mb-6 group-hover:scale-110 transition-transform duration-300">
+                      <div className="p-8 md:p-12 flex flex-col items-center justify-center bg-slate-50/50 dark:bg-slate-900/80 md:w-1/3 text-center border-b md:border-b-0 md:border-r border-slate-100 dark:border-slate-800 rounded-t-[2.5rem] md:rounded-l-[2.5rem] md:rounded-tr-none">
+                        <div className="p-6 bg-white dark:bg-slate-800 rounded-3xl shadow-sm mb-6 group-hover:scale-110 transition-transform duration-300">
                           <Icon className="w-12 h-12 text-primary" />
                         </div>
-                        <h3 className="font-display text-3xl font-bold text-slate-800 mb-2">{category.title}</h3>
-                        <p className="text-slate-500 font-medium">{category.description}</p>
+                        <h3 className="font-display text-3xl font-bold text-slate-800 dark:text-white mb-2">{category.title}</h3>
+                        <p className="text-slate-500 dark:text-slate-400 font-medium">{category.description}</p>
                       </div>
 
                       {/* Content Side */}
                       <div className="p-8 md:p-12 flex-1 grid md:grid-cols-2 gap-8">
                         <div>
-                          <h4 className="font-bold text-lg text-slate-800 mb-4 flex items-center gap-2">
+                          <h4 className="font-bold text-lg text-slate-800 dark:text-slate-200 mb-4 flex items-center gap-2">
                             <FileText className="w-5 h-5 text-primary" /> Requirements
                           </h4>
                           <ul className="space-y-3">
                             {category.requirements.map((req, i) => (
-                              <li key={i} className="flex items-start gap-2 text-slate-600 font-medium text-sm md:text-base">
+                              <li key={i} className="flex items-start gap-2 text-slate-600 dark:text-slate-400 font-medium text-sm md:text-base">
                                 <span className="text-primary mt-1">•</span> {req}
                               </li>
                             ))}
                           </ul>
                         </div>
                         <div>
-                          <h4 className="font-bold text-lg text-slate-800 mb-4 flex items-center gap-2">
+                          <h4 className="font-bold text-lg text-slate-800 dark:text-slate-200 mb-4 flex items-center gap-2">
                             <Award className="w-5 h-5 text-amber-500" /> Pro Tips
                           </h4>
                           <ul className="space-y-3">
                             {category.tips.map((tip, i) => (
-                              <li key={i} className="flex items-start gap-2 text-slate-600 font-medium text-sm md:text-base">
+                              <li key={i} className="flex items-start gap-2 text-slate-600 dark:text-slate-400 font-medium text-sm md:text-base">
                                 <span className="text-amber-500 mt-1">💡</span> {tip}
                               </li>
                             ))}

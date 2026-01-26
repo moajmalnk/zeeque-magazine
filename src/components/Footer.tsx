@@ -38,7 +38,7 @@ export function Footer() {
   };
 
   return (
-    <footer className="mt-auto border-t border-border/60 bg-muted/20">
+    <footer className="mt-auto border-t border-border/60 bg-slate-50 dark:bg-slate-950/50 dark:border-slate-800">
       {/* Main Footer Content */}
       <div className="container py-12 md:py-16">
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8 lg:gap-12 mb-12">
@@ -46,9 +46,9 @@ export function Footer() {
           <div className="space-y-4">
             <div className="flex items-center">
               {!logoError && mounted ? (
-                <img 
-                  src={theme === 'dark' ? '/favicon-dark.png' : '/favicon-light.png'} 
-                  alt="ZeeQue Logo" 
+                <img
+                  src={theme === 'dark' ? '/favicon-dark.png' : '/favicon-light.png'}
+                  alt="ZeeQue Logo"
                   className="h-14 md:h-16 w-auto object-contain"
                   onError={() => setLogoError(true)}
                 />
@@ -119,7 +119,7 @@ export function Footer() {
                 </li>
               ))}
             </ul>
-            
+
             {/* Contact Info */}
             <div className="space-y-3 pt-4 border-t border-border/40">
               <div className="flex items-start gap-3 text-sm text-muted-foreground">
@@ -139,7 +139,7 @@ export function Footer() {
         </div>
 
         {/* Bottom Bar */}
-        <div className="pt-8 border-t border-border/60">
+        <div className="pt-8 border-t border-border/60 dark:border-slate-800">
           <div className="flex flex-col md:flex-row items-center justify-between gap-6">
             {/* Copyright */}
             <div className="flex flex-col md:flex-row items-center gap-2 md:gap-4 text-sm text-muted-foreground">
@@ -161,28 +161,28 @@ export function Footer() {
                 <a
                   href="#"
                   aria-label="Facebook"
-                  className="w-9 h-9 rounded-full bg-muted hover:bg-primary/10 flex items-center justify-center text-muted-foreground hover:text-primary transition-all duration-200 group"
+                  className="w-9 h-9 rounded-full bg-slate-100 dark:bg-slate-800 hover:bg-primary/10 dark:hover:bg-primary/20 flex items-center justify-center text-muted-foreground dark:text-slate-400 hover:text-primary transition-all duration-200 group"
                 >
                   <Facebook className="w-4 h-4 group-hover:scale-110 transition-transform" />
                 </a>
                 <a
                   href="#"
                   aria-label="Twitter"
-                  className="w-9 h-9 rounded-full bg-muted hover:bg-primary/10 flex items-center justify-center text-muted-foreground hover:text-primary transition-all duration-200 group"
+                  className="w-9 h-9 rounded-full bg-slate-100 dark:bg-slate-800 hover:bg-primary/10 dark:hover:bg-primary/20 flex items-center justify-center text-muted-foreground dark:text-slate-400 hover:text-primary transition-all duration-200 group"
                 >
                   <Twitter className="w-4 h-4 group-hover:scale-110 transition-transform" />
                 </a>
                 <a
                   href="#"
                   aria-label="Instagram"
-                  className="w-9 h-9 rounded-full bg-muted hover:bg-primary/10 flex items-center justify-center text-muted-foreground hover:text-primary transition-all duration-200 group"
+                  className="w-9 h-9 rounded-full bg-slate-100 dark:bg-slate-800 hover:bg-primary/10 dark:hover:bg-primary/20 flex items-center justify-center text-muted-foreground dark:text-slate-400 hover:text-primary transition-all duration-200 group"
                 >
                   <Instagram className="w-4 h-4 group-hover:scale-110 transition-transform" />
                 </a>
                 <a
                   href="#"
                   aria-label="YouTube"
-                  className="w-9 h-9 rounded-full bg-muted hover:bg-primary/10 flex items-center justify-center text-muted-foreground hover:text-primary transition-all duration-200 group"
+                  className="w-9 h-9 rounded-full bg-slate-100 dark:bg-slate-800 hover:bg-primary/10 dark:hover:bg-primary/20 flex items-center justify-center text-muted-foreground dark:text-slate-400 hover:text-primary transition-all duration-200 group"
                 >
                   <Youtube className="w-4 h-4 group-hover:scale-110 transition-transform" />
                 </a>
@@ -193,7 +193,7 @@ export function Footer() {
                 onClick={scrollToTop}
                 variant="outline"
                 size="icon"
-                className="rounded-full w-9 h-9 border-border/60 hover:border-primary/50 hover:bg-primary/10 transition-all duration-200"
+                className="rounded-full w-9 h-9 border-border/60 hover:border-primary/50 hover:bg-primary/10 dark:bg-slate-800 dark:border-slate-700 dark:hover:bg-primary/20 transition-all duration-200"
                 aria-label="Scroll to top"
               >
                 <ArrowUp className="w-4 h-4" />

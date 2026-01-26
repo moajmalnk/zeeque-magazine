@@ -74,11 +74,12 @@ export default function Login() {
       <Header />
 
       {/* Background Pattern */}
-      <div className="absolute inset-0 bg-[linear-gradient(to_right,#80808003_1px,transparent_1px),linear-gradient(to_bottom,#80808003_1px,transparent_1px)] bg-[size:24px_24px] md:bg-[size:32px_32px] opacity-20 pointer-events-none" />
+      {/* Background Pattern */}
+      <div className="absolute inset-0 bg-[linear-gradient(to_right,#80808005_1px,transparent_1px),linear-gradient(to_bottom,#80808005_1px,transparent_1px)] bg-[size:32px_32px] opacity-20 pointer-events-none" />
 
-      {/* Responsive Decorative Elements */}
-      <div className="absolute top-0 left-0 w-[300px] h-[300px] sm:w-[500px] sm:h-[500px] md:w-[600px] md:h-[600px] rounded-full bg-primary/5 blur-[80px] sm:blur-[120px] md:blur-[140px] -translate-x-1/3 -translate-y-1/3 pointer-events-none transition-all duration-700" />
-      <div className="absolute bottom-0 right-0 w-[400px] h-[400px] sm:w-[600px] sm:h-[600px] md:w-[700px] md:h-[700px] rounded-full bg-accent/5 blur-[80px] sm:blur-[120px] md:blur-[140px] translate-x-1/3 translate-y-1/3 pointer-events-none transition-all duration-700" />
+      {/* Responsive Decorative Elements - Standardized Professional Look */}
+      <div className="absolute top-0 right-0 w-[500px] h-[500px] bg-secondary/20 rounded-full blur-[100px] -translate-y-1/2 translate-x-1/2 opacity-50 dark:opacity-20 pointer-events-none" />
+      <div className="absolute bottom-0 left-0 w-[400px] h-[400px] bg-primary/20 rounded-full blur-[80px] translate-y-1/2 -translate-x-1/2 opacity-50 dark:opacity-20 pointer-events-none" />
 
       {/* Main Content Container - Scrollable Area */}
       <div className="flex-1 overflow-y-auto w-full">
@@ -164,7 +165,7 @@ export default function Login() {
                   {/* Submit Button */}
                   <Button
                     type="submit"
-                    className="w-full h-11 text-base font-semibold rounded-xl bg-gradient-to-r from-primary to-primary/90 hover:from-primary/90 hover:to-primary shadow-lg hover:shadow-primary/20 hover:scale-[1.02] active:scale-[0.98] transition-all duration-300"
+                    className="w-full h-11 text-base font-semibold rounded-xl bg-gradient-to-r from-primary to-primary/90 hover:from-primary/90 hover:to-primary hover:scale-[1.02] active:scale-[0.98] transition-all duration-300"
                     disabled={isLoading}
                   >
                     {isLoading ? (

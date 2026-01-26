@@ -52,7 +52,7 @@ const NavTab = ({
         }
         ${isActive
           ? `${activeColor} scale-105 z-10`
-          : `text-muted-foreground hover:bg-slate-50 ${hoverColor} hover:scale-105 hover:bg-opacity-50`
+          : `text-muted-foreground hover:bg-primary/5 dark:hover:bg-primary/20 ${hoverColor} hover:scale-105`
         }
       `}
     >
@@ -104,18 +104,6 @@ const NavItems = ({ mobile = false, onItemClick, onLogout }: { mobile?: boolean;
       />
 
       <NavTab
-        to="/submit"
-        label="Create"
-        isActive={pathname === '/submit'}
-        activeBg="bg-gradient-to-r from-primary to-accent" // Gradient ONLY when active
-        activeColor="text-white"
-        activeShadow="shadow-[0_8px_20px_-6px_rgba(236,72,153,0.5)]"
-        hoverColor="hover:text-pink-500"
-        onClick={onItemClick}
-        mobile={mobile}
-      />
-
-      <NavTab
         to="/guidelines"
         label="Rules"
         isActive={pathname === '/guidelines'}
@@ -127,9 +115,10 @@ const NavItems = ({ mobile = false, onItemClick, onLogout }: { mobile?: boolean;
         mobile={mobile}
       />
 
-      {isAuthenticated ? (
+      {/* Editor & Teacher Tabs (If logged in) */}
+      {isAuthenticated && (
         <>
-          {!mobile && <div className="w-px h-6 bg-border/40 mx-2" />}
+          <div className="w-px h-6 bg-border/40 mx-2 hidden md:block" />
 
           <NavTab
             to="/editorial"
@@ -156,41 +145,57 @@ const NavItems = ({ mobile = false, onItemClick, onLogout }: { mobile?: boolean;
               mobile={mobile}
             />
           )}
-
-          <AlertDialog>
-            <AlertDialogTrigger asChild>
-              <button
-                className={`
-                  relative flex items-center justify-center rounded-full font-bold tracking-wide transition-all duration-300 ease-out select-none
-                  text-slate-500 hover:text-red-500 hover:bg-red-50
-                  ${mobile
-                    ? 'w-full py-4 px-6 text-lg justify-start'
-                    : 'h-10 px-6 text-sm'
-                  }
-                `}
-              >
-                <span>Logout</span>
-              </button>
-            </AlertDialogTrigger>
-            <AlertDialogContent>
-              <AlertDialogHeader>
-                <AlertDialogTitle>Are you absolutely sure?</AlertDialogTitle>
-                <AlertDialogDescription>
-                  You are about to log out of your account.
-                </AlertDialogDescription>
-              </AlertDialogHeader>
-              <AlertDialogFooter>
-                <AlertDialogCancel>Cancel</AlertDialogCancel>
-                <AlertDialogAction onClick={() => {
-                  if (onItemClick) onItemClick();
-                  onLogout();
-                }} className="bg-red-500 hover:bg-red-600 focus:ring-red-500">
-                  Logout
-                </AlertDialogAction>
-              </AlertDialogFooter>
-            </AlertDialogContent>
-          </AlertDialog>
         </>
+      )}
+
+      {/* Primary Action 'Create' - Always visible, prioritized */}
+      <NavTab
+        to="/submit"
+        label="Create"
+        isActive={pathname === '/submit'}
+        activeBg="bg-gradient-to-r from-primary to-accent"
+        activeColor="text-white"
+        activeShadow="shadow-[0_8px_20px_-6px_rgba(236,72,153,0.5)]"
+        hoverColor="hover:text-pink-500"
+        onClick={onItemClick}
+        mobile={mobile}
+      />
+
+      {/* Auth State (Login/Logout) */}
+      {isAuthenticated ? (
+        <AlertDialog>
+          <AlertDialogTrigger asChild>
+            <button
+              className={`
+                relative flex items-center justify-center rounded-full font-bold tracking-wide transition-all duration-300 ease-out select-none
+                text-slate-500 hover:text-red-500 hover:bg-red-50
+                ${mobile
+                  ? 'w-full py-4 px-6 text-lg justify-start'
+                  : 'h-10 px-6 text-sm'
+                }
+              `}
+            >
+              <span>Logout</span>
+            </button>
+          </AlertDialogTrigger>
+          <AlertDialogContent>
+            <AlertDialogHeader>
+              <AlertDialogTitle>Are you absolutely sure?</AlertDialogTitle>
+              <AlertDialogDescription>
+                You are about to log out of your account.
+              </AlertDialogDescription>
+            </AlertDialogHeader>
+            <AlertDialogFooter>
+              <AlertDialogCancel>Cancel</AlertDialogCancel>
+              <AlertDialogAction onClick={() => {
+                if (onItemClick) onItemClick();
+                onLogout();
+              }} className="bg-red-500 hover:bg-red-600 focus:ring-red-500">
+                Logout
+              </AlertDialogAction>
+            </AlertDialogFooter>
+          </AlertDialogContent>
+        </AlertDialog>
       ) : (
         <NavTab
           to="/login"
@@ -204,7 +209,7 @@ const NavItems = ({ mobile = false, onItemClick, onLogout }: { mobile?: boolean;
           mobile={mobile}
         />
       )}
-    </div>
+    </div >
   );
 };
 
@@ -229,14 +234,14 @@ export function Header() {
 
   return (
     <header className="sticky top-0 z-50 w-full bg-background/80 backdrop-blur-xl border-b border-border/40 shadow-sm">
-      <div className="container flex h-16 md:h-20 items-center justify-between px-4 md:px-8">
+      <div className="container flex h-20 md:h-24 items-center justify-between px-4 md:px-8">
         {/* Logo Area */}
         <Link to="/" className="flex items-center gap-3 group transition-opacity hover:opacity-80 duration-300">
 
           <img
             src={theme === 'dark' ? '/favicon-dark.png' : '/favicon-light.png'}
             alt="ZeeQue Logo"
-            className="h-12 md:h-16 w-auto object-contain transition-all duration-300 filter drop-shadow-sm"
+            className="h-20 md:h-24 w-auto object-contain transition-all duration-300 filter drop-shadow-sm hover:scale-105"
             onError={() => setLogoError(true)}
           />
 

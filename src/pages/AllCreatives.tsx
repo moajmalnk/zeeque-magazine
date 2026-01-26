@@ -1,5 +1,6 @@
 import { useState, useMemo } from 'react';
 import { Link } from 'react-router-dom';
+import { PostCard } from '@/components/PostCard';
 import { Header } from '@/components/Header';
 import { Footer } from '@/components/Footer';
 import { CategoryFilter } from '@/components/CategoryFilter';
@@ -54,8 +55,13 @@ export default function AllCreatives() {
 
       <main className="flex-1">
         {/* Hero Section */}
-        <section className="relative py-12 md:py-16 lg:py-20 bg-gradient-to-br from-primary/5 via-background to-accent/5">
-          <div className="absolute inset-0 bg-[linear-gradient(to_right,#80808003_1px,transparent_1px),linear-gradient(to_bottom,#80808003_1px,transparent_1px)] bg-[size:32px_32px] opacity-20" />
+        <section className="relative py-12 md:py-16 lg:py-20 bg-background overflow-hidden">
+          {/* Professional Background Effect */}
+          <div className="absolute inset-0 pointer-events-none">
+            <div className="absolute top-[-20%] right-[-10%] w-[600px] h-[600px] bg-secondary/20 rounded-full blur-[120px] opacity-50 dark:opacity-20" />
+            <div className="absolute bottom-[-20%] left-[-10%] w-[500px] h-[500px] bg-primary/20 rounded-full blur-[100px] opacity-50 dark:opacity-20" />
+            <div className="absolute inset-0 bg-[linear-gradient(to_right,#80808005_1px,transparent_1px),linear-gradient(to_bottom,#80808005_1px,transparent_1px)] bg-[size:32px_32px] opacity-20" />
+          </div>
 
           <div className="container max-w-7xl relative z-10">
             <div className="flex items-center justify-between mb-8">
@@ -112,106 +118,10 @@ export default function AllCreatives() {
                 </p>
               </div>
             ) : (
-              <div className="columns-1 sm:columns-2 lg:columns-3 xl:columns-4 gap-4 md:gap-6 space-y-4 md:space-y-6">
-                {filteredPosts.map((post) => {
-                  const formattedDate = post.published_at
-                    ? format(new Date(post.published_at), 'MMM d, yyyy')
-                    : '';
-
-                  return (
-                    <Card
-                      key={post.id}
-                      className="group overflow-hidden border border-border/60 shadow-sm hover:shadow-card transition-all duration-300 hover:-translate-y-1 bg-card cursor-pointer break-inside-avoid mb-4 md:mb-6"
-                    >
-                      {/* Image/Video Section */}
-                      {post.video_file ? (
-                        <div className="relative w-full aspect-video bg-black/5 overflow-hidden">
-                          <video
-                            src={post.video_file}
-                            controls
-                            className="w-full h-full object-contain"
-                          />
-                        </div>
-                      ) : post.video_url ? (() => {
-                        const embedUrl = getVideoEmbedUrl(post.video_url);
-                        return embedUrl ? (
-                          <div className="relative w-full aspect-video bg-black/5 overflow-hidden">
-                            <iframe
-                              src={embedUrl}
-                              title={post.title}
-                              className="w-full h-full"
-                              allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
-                              allowFullScreen
-                            />
-                          </div>
-                        ) : (
-                          <a
-                            href={post.video_url}
-                            target="_blank"
-                            rel="noopener noreferrer"
-                            className="block p-8 bg-gradient-video text-white text-center font-semibold hover:opacity-90"
-                          >
-                            Watch Video 🎥
-                          </a>
-                        );
-                      })() : post.image_url ? (
-                        <div className="relative w-full overflow-hidden bg-muted">
-                          <img
-                            src={post.image_url}
-                            alt={post.title}
-                            className="w-full h-auto object-cover group-hover:scale-105 transition-transform duration-500"
-                          />
-                        </div>
-                      ) : null}
-
-                      <CardContent className="p-4 md:p-5">
-                        {/* Category Badge */}
-                        <div className="mb-3">
-                          <Badge className={`${categoryStyles[post.category]} text-white border-0 text-xs`}>
-                            {categoryIcons[post.category]} {categoryLabels[post.category]}
-                          </Badge>
-                        </div>
-
-                        {/* Title */}
-                        <h3 className="font-display font-bold text-lg md:text-xl mb-2 line-clamp-2 group-hover:text-primary transition-colors">
-                          {post.title}
-                        </h3>
-
-                        {/* Author & Date */}
-                        <div className="flex items-center justify-between text-sm text-muted-foreground mb-3">
-                          <span className="font-medium">by {post.author_name}</span>
-                          {formattedDate && <span>{formattedDate}</span>}
-                        </div>
-
-                        {/* Teacher & School */}
-                        {(post.teacher_name || post.school_name) && (
-                          <div className="text-xs text-muted-foreground mb-3 space-y-1">
-                            {post.teacher_name && (
-                              <p>Teacher: <span className="font-medium">{post.teacher_name}</span></p>
-                            )}
-                            {post.school_name && (
-                              <p>School: <span className="font-medium">{post.school_name}</span></p>
-                            )}
-                          </div>
-                        )}
-
-                        {/* Content Preview */}
-                        <p className="text-sm text-muted-foreground line-clamp-3 leading-relaxed">
-                          {post.content}
-                        </p>
-
-                        {/* Featured Badge */}
-                        {post.is_featured && (
-                          <div className="mt-3 pt-3 border-t border-border/60">
-                            <Badge className="bg-primary/10 text-primary border-primary/20">
-                              ⭐ Featured
-                            </Badge>
-                          </div>
-                        )}
-                      </CardContent>
-                    </Card>
-                  );
-                })}
+              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6 auto-rows-fr">
+                {filteredPosts.map((post, index) => (
+                  <PostCard key={post.id} post={post} index={index} />
+                ))}
               </div>
             )}
           </div>

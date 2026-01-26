@@ -9,7 +9,7 @@ import { Textarea } from '@/components/ui/textarea';
 import { Label } from '@/components/ui/label';
 import { Card, CardContent } from '@/components/ui/card';
 import { toast } from 'sonner';
-import { Send, Upload, Sparkles, Video, ArrowRight, ArrowLeft, Star, PartyPopper } from 'lucide-react';
+import { Send, Upload, Sparkles, Video, ArrowRight, ArrowLeft, Star, PartyPopper, X } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { usePosts } from '@/hooks/usePosts';
 import { useAuth } from '@/hooks/useAuth';
@@ -41,12 +41,12 @@ const GuideMascot = ({ mood = 'happy', message }: { mood?: 'happy' | 'thinking' 
       <img src="/images/mascot1.png" alt="Guide" className="w-full h-full object-contain filter drop-shadow-md"
         onError={(e) => (e.currentTarget.src = 'https://em-content.zobj.net/source/microsoft-teams/337/robot_1f916.png')} />
     </div>
-    <div className="relative bg-white p-3 rounded-2xl rounded-bl-none shadow-[2px_2px_0px_#e5e7eb] border border-slate-100 max-w-[250px] md:max-w-sm">
-      <div className="text-sm md:text-base font-bold text-slate-700 font-display leading-tight">
+    <div className="relative bg-white dark:bg-slate-800 p-3 rounded-2xl rounded-bl-none shadow-[2px_2px_0px_#e5e7eb] dark:shadow-none border border-slate-100 dark:border-slate-700 max-w-[250px] md:max-w-sm">
+      <div className="text-sm md:text-base font-bold text-slate-700 dark:text-slate-100 font-display leading-tight">
         {message}
       </div>
       {/* Speech bubble tail */}
-      <div className="absolute -bottom-[1px] -left-1.5 w-3 h-3 bg-white border-b border-l border-slate-100 skew-x-12" />
+      <div className="absolute -bottom-[1px] -left-1.5 w-3 h-3 bg-white dark:bg-slate-800 border-b border-l border-slate-100 dark:border-slate-700 skew-x-12" />
     </div>
   </div>
 );
@@ -219,7 +219,7 @@ export function SubmitForm() {
         }
       />
 
-      <Card className="border-0 shadow-sm bg-white/50 backdrop-blur-xl rounded-[1.5rem] overflow-visible">
+      <Card className="border-0 shadow-sm bg-white/50 backdrop-blur-xl rounded-[1.5rem] overflow-visible dark:bg-slate-900/80 dark:border dark:border-slate-800">
         <CardContent className="p-6">
           <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
 
@@ -227,11 +227,11 @@ export function SubmitForm() {
             {currentStep === 1 && (
               <div className="space-y-4 animate-in slide-in-from-right duration-500">
                 <div className="space-y-2">
-                  <Label className="text-base md:text-lg font-bold text-slate-700">My Name Is...</Label>
+                  <Label className="text-base md:text-lg font-bold text-slate-700 dark:text-slate-200">My Name Is...</Label>
                   <Input
                     {...form.register('authorName')}
                     placeholder="Type your name here..."
-                    className="h-11 text-base rounded-xl border-slate-200 focus:border-primary focus:ring-4 focus:ring-primary/10 transition-all bg-white"
+                    className="h-11 text-base rounded-xl border-slate-200 focus:border-primary focus:ring-4 focus:ring-primary/10 transition-all bg-white dark:bg-slate-900 dark:border-slate-700 dark:text-white dark:placeholder:text-slate-500"
                   />
                   {form.formState.errors.authorName && <p className="text-red-500 font-bold ml-2 text-sm">⚠️ {form.formState.errors.authorName.message}</p>}
                 </div>
@@ -239,20 +239,20 @@ export function SubmitForm() {
                 {!isTeacher && (
                   <>
                     <div className="space-y-2">
-                      <Label className="text-base md:text-lg font-bold text-slate-700">I Go To School At...</Label>
+                      <Label className="text-base md:text-lg font-bold text-slate-700 dark:text-slate-200">I Go To School At...</Label>
                       <Input
                         {...form.register('schoolName')}
                         placeholder="My School Name"
-                        className="h-11 text-base rounded-xl border-slate-200 focus:border-amber-500 focus:ring-4 focus:ring-amber-500/10 transition-all bg-white"
+                        className="h-11 text-base rounded-xl border-slate-200 focus:border-amber-500 focus:ring-4 focus:ring-amber-500/10 transition-all bg-white dark:bg-slate-900 dark:border-slate-700 dark:text-white dark:placeholder:text-slate-500"
                       />
                       {form.formState.errors.schoolName && <p className="text-red-500 font-bold ml-2 text-sm">⚠️ {form.formState.errors.schoolName.message}</p>}
                     </div>
                     <div className="space-y-2">
-                      <Label className="text-base md:text-lg font-bold text-slate-700">My Teacher Is...</Label>
+                      <Label className="text-base md:text-lg font-bold text-slate-700 dark:text-slate-200">My Teacher Is...</Label>
                       <Input
                         {...form.register('teacherName')}
                         placeholder="My Teacher's Name"
-                        className="h-11 text-base rounded-xl border-slate-200 focus:border-sky-500 focus:ring-4 focus:ring-sky-500/10 transition-all bg-white"
+                        className="h-11 text-base rounded-xl border-slate-200 focus:border-sky-500 focus:ring-4 focus:ring-sky-500/10 transition-all bg-white dark:bg-slate-900 dark:border-slate-700 dark:text-white dark:placeholder:text-slate-500"
                       />
                       {form.formState.errors.teacherName && <p className="text-red-500 font-bold ml-2 text-sm">⚠️ {form.formState.errors.teacherName.message}</p>}
                     </div>
@@ -272,12 +272,12 @@ export function SubmitForm() {
                     className={cn(
                       "flex flex-col items-center justify-center p-3 rounded-2xl border transition-all duration-300 aspect-[4/3] w-full",
                       form.watch('category') === cat
-                        ? "border-primary bg-primary/5 scale-105 shadow-sm -translate-y-0.5"
-                        : "border-slate-100 bg-white hover:border-primary/30 hover:shadow-sm hover:-translate-y-0.5"
+                        ? "border-primary bg-primary/5 dark:bg-primary/20 scale-105 shadow-sm -translate-y-0.5"
+                        : "border-slate-100 dark:border-slate-700 bg-white dark:bg-slate-800 hover:border-primary/30 hover:shadow-sm hover:-translate-y-0.5"
                     )}
                   >
                     <span className="text-3xl mb-1 filter drop-shadow-sm transition-transform duration-300 group-hover:scale-110">{categoryIcons[cat]}</span>
-                    <span className="font-bold text-sm text-slate-700">{categoryLabels[cat]}</span>
+                    <span className="font-bold text-sm text-slate-700 dark:text-slate-200">{categoryLabels[cat]}</span>
                   </button>
                 ))}
               </div>
@@ -287,20 +287,20 @@ export function SubmitForm() {
             {currentStep === 3 && (
               <div className="space-y-4 animate-in slide-in-from-right duration-500">
                 <div className="space-y-2">
-                  <Label className="text-base md:text-lg font-bold text-slate-700">My Title</Label>
+                  <Label className="text-base md:text-lg font-bold text-slate-700 dark:text-slate-200">My Title</Label>
                   <Input
                     {...form.register('title')}
                     placeholder="The Magical Adventure..."
-                    className="h-11 text-base rounded-xl border-slate-200 bg-white"
+                    className="h-11 text-base rounded-xl border-slate-200 bg-white dark:bg-slate-900 dark:border-slate-700 dark:text-white dark:placeholder:text-slate-500"
                   />
                   {form.formState.errors.title && <p className="text-red-500 font-bold ml-2 text-sm">⚠️ {form.formState.errors.title.message}</p>}
                 </div>
                 <div className="space-y-2">
-                  <Label className="text-base md:text-lg font-bold text-slate-700">My Story</Label>
+                  <Label className="text-base md:text-lg font-bold text-slate-700 dark:text-slate-200">My Story</Label>
                   <Textarea
                     {...form.register('content')}
                     placeholder="Once upon a time..."
-                    className="min-h-[120px] text-base rounded-xl border-slate-200 p-4 leading-relaxed bg-white"
+                    className="min-h-[120px] text-base rounded-xl border-slate-200 p-4 leading-relaxed bg-white dark:bg-slate-900 dark:border-slate-700 dark:text-white dark:placeholder:text-slate-500"
                   />
                   {form.formState.errors.content && <p className="text-red-500 font-bold ml-2 text-sm">⚠️ {form.formState.errors.content.message}</p>}
                 </div>
@@ -312,38 +312,53 @@ export function SubmitForm() {
               <div className="space-y-5 animate-in slide-in-from-right duration-500">
                 {form.watch('category') === 'video' ? (
                   <div className="space-y-4">
-                    <div className="bg-slate-50 p-4 rounded-2xl border border-slate-100">
-                      <Label className="text-base font-bold mb-2 block">Video Link 🔗</Label>
+                    <div className="bg-slate-50 dark:bg-slate-900 p-4 rounded-2xl border border-slate-100 dark:border-slate-800">
+                      <Label className="text-base font-bold mb-2 block dark:text-slate-200">Video Link 🔗</Label>
                       <Input
                         {...form.register('videoUrl')}
                         placeholder="https://youtube.com/..."
-                        className="h-11 text-base rounded-xl bg-white"
+                        className="h-11 text-base rounded-xl bg-white dark:bg-slate-800 dark:border-slate-700 dark:text-white"
                       />
                     </div>
-                    <div className="relative border-2 border-dashed border-slate-200 rounded-2xl p-6 hover:bg-slate-50 transition-colors text-center cursor-pointer">
+                    <div className="relative border-2 border-dashed border-slate-200 dark:border-slate-700 rounded-2xl p-6 hover:bg-slate-50 dark:hover:bg-slate-800 transition-colors text-center cursor-pointer">
                       <input type="file" onChange={handleVideoChange} accept="video/*" className="absolute inset-0 opacity-0 cursor-pointer" />
-                      <Video className="w-10 h-10 mx-auto text-slate-300 mb-2" />
-                      <p className="text-base font-bold text-slate-600">
+                      <Video className="w-10 h-10 mx-auto text-slate-300 dark:text-slate-600 mb-2" />
+                      <p className="text-base font-bold text-slate-600 dark:text-slate-300">
                         {selectedVideo ? "Video Selected! 🎥" : "Or Click to Upload Video"}
                       </p>
                       {selectedVideo && <p className="text-primary font-bold mt-1 text-sm">{selectedVideo.name}</p>}
                     </div>
                   </div>
                 ) : (
-                  <div className="relative border-2 border-dashed border-slate-200 rounded-2xl p-8 hover:bg-slate-50 transition-colors text-center cursor-pointer group">
+                  <div className="relative border-2 border-dashed border-slate-200 dark:border-slate-700 rounded-2xl p-8 hover:bg-slate-50 dark:hover:bg-slate-800 transition-colors text-center cursor-pointer group">
                     <input type="file" onChange={handleImageChange} accept="image/*" className="absolute inset-0 opacity-0 cursor-pointer" />
                     {imagePreview ? (
-                      <div className="relative">
-                        <img src={imagePreview} alt="Preview" className="max-h-48 mx-auto rounded-xl shadow-md rotate-1" />
-                        <p className="mt-3 text-base font-bold text-green-500">Looks great! 🌟</p>
+                      <div className="relative inline-block">
+                        <img src={imagePreview} alt="Preview" className="max-h-64 mx-auto rounded-xl shadow-lg rotate-1 border-4 border-white" />
+
+                        <button
+                          type="button"
+                          onClick={(e) => {
+                            e.stopPropagation(); // Prevent triggering the file input
+                            setSelectedImage(null);
+                            setImagePreview(null);
+                          }}
+                          className="absolute -top-3 -right-3 bg-red-500 text-white p-1.5 rounded-full shadow-md hover:bg-red-600 hover:scale-110 transition-all z-10"
+                        >
+                          <X className="w-4 h-4" />
+                        </button>
+
+                        <p className="mt-4 text-base font-bold text-green-600 bg-green-50 inline-block px-3 py-1 rounded-full border border-green-100">
+                          Looks great! 🌟
+                        </p>
                       </div>
                     ) : (
                       <>
-                        <div className="w-12 h-12 bg-blue-100 rounded-full flex items-center justify-center mx-auto mb-3 group-hover:scale-110 transition-transform">
-                          <Upload className="w-6 h-6 text-blue-500" />
+                        <div className="w-12 h-12 bg-blue-100 dark:bg-blue-900/30 rounded-full flex items-center justify-center mx-auto mb-3 group-hover:scale-110 transition-transform">
+                          <Upload className="w-6 h-6 text-blue-500 dark:text-blue-400" />
                         </div>
-                        <p className="text-lg font-bold text-slate-600 mb-1">Add a Picture?</p>
-                        <p className="text-sm text-slate-400">Click here to upload your drawing or photo!</p>
+                        <p className="text-lg font-bold text-slate-600 dark:text-slate-200 mb-1">Add a Picture?</p>
+                        <p className="text-sm text-slate-400 dark:text-slate-500">Click here to upload your drawing or photo!</p>
                       </>
                     )}
                   </div>
@@ -352,13 +367,13 @@ export function SubmitForm() {
             )}
 
             {/* NAVIGATION BUTTONS */}
-            <div className="flex gap-3 pt-2">
+            <div className="flex flex-col-reverse md:flex-row gap-3 md:gap-4 pt-6">
               {currentStep > 1 && (
                 <Button
                   type="button"
                   variant="ghost"
                   onClick={handleBack}
-                  className="h-11 px-5 rounded-xl text-base font-bold text-slate-400 hover:bg-slate-100 hover:text-slate-600"
+                  className="flex-1 h-12 rounded-xl text-base font-bold text-slate-500 bg-slate-50 border-2 border-slate-100 hover:bg-slate-100 hover:text-slate-700 hover:border-slate-200 dark:bg-slate-800 dark:border-slate-700 dark:text-slate-300 dark:hover:bg-slate-700 transition-all"
                 >
                   <ArrowLeft className="mr-2 w-4 h-4" /> Back
                 </Button>
@@ -369,8 +384,8 @@ export function SubmitForm() {
                 type={currentStep < TOTAL_STEPS ? "button" : "submit"}
                 onClick={currentStep < TOTAL_STEPS ? handleNext : undefined}
                 disabled={isSubmitting}
-                className={`flex-1 h-11 rounded-xl text-base font-bold transition-all shadow-md ${currentStep < TOTAL_STEPS
-                  ? "bg-slate-900 text-white hover:bg-slate-800 hover:scale-[1.02] shadow-slate-200"
+                className={`flex-1 h-12 rounded-xl text-base font-bold transition-all shadow-md active:scale-95 ${currentStep < TOTAL_STEPS
+                  ? "bg-slate-900 text-white hover:bg-slate-800 hover:scale-[1.02] shadow-xl shadow-slate-400/20 dark:shadow-black/40 dark:bg-primary dark:hover:bg-primary/90"
                   : "bg-gradient-to-r from-primary to-accent text-white hover:opacity-90 hover:scale-[1.02] shadow-primary/25"}`}
               >
                 {currentStep < TOTAL_STEPS
