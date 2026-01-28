@@ -44,7 +44,7 @@ import {
 } from "@/components/ui/dialog";
 import { User, UserRole } from '@/types/user';
 import api from '@/lib/api';
-import { UserPlus, Search, School, Phone, Mail, User as UserIcon, Loader2, Trash2, Edit, Calendar, BadgeCheck } from 'lucide-react';
+import { UserPlus, Search, School, Phone, Mail, User as UserIcon, Loader2, Trash2, Edit, Calendar, BadgeCheck, Eye, EyeOff } from 'lucide-react';
 import { toast } from 'sonner';
 import { cn } from '@/lib/utils';
 import { format } from 'date-fns';
@@ -52,12 +52,13 @@ import { format } from 'date-fns';
 export default function Teachers() {
     const [searchTerm, setSearchTerm] = useState('');
     const [isSheetOpen, setIsSheetOpen] = useState(false);
-    const [deleteId, setDeleteId] = useState<number | null>(null);
+    const [deleteId, setDeleteId] = useState<string | null>(null);
     const [editingUser, setEditingUser] = useState<User | null>(null);
     const [viewingUser, setViewingUser] = useState<User | null>(null);
     const queryClient = useQueryClient();
 
     // Form State
+    const [showPassword, setShowPassword] = useState(false);
     const [formData, setFormData] = useState({
         email: '',
         username: '',
@@ -95,7 +96,11 @@ export default function Teachers() {
             toast.success('Teacher added successfully');
         },
         onError: (error: any) => {
-            toast.error('Failed to add teacher. ' + (error.response?.data?.email?.[0] || 'Check details.'));
+            // Extract error message from backend response
+            const msg = error.response?.data?.detail
+                || (typeof error.response?.data === 'object' ? Object.values(error.response.data).flat().join(', ') : '')
+                || 'Failed to add teacher.';
+            toast.error(msg);
         }
     });
 
@@ -114,12 +119,15 @@ export default function Teachers() {
             toast.success('Teacher updated successfully');
         },
         onError: (error: any) => {
-            toast.error('Failed to update teacher.');
+            const msg = error.response?.data?.detail
+                || (typeof error.response?.data === 'object' ? Object.values(error.response.data).flat().join(', ') : '')
+                || 'Failed to update teacher.';
+            toast.error(msg);
         }
     });
 
     const deleteTeacherMutation = useMutation({
-        mutationFn: async (id: number) => {
+        mutationFn: async (id: string) => {
             await api.delete(`/users/${id}/`);
         },
         onSuccess: () => {
@@ -135,17 +143,42 @@ export default function Teachers() {
 
     const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
         const { name, value } = e.target;
+
+        if (name === 'phone_number') {
+            // Allow only numbers
+            const numericValue = value.replace(/\D/g, '');
+            // Limit to 10 digits
+            if (numericValue.length <= 10) {
+                setFormData(prev => ({ ...prev, [name]: numericValue }));
+            }
+            return;
+        }
+
         setFormData(prev => ({ ...prev, [name]: value }));
     };
 
     const handleSubmit = (e: React.FormEvent) => {
         e.preventDefault();
 
+        // Phone Validation (Common)
+        if (formData.phone_number && formData.phone_number.length !== 10) {
+            toast.error("Phone number must be exactly 10 digits");
+            return;
+        }
+
         if (editingUser) {
+            if (formData.password && formData.password.length < 8) {
+                toast.error("Password must be at least 8 characters long");
+                return;
+            }
             updateTeacherMutation.mutate({ ...formData, id: editingUser.id });
         } else {
             if (!formData.email || !formData.password) {
                 toast.error("Email and Password are required");
+                return;
+            }
+            if (formData.password.length < 8) {
+                toast.error("Password must be at least 8 characters long");
                 return;
             }
             createTeacherMutation.mutate(formData);
@@ -177,7 +210,7 @@ export default function Teachers() {
         setIsSheetOpen(true);
     };
 
-    const confirmDelete = (e: React.MouseEvent, id: number) => {
+    const confirmDelete = (e: React.MouseEvent, id: string) => {
         e.stopPropagation(); // Prevent row click
         setDeleteId(id);
     };
@@ -216,15 +249,15 @@ export default function Teachers() {
                                 Add New Teacher
                             </Button>
                         </DialogTrigger>
-                        <DialogContent className="sm:max-w-[500px] rounded-[2rem] p-0 overflow-hidden border-border/60">
-                            <div className="bg-gradient-hero h-24 w-full flex items-center justify-center relative overflow-hidden">
+                        <DialogContent className="sm:max-w-[500px] rounded-[2rem] p-0 overflow-hidden max-h-[85vh] border-border/60 flex flex-col">
+                            <div className="bg-gradient-hero h-24 w-full flex items-center justify-center relative overflow-hidden shrink-0">
                                 <div className="absolute inset-0 bg-white/10" />
                                 <div className="bg-white/20 backdrop-blur-md rounded-full p-4 shadow-sm z-10 border border-white/20">
                                     <UserPlus className="h-8 w-8 text-white" />
                                 </div>
                             </div>
 
-                            <div className="px-8 pb-8 pt-4">
+                            <div className="px-6 pb-8 pt-4 overflow-y-auto flex-1">
                                 <DialogHeader className="mb-6 text-center">
                                     <DialogTitle className="text-2xl font-display text-center">
                                         {editingUser ? 'Edit Teacher' : 'Add Teacher'}
@@ -307,16 +340,25 @@ export default function Teachers() {
                                             <Label htmlFor="password">
                                                 {editingUser ? 'New Password (Optional)' : 'Password'}
                                             </Label>
-                                            <Input
-                                                id="password"
-                                                name="password"
-                                                type="password"
-                                                placeholder={editingUser ? "Leave blank to keep current" : "••••••••"}
-                                                className="rounded-xl"
-                                                value={formData.password}
-                                                onChange={handleInputChange}
-                                                required={!editingUser}
-                                            />
+                                            <div className="relative">
+                                                <Input
+                                                    id="password"
+                                                    name="password"
+                                                    type={showPassword ? "text" : "password"}
+                                                    placeholder={editingUser ? "Leave blank to keep current" : "••••••••"}
+                                                    className="rounded-xl pr-10"
+                                                    value={formData.password}
+                                                    onChange={handleInputChange}
+                                                    required={!editingUser}
+                                                />
+                                                <button
+                                                    type="button"
+                                                    onClick={() => setShowPassword(!showPassword)}
+                                                    className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-primary transition-colors"
+                                                >
+                                                    {showPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+                                                </button>
+                                            </div>
                                             {!editingUser && (
                                                 <p className="text-[10px] text-muted-foreground ml-1">
                                                     Must be at least 8 characters.
@@ -489,9 +531,9 @@ export default function Teachers() {
 
             {/* Detail/Profile View Dialog */}
             <Dialog open={!!viewingUser} onOpenChange={(open) => !open && setViewingUser(null)}>
-                <DialogContent className="max-w-md rounded-3xl p-0 overflow-hidden border-border/60">
+                <DialogContent className="max-w-md rounded-3xl p-0 overflow-hidden max-h-[85vh] border-border/60 flex flex-col">
                     {/* Header Background */}
-                    <div className="h-32 bg-gradient-hero w-full relative">
+                    <div className="h-24 bg-gradient-hero w-full relative shrink-0 z-10">
                         <div className="absolute -bottom-12 left-6">
                             <div className="h-24 w-24 rounded-full border-4 border-background bg-white shadow-xl flex items-center justify-center text-3xl font-display font-bold text-primary">
                                 {viewingUser?.username?.[0]?.toUpperCase()}
@@ -507,7 +549,7 @@ export default function Teachers() {
                         </Button>
                     </div>
 
-                    <div className="pt-16 pb-8 px-6">
+                    <div className="pt-16 pb-10 px-6 overflow-y-auto flex-1">
                         <DialogHeader className="mb-6 text-left">
                             <DialogTitle className="text-2xl font-bold flex items-center gap-2">
                                 {viewingUser?.username}
@@ -560,7 +602,7 @@ export default function Teachers() {
                                 </p>
                             </div>
 
-                            <div className="flex gap-3 pt-2">
+                            <div className="flex gap-3 pt-2 mb-6">
                                 <Button className="flex-1 rounded-full bg-gradient-hero border-0 shadow-md" onClick={(e) => {
                                     setViewingUser(null);
                                     if (viewingUser) openEditSheet(e as any, viewingUser);

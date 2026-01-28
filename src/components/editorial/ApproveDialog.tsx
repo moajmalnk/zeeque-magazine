@@ -44,7 +44,11 @@ export function ApproveDialog({ open, onOpenChange, post, onApprove }: ApproveDi
           <AlertDialogTitle className="font-display text-xl">
             Approve and Publish Submission
           </AlertDialogTitle>
-          <AlertDialogDescription className="space-y-3 pt-2">
+          <AlertDialogDescription>
+            Are you sure you want to approve this post?
+          </AlertDialogDescription>
+
+          <div className="space-y-3 pt-2 text-left">
             <div>
               <p className="text-sm font-medium text-foreground mb-1">
                 "{post.title}" by {post.author_name}
@@ -56,7 +60,7 @@ export function ApproveDialog({ open, onOpenChange, post, onApprove }: ApproveDi
 
             {/* Featured Toggle */}
             <div className="pt-4 pb-2 border-t border-border/60">
-              <div className="flex items-center justify-between gap-4 p-4 rounded-xl bg-muted/50 border border-border/60">
+              <label htmlFor="featured-toggle" className="flex items-center justify-between gap-4 p-4 rounded-xl bg-muted/50 border border-border/60 cursor-pointer hover:bg-muted/70 transition-colors">
                 <div className="flex items-start gap-3 flex-1">
                   <div className={cn(
                     "p-2 rounded-lg transition-colors",
@@ -68,12 +72,9 @@ export function ApproveDialog({ open, onOpenChange, post, onApprove }: ApproveDi
                     )} />
                   </div>
                   <div className="flex-1 space-y-1">
-                    <Label
-                      htmlFor="featured-toggle"
-                      className="text-sm font-semibold text-foreground cursor-pointer"
-                    >
+                    <div className="text-sm font-semibold text-foreground">
                       Feature this post
-                    </Label>
+                    </div>
                     <p className="text-xs text-muted-foreground leading-relaxed">
                       Featured posts will be highlighted prominently on the home page
                     </p>
@@ -85,9 +86,9 @@ export function ApproveDialog({ open, onOpenChange, post, onApprove }: ApproveDi
                   onCheckedChange={setIsFeatured}
                   className="shrink-0"
                 />
-              </div>
+              </label>
             </div>
-          </AlertDialogDescription>
+          </div>
         </AlertDialogHeader>
         <AlertDialogFooter className="gap-2 sm:gap-0">
           <AlertDialogCancel onClick={handleCancel}>

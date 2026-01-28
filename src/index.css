@@ -1,8 +1,46 @@
-@import url('https://fonts.googleapis.com/css2?family=Nunito:wght@400;500;600;700;800&family=Quicksand:wght@500;600;700&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800&family=Fredoka:wght@300;400;500;600;700&display=swap');
 
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
+
+/* Custom Scrollbar for a Premium Feel */
+::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+::-webkit-scrollbar-thumb {
+  background: #cbd5e1;
+  /* slate-300 */
+  border-radius: 9999px;
+  border: 2px solid transparent;
+  /* Creates padding effect */
+  background-clip: content-box;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: #94a3b8;
+  /* slate-400 */
+  background-clip: content-box;
+}
+
+/* For dark mode if needed */
+.dark ::-webkit-scrollbar-thumb {
+  background: #475569;
+  /* slate-600 */
+  background-clip: content-box;
+}
+
+.dark ::-webkit-scrollbar-thumb:hover {
+  background: #64748b;
+  /* slate-500 */
+  background-clip: content-box;
+}
 
 /* ZeeQue Webzine Design System
    A warm, playful, child-friendly design for celebrating creativity
@@ -143,6 +181,11 @@
     --sidebar-accent-foreground: 45 90% 10%;
     --sidebar-border: 240 20% 25%;
     --sidebar-ring: 340 100% 60%;
+
+    /* Dark Mode Shadows - Darker to blend */
+    --shadow-soft: 0 4px 10px -2px hsl(0 0% 0% / 0.3);
+    --shadow-card: 0 10px 25px -5px hsl(0 0% 0% / 0.4);
+    --shadow-hover: 0 20px 35px -5px hsl(0 0% 0% / 0.5);
   }
 }
 
@@ -441,6 +484,18 @@
   .custom-scrollbar {
     scrollbar-width: thin;
     scrollbar-color: hsl(var(--primary) / 0.3) hsl(var(--muted));
+  }
+
+  /* Utility to completely hide scrollbar but allow scrolling */
+  .scrollbar-hide {
+    -ms-overflow-style: none;
+    /* IE and Edge */
+    scrollbar-width: none;
+    /* Firefox */
+  }
+
+  .scrollbar-hide::-webkit-scrollbar {
+    display: none;
   }
 
   .custom-scrollbar::-webkit-scrollbar {

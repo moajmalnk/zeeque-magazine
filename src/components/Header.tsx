@@ -1,7 +1,7 @@
 import { Link, useLocation, useNavigate } from 'react-router-dom';
 import { useTheme } from 'next-themes';
 import { Button } from '@/components/ui/button';
-import { PenLine, BookOpen, FileText, Moon, Sun, HelpCircle, LogIn, Users, LogOut, Menu } from 'lucide-react';
+import { PenLine, BookOpen, FileText, Moon, Sun, HelpCircle, LogIn, Users, LogOut, Menu, Sparkles, ShieldQuestion, Layers, GraduationCap } from 'lucide-react';
 import { motion } from 'framer-motion';
 import { useAuth } from '@/hooks/useAuth';
 import { useEffect, useState } from 'react';
@@ -25,12 +25,11 @@ import {
   AlertDialogTrigger,
 } from '@/components/ui/alert-dialog';
 
-
-
 // Text-Only "Morph" Tab Component
 const NavTab = ({
   to,
   label,
+  icon: Icon,
   isActive,
   activeColor,
   activeBg = 'bg-white', // Default to white
@@ -47,8 +46,8 @@ const NavTab = ({
       className={`
         relative flex items-center justify-center rounded-full font-bold tracking-wide transition-all duration-300 ease-out select-none
         ${mobile
-          ? 'w-full py-4 px-6 text-lg justify-start'
-          : 'h-10 px-6 text-sm'
+          ? 'w-full py-4 px-6 text-lg justify-start gap-4'
+          : 'h-10 px-5 text-sm gap-2'
         }
         ${isActive
           ? `${activeColor} scale-105 z-10`
@@ -64,9 +63,17 @@ const NavTab = ({
         />
       )}
 
-      {/* Mobile active background (no sliding animation) */}
+      {/* Mobile active background */}
       {isActive && mobile && (
         <span className={`absolute inset-0 rounded-full ${activeBg} ${activeShadow} -z-10`} />
+      )}
+
+      {/* Icon */}
+      {Icon && (
+        <Icon className={`
+          ${mobile ? 'w-6 h-6' : 'w-4 h-4'}
+          ${isActive ? 'opacity-100' : 'opacity-70 group-hover:opacity-100'}
+        `} />
       )}
 
       <span className="relative z-10 font-bold">{label}</span>
@@ -90,10 +97,11 @@ const NavItems = ({ mobile = false, onItemClick, onLogout }: { mobile?: boolean;
   const { pathname } = location;
 
   return (
-    <div className={`flex ${mobile ? 'flex-col space-y-2 p-2' : 'items-center gap-2'}`}>
+    <div className={`flex ${mobile ? 'flex-col space-y-2 p-2' : 'items-center gap-1.5'}`}>
       <NavTab
         to="/"
         label="Read"
+        icon={BookOpen}
         isActive={pathname === '/'}
         activeBg="bg-gradient-to-r from-sky-400 to-blue-500"
         activeColor="text-white"
@@ -106,6 +114,7 @@ const NavItems = ({ mobile = false, onItemClick, onLogout }: { mobile?: boolean;
       <NavTab
         to="/guidelines"
         label="Rules"
+        icon={ShieldQuestion}
         isActive={pathname === '/guidelines'}
         activeBg="bg-gradient-to-r from-amber-400 to-orange-500"
         activeColor="text-white"
@@ -123,6 +132,7 @@ const NavItems = ({ mobile = false, onItemClick, onLogout }: { mobile?: boolean;
           <NavTab
             to="/editorial"
             label="Editor"
+            icon={Layers}
             isActive={pathname.startsWith('/editorial')}
             activeBg="bg-gradient-to-r from-purple-400 to-violet-500"
             activeColor="text-white"
@@ -136,6 +146,7 @@ const NavItems = ({ mobile = false, onItemClick, onLogout }: { mobile?: boolean;
             <NavTab
               to="/teachers"
               label="Teachers"
+              icon={GraduationCap}
               isActive={pathname.startsWith('/teachers')}
               activeBg="bg-gradient-to-r from-indigo-400 to-blue-600"
               activeColor="text-white"
@@ -148,10 +159,11 @@ const NavItems = ({ mobile = false, onItemClick, onLogout }: { mobile?: boolean;
         </>
       )}
 
-      {/* Primary Action 'Create' - Always visible, prioritized */}
+      {/* Primary Action 'Create' */}
       <NavTab
         to="/submit"
         label="Create"
+        icon={Sparkles}
         isActive={pathname === '/submit'}
         activeBg="bg-gradient-to-r from-primary to-accent"
         activeColor="text-white"
@@ -167,15 +179,25 @@ const NavItems = ({ mobile = false, onItemClick, onLogout }: { mobile?: boolean;
           <AlertDialogTrigger asChild>
             <button
               className={`
-                relative flex items-center justify-center rounded-full font-bold tracking-wide transition-all duration-300 ease-out select-none
-                text-slate-500 hover:text-red-500 hover:bg-red-50
+                relative flex items-center justify-center font-bold tracking-wide transition-all duration-300 ease-out select-none group
                 ${mobile
-                  ? 'w-full py-4 px-6 text-lg justify-start'
-                  : 'h-10 px-6 text-sm'
+                  ? 'w-full py-4 px-6 text-lg justify-start text-red-500 hover:bg-red-50 gap-4'
+                  : 'ml-2 h-10 px-5 text-sm rounded-full border border-red-200 dark:border-red-900/50 text-red-600 dark:text-red-400 hover:bg-red-50 dark:hover:bg-red-950/30 hover:border-red-300 dark:hover:border-red-800 shadow-sm hover:shadow-md'
                 }
               `}
             >
-              <span>Logout</span>
+              {mobile ? (
+                <span className="flex items-center gap-3">
+                  <div className="p-2 rounded-full bg-red-100 dark:bg-red-900/20 text-red-500">
+                    <LogOut className="w-5 h-5" />
+                  </div>
+                  Logout
+                </span>
+              ) : (
+                <span className="flex items-center gap-2">
+                  <span>Logout</span> <LogOut className="w-4 h-4 transition-transform group-hover:translate-x-1" />
+                </span>
+              )}
             </button>
           </AlertDialogTrigger>
           <AlertDialogContent>
@@ -197,17 +219,33 @@ const NavItems = ({ mobile = false, onItemClick, onLogout }: { mobile?: boolean;
           </AlertDialogContent>
         </AlertDialog>
       ) : (
-        <NavTab
+        <Link
           to="/login"
-          label="Login"
-          isActive={pathname === '/login'}
-          activeBg="bg-gradient-to-r from-violet-400 to-fuchsia-500"
-          activeColor="text-white"
-          activeShadow="shadow-[0_8px_16px_-6px_rgba(139,92,246,0.5)]"
-          hoverColor="hover:text-violet-500"
           onClick={onItemClick}
-          mobile={mobile}
-        />
+          className={`
+            relative flex items-center justify-center font-bold tracking-wide transition-all duration-300 ease-out select-none
+            ${mobile
+              ? 'w-full py-4 px-6 text-lg justify-start text-primary gap-4'
+              : 'ml-2 h-10 px-6 text-sm rounded-full bg-primary text-white shadow-lg shadow-primary/30 hover:shadow-primary/50 hover:bg-primary/90 hover:scale-105 active:scale-95'
+            }
+          `}
+        >
+          {mobile ? (
+            <span className="flex items-center gap-3">
+              <div className="p-2 rounded-full bg-primary/10 text-primary">
+                <LogIn className="w-5 h-5" />
+              </div>
+              Login
+            </span>
+          ) : (
+            <>
+              <span className="relative z-10 flex items-center gap-2">
+                <span>Login</span> <LogIn className="w-4 h-4 opacity-80" />
+              </span>
+              <div className="absolute inset-0 rounded-full bg-gradient-to-r from-white/20 to-transparent opacity-0 hover:opacity-100 transition-opacity" />
+            </>
+          )}
+        </Link>
       )}
     </div >
   );
@@ -261,47 +299,66 @@ export function Header() {
           >
             {mounted ? (
               theme === 'dark' ? (
-                <Sun className="h-4 w-4" />
+                <Sun className="h-4 w-4 text-yellow-400" />
               ) : (
-                <Moon className="h-4 w-4" />
+                <Moon className="h-4 w-4 text-slate-700" />
               )
             ) : (
-              <Sun className="h-4 w-4" />
+              <Sun className="h-4 w-4 text-yellow-400" />
             )}
           </Button>
         </nav>
 
         {/* Mobile Navigation */}
-        <div className="flex md:hidden items-center gap-2">
-          <Button
-            variant="ghost"
-            size="icon"
-            className="h-9 w-9 rounded-full transition-all duration-200 hover:bg-muted"
-            onClick={() => setTheme(theme === 'dark' ? 'light' : 'dark')}
-          >
-            {mounted ? (
-              theme === 'dark' ? <Sun className="h-4 w-4" /> : <Moon className="h-4 w-4" />
-            ) : null}
-          </Button>
+        <div className="flex md:hidden items-center gap-3">
+          {/* Modern Glass Capsule */}
+          <div className="flex items-center gap-1 bg-background/40 backdrop-blur-md border border-border/50 rounded-full p-1 pl-2 shadow-sm">
+            <Button
+              variant="ghost"
+              size="icon"
+              className="h-9 w-9 rounded-full hover:bg-accent/50 transition-colors"
+              onClick={() => setTheme(theme === 'dark' ? 'light' : 'dark')}
+            >
+              <motion.div
+                initial={false}
+                animate={{ rotate: theme === 'dark' ? 90 : 0 }}
+                transition={{ type: "spring", stiffness: 200, damping: 15 }}
+              >
+                {mounted ? (
+                  theme === 'dark' ? (
+                    <Sun className="h-5 w-5 text-yellow-400 fill-yellow-400/20" />
+                  ) : (
+                    <Moon className="h-5 w-5 text-indigo-500 fill-indigo-500/20" />
+                  )
+                ) : null}
+              </motion.div>
+            </Button>
 
-          <Sheet open={mobileOpen} onOpenChange={setMobileOpen}>
-            <SheetTrigger asChild>
-              <Button variant="ghost" size="icon" className="h-10 w-10 shrink-0">
-                <Menu className="h-5 w-5" />
-                <span className="sr-only">Toggle menu</span>
-              </Button>
-            </SheetTrigger>
-            <SheetContent side="right" className="w-[300px] sm:w-[400px] flex flex-col gap-6 pt-10">
-              <SheetHeader className="text-left px-2">
-                <SheetTitle className="flex items-center gap-2">
-                  <span className="font-display text-xl font-bold">Menu</span>
-                </SheetTitle>
-              </SheetHeader>
-              <div className="flex flex-col gap-2">
-                <NavItems mobile onItemClick={() => setMobileOpen(false)} onLogout={handleLogout} />
-              </div>
-            </SheetContent>
-          </Sheet>
+            <div className="w-px h-4 bg-border/50 mx-1" />
+
+            <Sheet open={mobileOpen} onOpenChange={setMobileOpen}>
+              <SheetTrigger asChild>
+                <Button variant="ghost" size="icon" className="h-10 w-10 shrink-0 rounded-full hover:bg-accent/50 group">
+                  <div className="flex flex-col gap-1.5 items-end justify-center w-6">
+                    <span className="w-6 h-0.5 bg-foreground rounded-full transition-all group-hover:w-4 group-aria-expanded:rotate-45 group-aria-expanded:translate-y-2" />
+                    <span className="w-4 h-0.5 bg-foreground/70 rounded-full transition-all group-hover:w-6 group-aria-expanded:opacity-0" />
+                    <span className="w-5 h-0.5 bg-foreground rounded-full transition-all group-hover:w-3 group-aria-expanded:-rotate-45 group-aria-expanded:-translate-y-2" />
+                  </div>
+                  <span className="sr-only">Toggle menu</span>
+                </Button>
+              </SheetTrigger>
+              <SheetContent side="right" className="w-[300px] sm:w-[400px] flex flex-col gap-6 pt-10">
+                <SheetHeader className="text-left px-2">
+                  <SheetTitle className="flex items-center gap-2">
+                    <span className="font-display text-xl font-bold">Menu</span>
+                  </SheetTitle>
+                </SheetHeader>
+                <div className="flex flex-col gap-2">
+                  <NavItems mobile onItemClick={() => setMobileOpen(false)} onLogout={handleLogout} />
+                </div>
+              </SheetContent>
+            </Sheet>
+          </div>
         </div>
       </div>
     </header>

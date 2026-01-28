@@ -17,7 +17,7 @@ const Index = () => {
 
   // Show only featured posts on home page (limit to 6)
   const featuredPosts = useMemo(() => {
-    return publishedPosts.filter(post => post.is_featured).slice(0, 6);
+    return publishedPosts.filter(post => post.is_featured).slice(0, 8);
   }, [publishedPosts]);
 
   const filteredPosts = useMemo(() => {

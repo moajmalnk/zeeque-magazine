@@ -85,11 +85,13 @@ export function HeroSection() {
               <div className="absolute inset-0 bg-accent/20 rounded-full blur-[60px] scale-75 animate-pulse" />
 
               {/* Main Mascot Image */}
-              <div className="relative z-10 w-full max-w-[400px] lg:max-w-[500px] animate-bounce-gentle">
+              <div className="relative z-10 w-full max-w-[400px] lg:max-w-[500px] animate-float hover:z-20">
                 <img
                   src="/images/mascot1.png"
                   alt="ZeeQue Mascot"
-                  className="w-full h-full object-contain drop-shadow-2xl hover:scale-105 transition-transform duration-500"
+                  className="w-full h-full object-contain drop-shadow-2xl transition-all duration-500 cubic-bezier(0.34, 1.56, 0.64, 1) cursor-pointer 
+                  hover:scale-110 hover:-rotate-6 hover:brightness-110 hover:drop-shadow-[0_20px_35px_rgba(236,72,153,0.3)]
+                  active:scale-90 active:rotate-12 active:brightness-90"
                 />
               </div>
 

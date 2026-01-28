@@ -29,17 +29,29 @@ export function usePosts() {
   const createMutation = useMutation({
     mutationFn: async (newPost: any) => {
       // Check if we need to send FormData (for file uploads)
-      const hasFiles = newPost.image_url instanceof File || newPost.video_file instanceof File;
+      // Relaxed check: if these keys exist, we assume they are files and must use FormData.
+      // This avoids issues where 'instanceof Blob' fails for some reason.
+      const hasFiles = !!newPost.image_url || !!newPost.video_file;
 
       if (hasFiles) {
         const formData = new FormData();
         Object.keys(newPost).forEach(key => {
-          if (newPost[key] !== undefined && newPost[key] !== null) {
-            formData.append(key, newPost[key]);
+          const value = newPost[key];
+          if (value !== undefined && value !== null) {
+            if ((key === 'image_url' || key === 'video_file') && value instanceof Blob) {
+              // Append with a default filename to ensure backend treats it as a file
+              const ext = value.type.split('/')[1] || 'bin';
+              // Backend Serializer expects 'image_url', so we keep the key as is.
+              formData.append(key, value, `upload.${ext}`);
+            } else {
+              formData.append(key, value);
+            }
           }
         });
         const response = await api.post('/posts/', formData, {
-          headers: { 'Content-Type': 'multipart/form-data' },
+          headers: {
+            'Content-Type': 'multipart/form-data',
+          },
         });
         return response.data;
       }

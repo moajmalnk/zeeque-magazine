@@ -55,6 +55,16 @@ const Editorial = () => {
     updatePost(id, updates);
   };
 
+  const handleToggleFeature = (id: string, currentFeatured: boolean) => {
+    updatePost(id, { is_featured: !currentFeatured });
+    toast.success(
+      currentFeatured
+        ? 'Post removed from featured list'
+        : 'Post featured on home page! 🌟',
+      { duration: 2000 }
+    );
+  };
+
   const filterPosts = (posts: Post[]) => {
     if (selectedCategory === 'all') return posts;
     return posts.filter(post => post.category === selectedCategory);
@@ -69,7 +79,7 @@ const Editorial = () => {
       <Header />
 
       <main className="flex-1 py-8">
-        <div className="container max-w-6xl">
+        <div className="container max-w-[95%] xl:max-w-full px-4 md:px-8">
           {/* Page Header */}
           <div className="mb-8 flex items-start justify-between gap-4">
             <div>
@@ -156,7 +166,7 @@ const Editorial = () => {
                   </p>
                 </div>
               ) : viewMode === 'grid' ? (
-                <div className="grid gap-4 md:grid-cols-2 auto-rows-fr">
+                <div className="grid gap-4 grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 auto-rows-fr">
                   {filteredPending.map(post => (
                     <ReviewCard
                       key={post.id}
@@ -204,7 +214,7 @@ const Editorial = () => {
                   </p>
                 </div>
               ) : viewMode === 'grid' ? (
-                <div className="grid gap-4 md:grid-cols-2 auto-rows-fr">
+                <div className="grid gap-4 grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 auto-rows-fr">
                   {filteredPublished.map(post => (
                     <ReviewCard
                       key={post.id}
@@ -214,6 +224,7 @@ const Editorial = () => {
                       onRestore={handleRestore}
                       onDelete={handleDelete}
                       onEdit={handleEdit}
+                      onToggleFeature={handleToggleFeature}
                     />
                   ))}
                 </div>
@@ -253,7 +264,7 @@ const Editorial = () => {
                   </p>
                 </div>
               ) : viewMode === 'grid' ? (
-                <div className="grid gap-4 md:grid-cols-2 auto-rows-fr">
+                <div className="grid gap-4 grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 auto-rows-fr">
                   {filteredRejected.map(post => (
                     <ReviewCard
                       key={post.id}

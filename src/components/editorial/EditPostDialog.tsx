@@ -93,75 +93,77 @@ export function EditPostDialog({ post, open, onOpenChange, onSave }: EditPostDia
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-w-3xl max-h-[90vh] overflow-y-auto">
-        <DialogHeader>
-          <DialogTitle className="font-display text-2xl">Edit Post</DialogTitle>
+      <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto rounded-[2rem] sm:rounded-3xl p-6 shadow-2xl border-0 bg-white/95 dark:bg-slate-900/95 backdrop-blur-xl">
+        <DialogHeader className="text-center sm:text-left pr-8">
+          <DialogTitle className="font-display text-2xl sm:text-3xl font-bold tracking-tight">Edit Post</DialogTitle>
         </DialogHeader>
 
-        <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
-          {/* Author Name */}
-          <div className="space-y-2">
-            <Label htmlFor="edit-authorName" className="text-base font-semibold">
-              Student Name 👋
-            </Label>
-            <Input
-              id="edit-authorName"
-              placeholder="Student name"
-              {...form.register('authorName')}
-              className="h-12 text-base rounded-xl"
-            />
-            {form.formState.errors.authorName && (
-              <p className="text-sm text-destructive">{form.formState.errors.authorName.message}</p>
-            )}
-          </div>
+        <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6 pt-4">
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+            {/* Author Name */}
+            <div className="space-y-2 text-left">
+              <Label htmlFor="edit-authorName" className="text-sm font-semibold text-muted-foreground">
+                Student Name 👋
+              </Label>
+              <Input
+                id="edit-authorName"
+                placeholder="Student name"
+                {...form.register('authorName')}
+                className="h-11 text-base rounded-xl shadow-sm border-slate-200 dark:border-slate-800 focus:border-primary/50 focus:ring-primary/20 bg-slate-50/50 dark:bg-slate-900/50"
+              />
+              {form.formState.errors.authorName && (
+                <p className="text-xs text-destructive font-medium">{form.formState.errors.authorName.message}</p>
+              )}
+            </div>
 
-          {/* Teacher Name */}
-          <div className="space-y-2">
-            <Label htmlFor="edit-teacherName" className="text-base font-semibold">
-              Teacher Name 👨‍🏫
-            </Label>
-            <Input
-              id="edit-teacherName"
-              placeholder="Teacher name"
-              {...form.register('teacherName')}
-              className="h-12 text-base rounded-xl"
-            />
-            {form.formState.errors.teacherName && (
-              <p className="text-sm text-destructive">{form.formState.errors.teacherName.message}</p>
-            )}
+            {/* Teacher Name */}
+            <div className="space-y-2 text-left">
+              <Label htmlFor="edit-teacherName" className="text-sm font-semibold text-muted-foreground">
+                Teacher Name 👨‍🏫
+              </Label>
+              <Input
+                id="edit-teacherName"
+                placeholder="Teacher name"
+                {...form.register('teacherName')}
+                className="h-11 text-base rounded-xl shadow-sm border-slate-200 dark:border-slate-800 focus:border-primary/50 focus:ring-primary/20 bg-slate-50/50 dark:bg-slate-900/50"
+              />
+              {form.formState.errors.teacherName && (
+                <p className="text-xs text-destructive font-medium">{form.formState.errors.teacherName.message}</p>
+              )}
+            </div>
           </div>
 
           {/* School Name */}
-          <div className="space-y-2">
-            <Label htmlFor="edit-schoolName" className="text-base font-semibold">
+          <div className="space-y-2 text-left">
+            <Label htmlFor="edit-schoolName" className="text-sm font-semibold text-muted-foreground">
               School Name 🏫
             </Label>
             <Input
               id="edit-schoolName"
               placeholder="School name"
               {...form.register('schoolName')}
-              className="h-12 text-base rounded-xl"
+              className="h-11 text-base rounded-xl shadow-sm border-slate-200 dark:border-slate-800 focus:border-primary/50 focus:ring-primary/20 bg-slate-50/50 dark:bg-slate-900/50"
             />
             {form.formState.errors.schoolName && (
-              <p className="text-sm text-destructive">{form.formState.errors.schoolName.message}</p>
+              <p className="text-xs text-destructive font-medium">{form.formState.errors.schoolName.message}</p>
             )}
           </div>
 
           {/* Category Selection */}
-          <div className="space-y-3">
-            <Label className="text-base font-semibold">
+          <div className="space-y-3 text-left">
+            <Label className="text-sm font-semibold text-muted-foreground">
               Category 🎨
             </Label>
-            <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-6 gap-3">
+            <div className="grid grid-cols-2 md:grid-cols-3 gap-3">
               {categories.map((category) => (
                 <button
                   key={category}
                   type="button"
                   onClick={() => form.setValue('category', category)}
                   className={cn(
-                    'p-4 rounded-2xl border-2 text-left transition-all duration-200 w-full',
+                    'p-3 rounded-xl border-2 text-left transition-all duration-200 w-full flex items-center gap-3 group outline-none focus:ring-2 focus:ring-primary/20',
                     selectedCategory === category
-                      ? cn('border-transparent shadow-card', {
+                      ? cn('border-transparent shadow-md transform scale-[1.02]', {
                         'bg-gradient-stories': category === 'stories',
                         'bg-gradient-poems': category === 'poems',
                         'bg-gradient-drawings': category === 'drawings',
@@ -169,13 +171,13 @@ export function EditPostDialog({ post, open, onOpenChange, onSave }: EditPostDia
                         'bg-gradient-video': category === 'video',
                         'bg-gradient-other': category === 'other',
                       })
-                      : 'border-border hover:border-primary/30 bg-background hover:bg-muted/50'
+                      : 'border-slate-100 hover:border-primary/30 bg-slate-50/50 hover:bg-white dark:border-slate-800 dark:bg-slate-900 dark:hover:bg-slate-800'
                   )}
                 >
-                  <span className="text-2xl mb-1 block">{categoryIcons[category]}</span>
+                  <span className="text-xl shrink-0 group-hover:scale-110 transition-transform duration-300">{categoryIcons[category]}</span>
                   <span className={cn(
-                    'font-semibold block text-sm',
-                    selectedCategory === category ? 'text-white' : 'text-foreground'
+                    'font-bold text-sm tracking-wide',
+                    selectedCategory === category ? 'text-white' : 'text-slate-600 dark:text-slate-300'
                   )}>
                     {categoryLabels[category]}
                   </span>
@@ -183,46 +185,46 @@ export function EditPostDialog({ post, open, onOpenChange, onSave }: EditPostDia
               ))}
             </div>
             {form.formState.errors.category && (
-              <p className="text-sm text-destructive">{form.formState.errors.category.message}</p>
+              <p className="text-xs text-destructive font-medium">{form.formState.errors.category.message}</p>
             )}
           </div>
 
           {/* Title */}
-          <div className="space-y-2">
-            <Label htmlFor="edit-title" className="text-base font-semibold">
+          <div className="space-y-2 text-left">
+            <Label htmlFor="edit-title" className="text-sm font-semibold text-muted-foreground">
               Title ✏️
             </Label>
             <Input
               id="edit-title"
               placeholder="Post title"
               {...form.register('title')}
-              className="h-12 text-base rounded-xl"
+              className="h-11 text-base rounded-xl shadow-sm border-slate-200 dark:border-slate-800 focus:border-primary/50 focus:ring-primary/20 bg-slate-50/50 dark:bg-slate-900/50"
             />
             {form.formState.errors.title && (
-              <p className="text-sm text-destructive">{form.formState.errors.title.message}</p>
+              <p className="text-xs text-destructive font-medium">{form.formState.errors.title.message}</p>
             )}
           </div>
 
           {/* Content */}
-          <div className="space-y-2">
-            <Label htmlFor="edit-content" className="text-base font-semibold">
+          <div className="space-y-2 text-left">
+            <Label htmlFor="edit-content" className="text-sm font-semibold text-muted-foreground">
               Content 📝
             </Label>
             <Textarea
               id="edit-content"
               placeholder="Post content..."
               {...form.register('content')}
-              className="min-h-32 text-base rounded-xl resize-none"
+              className="min-h-32 text-base rounded-xl resize-none shadow-sm border-slate-200 dark:border-slate-800 focus:border-primary/50 focus:ring-primary/20 bg-slate-50/50 dark:bg-slate-900/50"
             />
             {form.formState.errors.content && (
-              <p className="text-sm text-destructive">{form.formState.errors.content.message}</p>
+              <p className="text-xs text-destructive font-medium">{form.formState.errors.content.message}</p>
             )}
           </div>
 
           {/* Video URL (if category is video) */}
           {selectedCategory === 'video' && (
-            <div className="space-y-2">
-              <Label htmlFor="edit-videoUrl" className="text-base font-semibold">
+            <div className="space-y-2 text-left">
+              <Label htmlFor="edit-videoUrl" className="text-sm font-semibold text-muted-foreground">
                 Video URL 🔗
               </Label>
               <Input
@@ -230,23 +232,24 @@ export function EditPostDialog({ post, open, onOpenChange, onSave }: EditPostDia
                 type="url"
                 placeholder="https://youtube.com/watch?v=... or https://vimeo.com/..."
                 {...form.register('videoUrl')}
-                className="h-12 text-base rounded-xl"
+                className="h-11 text-base rounded-xl shadow-sm border-slate-200 dark:border-slate-800 focus:border-primary/50 focus:ring-primary/20 bg-slate-50/50 dark:bg-slate-900/50"
               />
               {form.formState.errors.videoUrl && (
-                <p className="text-sm text-destructive">{form.formState.errors.videoUrl.message}</p>
+                <p className="text-xs text-destructive font-medium">{form.formState.errors.videoUrl.message}</p>
               )}
             </div>
           )}
 
-          <DialogFooter className="gap-2">
+          <DialogFooter className="gap-3 sm:gap-2 pt-4 border-t border-slate-100 dark:border-slate-800">
             <Button
               type="button"
               variant="outline"
               onClick={() => onOpenChange(false)}
+              className="rounded-xl h-11 border-slate-200 hover:bg-slate-50"
             >
               Cancel
             </Button>
-            <Button type="submit" className="bg-primary hover:bg-primary/90">
+            <Button type="submit" className="bg-primary hover:bg-primary/90 rounded-xl h-11 px-8 shadow-lg shadow-primary/20 transition-all hover:scale-[1.02]">
               Save Changes
             </Button>
           </DialogFooter>

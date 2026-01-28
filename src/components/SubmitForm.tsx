@@ -13,6 +13,7 @@ import { Send, Upload, Sparkles, Video, ArrowRight, ArrowLeft, Star, PartyPopper
 import { cn } from '@/lib/utils';
 import { usePosts } from '@/hooks/usePosts';
 import { useAuth } from '@/hooks/useAuth';
+import imageCompression from 'browser-image-compression';
 
 // --- Form Schema ---
 // Made teacher/school optional to prevent validation blocks on hidden fields.
@@ -122,14 +123,39 @@ export function SubmitForm() {
   };
 
   // ... (Image/Video handlers omitted as they don't impact layout logic, keeping logic same)
-  const handleImageChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+  const handleImageChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (file) {
-      if (file.size > 5 * 1024 * 1024) { toast.error("Too big!"); return; }
-      setSelectedImage(file);
-      const reader = new FileReader();
-      reader.onload = () => setImagePreview(reader.result as string);
-      reader.readAsDataURL(file);
+      // Basic sanity check - don't try to compress massive files that might crash browser
+      if (file.size > 20 * 1024 * 1024) {
+        toast.error("File is too large! Please choose an image under 20MB.");
+        return;
+      }
+
+      const loadingToast = toast.loading("Optimizing your image...");
+
+      try {
+        const options = {
+          maxSizeMB: 1, // Target < 1MB to be safe with standard Nginx limits
+          maxWidthOrHeight: 1920, // Full HD standard is usually enough
+          useWebWorker: true,
+        };
+
+        const compressedFile = await imageCompression(file, options);
+
+        setSelectedImage(compressedFile);
+
+        const reader = new FileReader();
+        reader.onload = () => setImagePreview(reader.result as string);
+        reader.readAsDataURL(compressedFile);
+
+        toast.dismiss(loadingToast);
+        toast.success("Image ready!");
+      } catch (error) {
+        console.error("Image compression error:", error);
+        toast.dismiss(loadingToast);
+        toast.error("Could not process this image. Try another.");
+      }
     }
   };
 
@@ -179,9 +205,12 @@ export function SubmitForm() {
       });
 
       setIsSuccess(true);
-    } catch (error) {
+    } catch (error: any) {
       console.error("Submission error:", error);
-      toast.error("Something went wrong! Please try again.");
+      const msg = error.response?.data?.detail
+        || (typeof error.response?.data === 'object' ? Object.values(error.response.data).flat().join(', ') : '')
+        || "Something went wrong! Please try again.";
+      toast.error(msg);
     } finally {
       setIsSubmitting(false);
     }
@@ -193,8 +222,8 @@ export function SubmitForm() {
         <div className="w-20 h-20 bg-green-100 rounded-full flex items-center justify-center mb-6 shadow-lg animate-bounce">
           <PartyPopper className="w-10 h-10 text-green-600" />
         </div>
-        <h2 className="text-2xl md:text-3xl font-black text-slate-800 mb-2 font-display">Woohoo! 🎉</h2>
-        <p className="text-base text-slate-600 mb-6 max-w-sm">
+        <h2 className="text-2xl md:text-3xl font-black text-slate-800 dark:text-white mb-2 font-display">Woohoo! 🎉</h2>
+        <p className="text-base text-slate-600 dark:text-slate-300 mb-6 max-w-sm">
           Great job, {form.getValues('authorName')}! Your amazing work has been sent to the teachers.
         </p>
         <Button onClick={() => window.location.reload()} size="lg" variant="hero" className="rounded-full px-8 text-lg h-12">
@@ -287,22 +316,76 @@ export function SubmitForm() {
             {currentStep === 3 && (
               <div className="space-y-4 animate-in slide-in-from-right duration-500">
                 <div className="space-y-2">
-                  <Label className="text-base md:text-lg font-bold text-slate-700 dark:text-slate-200">My Title</Label>
+                  <Label className="text-base md:text-lg font-bold text-slate-700 dark:text-slate-200">
+                    {(() => {
+                      const cat = form.watch('category');
+                      if (cat === 'poems') return 'Name of your Poem';
+                      if (cat === 'drawings') return 'Title of your Artwork';
+                      if (cat === 'news') return 'Headline';
+                      if (cat === 'other') return 'Title of your Creation';
+                      return 'My Title';
+                    })()}
+                  </Label>
                   <Input
                     {...form.register('title')}
-                    placeholder="The Magical Adventure..."
+                    placeholder={(() => {
+                      const cat = form.watch('category');
+                      if (cat === 'poems') return 'The Dancing Leaves...';
+                      if (cat === 'drawings') return 'Sunset over the Hills...';
+                      if (cat === 'news') return 'Class 5 Wins the Trophy!';
+                      if (cat === 'other') return 'My Amazing Project...';
+                      return 'The Magical Adventure...';
+                    })()}
                     className="h-11 text-base rounded-xl border-slate-200 bg-white dark:bg-slate-900 dark:border-slate-700 dark:text-white dark:placeholder:text-slate-500"
                   />
                   {form.formState.errors.title && <p className="text-red-500 font-bold ml-2 text-sm">⚠️ {form.formState.errors.title.message}</p>}
                 </div>
                 <div className="space-y-2">
-                  <Label className="text-base md:text-lg font-bold text-slate-700 dark:text-slate-200">My Story</Label>
-                  <Textarea
-                    {...form.register('content')}
-                    placeholder="Once upon a time..."
-                    className="min-h-[120px] text-base rounded-xl border-slate-200 p-4 leading-relaxed bg-white dark:bg-slate-900 dark:border-slate-700 dark:text-white dark:placeholder:text-slate-500"
-                  />
-                  {form.formState.errors.content && <p className="text-red-500 font-bold ml-2 text-sm">⚠️ {form.formState.errors.content.message}</p>}
+                  <Label className="text-base md:text-lg font-bold text-slate-700 dark:text-slate-200">
+                    {(() => {
+                      const cat = form.watch('category');
+                      if (cat === 'poems') return 'Your Poem';
+                      if (cat === 'drawings') return 'Tell us about your drawing';
+                      if (cat === 'news') return 'The News Story';
+                      if (cat === 'video') return 'Video Description';
+                      if (cat === 'other') return 'Tell us about your creation';
+                      return 'My Story';
+                    })()}
+                  </Label>
+                  <div className="relative">
+                    <Textarea
+                      {...form.register('content')}
+                      placeholder={(() => {
+                        const cat = form.watch('category');
+                        if (cat === 'poems') return 'Roses are red...';
+                        if (cat === 'drawings') return 'I used watercolors to paint...';
+                        if (cat === 'news') return 'Today in our school...';
+                        if (cat === 'video') return 'In this video, I will show...';
+                        if (cat === 'other') return 'This is a project about...';
+                        return 'Once upon a time...';
+                      })()}
+                      className="min-h-[120px] text-base rounded-xl border-slate-200 p-4 leading-relaxed bg-white dark:bg-slate-900 dark:border-slate-700 dark:text-white dark:placeholder:text-slate-500"
+                    />
+                    <div className="flex justify-between items-center mt-2 px-1">
+                      <div className="text-sm">
+                        {form.formState.errors.content ? (
+                          <p className="text-red-500 font-bold">⚠️ {form.formState.errors.content.message}</p>
+                        ) : (
+                          (form.watch('content')?.length || 0) < 10 && (
+                            <p className="text-amber-500 font-medium text-xs animate-pulse">Need a bit more...</p>
+                          )
+                        )}
+                      </div>
+                      <div className={cn(
+                        "text-xs font-mono font-medium px-2 py-1 rounded-full border",
+                        (form.watch('content')?.length || 0) >= 10
+                          ? "text-slate-500 bg-slate-100 border-slate-200 dark:bg-slate-800 dark:text-slate-400 dark:border-slate-700"
+                          : "text-amber-600 bg-amber-50 border-amber-200 dark:bg-amber-900/20 dark:text-amber-400 dark:border-amber-900/50"
+                      )}>
+                        {(form.watch('content')?.length || 0)} / 2000
+                      </div>
+                    </div>
+                  </div>
                 </div>
               </div>
             )}
@@ -357,8 +440,21 @@ export function SubmitForm() {
                         <div className="w-12 h-12 bg-blue-100 dark:bg-blue-900/30 rounded-full flex items-center justify-center mx-auto mb-3 group-hover:scale-110 transition-transform">
                           <Upload className="w-6 h-6 text-blue-500 dark:text-blue-400" />
                         </div>
-                        <p className="text-lg font-bold text-slate-600 dark:text-slate-200 mb-1">Add a Picture?</p>
-                        <p className="text-sm text-slate-400 dark:text-slate-500">Click here to upload your drawing or photo!</p>
+                        <p className="text-lg font-bold text-slate-600 dark:text-slate-200 mb-1">
+                          {(() => {
+                            const cat = form.watch('category');
+                            if (cat === 'drawings') return 'Upload your Artwork?';
+                            if (cat === 'poems' || cat === 'stories') return 'Add an illustration?';
+                            return 'Add a Picture?';
+                          })()}
+                        </p>
+                        <p className="text-sm text-slate-400 dark:text-slate-500">
+                          {(() => {
+                            const cat = form.watch('category');
+                            if (cat === 'drawings') return 'Click to upload your drawing!';
+                            return 'Click here if you have a picture to go with it!';
+                          })()}
+                        </p>
                       </>
                     )}
                   </div>
