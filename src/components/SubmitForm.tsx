@@ -102,20 +102,63 @@ export function SubmitForm() {
 
   const handleNext = async () => {
     let fieldsToValidate: (keyof SubmitFormData)[] = [];
+
+    // Step 1 Validation
     if (currentStep === 1) {
       fieldsToValidate = ['authorName'];
-      if (!isTeacher) fieldsToValidate.push('schoolName');
+
+      const isInputVisible = !isTeacher || role === 'ADMIN';
+
+      // Always validate authorName
+      const isAuthorValid = await form.trigger('authorName');
+      if (!isAuthorValid) {
+        toast.error("Please enter the student's name");
+        return;
+      }
+
+      // If School/Teacher inputs are visible, manually enforce they are not empty
+      if (isInputVisible) {
+        const values = form.getValues();
+        let hasError = false;
+
+        if (!values.schoolName?.trim()) {
+          form.setError('schoolName', {
+            type: 'manual',
+            message: 'School name is required'
+          });
+          hasError = true;
+        }
+
+        if (!values.teacherName?.trim()) {
+          form.setError('teacherName', {
+            type: 'manual',
+            message: 'Teacher name is required'
+          });
+          hasError = true;
+        }
+
+        if (hasError) {
+          toast.error("Please fill in all required fields");
+          return;
+        }
+      }
     }
+
     if (currentStep === 2) fieldsToValidate = ['category'];
     if (currentStep === 3) fieldsToValidate = ['title', 'content'];
 
-    const isValid = await form.trigger(fieldsToValidate);
-    if (isValid) {
-      setCurrentStep((prev) => Math.min(prev + 1, TOTAL_STEPS));
-      window.scrollTo({ top: 0, behavior: 'smooth' });
-    } else {
-      toast.error("Oops! Can you check the red fields?");
+    // For step 2 & 3, standard trigger is sufficient
+    if (currentStep > 1) {
+      const isValid = await form.trigger(fieldsToValidate);
+      if (!isValid) {
+        toast.error("Oops! Can you check the red fields?");
+        return;
+      }
     }
+
+    // Move to next step
+    setCurrentStep((prev) => Math.min(prev + 1, TOTAL_STEPS));
+    window.scrollTo({ top: 0, behavior: 'smooth' });
   };
 
   const handleBack = () => {
@@ -185,6 +228,11 @@ export function SubmitForm() {
       return;
     }
 
+    if ((data.category === 'drawings' || data.category === 'poems') && !selectedImage) {
+      toast.error(`Please upload an image for your ${data.category === 'poems' ? 'poem' : 'drawing'}!`);
+      return;
+    }
+
     setIsSubmitting(true);
 
     try {
@@ -219,8 +267,12 @@ export function SubmitForm() {
   if (isSuccess) {
     return (
       <div className="flex flex-col items-center justify-center py-12 text-center animate-in zoom-in-50 duration-500 px-4">
-        <div className="w-20 h-20 bg-green-100 rounded-full flex items-center justify-center mb-6 shadow-lg animate-bounce">
-          <PartyPopper className="w-10 h-10 text-green-600" />
+        <div className="w-32 h-32 mb-6 animate-bounce">
+          <img
+            src="/images/mascot1.png"
+            alt="Success!"
+            className="w-full h-full object-contain filter drop-shadow-xl"
+          />
         </div>
         <h2 className="text-2xl md:text-3xl font-black text-slate-800 dark:text-white mb-2 font-display">Woohoo! 🎉</h2>
         <p className="text-base text-slate-600 dark:text-slate-300 mb-6 max-w-sm">
@@ -265,7 +317,7 @@ export function SubmitForm() {
                   {form.formState.errors.authorName && <p className="text-red-500 font-bold ml-2 text-sm">⚠️ {form.formState.errors.authorName.message}</p>}
                 </div>
 
-                {!isTeacher && (
+                {(!isTeacher || role === 'ADMIN') && (
                   <>
                     <div className="space-y-2">
                       <Label className="text-base md:text-lg font-bold text-slate-700 dark:text-slate-200">I Go To School At...</Label>
@@ -372,7 +424,9 @@ export function SubmitForm() {
                           <p className="text-red-500 font-bold">⚠️ {form.formState.errors.content.message}</p>
                         ) : (
                           (form.watch('content')?.length || 0) < 10 && (
-                            <p className="text-amber-500 font-medium text-xs animate-pulse">Need a bit more...</p>
+                            <p className="text-amber-500 font-medium text-xs animate-pulse">
+                              Just {10 - (form.watch('content')?.length || 0)} more letters to go... ✍️
+                            </p>
                           )
                         )}
                       </div>
@@ -443,8 +497,8 @@ export function SubmitForm() {
                         <p className="text-lg font-bold text-slate-600 dark:text-slate-200 mb-1">
                           {(() => {
                             const cat = form.watch('category');
-                            if (cat === 'drawings') return 'Upload your Artwork?';
-                            if (cat === 'poems' || cat === 'stories') return 'Add an illustration?';
+                            if (cat === 'drawings') return 'Upload your Artwork (Required)';
+                            if (cat === 'poems') return 'Add an illustration (Required)';
                             return 'Add a Picture?';
                           })()}
                         </p>
@@ -452,6 +506,7 @@ export function SubmitForm() {
                           {(() => {
                             const cat = form.watch('category');
                             if (cat === 'drawings') return 'Click to upload your drawing!';
+                            if (cat === 'poems') return 'Upload a photo of your poem or a drawing!';
                             return 'Click here if you have a picture to go with it!';
                           })()}
                         </p>

@@ -16,6 +16,7 @@ import {
 } from '@/components/ui/dialog';
 import { toast } from 'sonner';
 import { cn } from '@/lib/utils';
+import { Upload, X, ImageIcon } from 'lucide-react';
 
 const editPostSchema = z.object({
   authorName: z.string().min(1, "Please enter a name!").max(50, "Name is too long"),
@@ -55,6 +56,9 @@ export function EditPostDialog({ post, open, onOpenChange, onSave }: EditPostDia
     },
   });
 
+  const [selectedImage, setSelectedImage] = useState<File | null>(null);
+  const [previewUrl, setPreviewUrl] = useState<string | null>(post.image_url || null);
+
   // Reset form when post changes
   useEffect(() => {
     if (open && post) {
@@ -67,13 +71,15 @@ export function EditPostDialog({ post, open, onOpenChange, onSave }: EditPostDia
         content: post.content,
         videoUrl: post.video_url || '',
       });
+      setPreviewUrl(post.image_url || null);
+      setSelectedImage(null);
     }
   }, [open, post, form]);
 
   const selectedCategory = form.watch('category');
 
   const onSubmit = (data: EditPostFormData) => {
-    onSave(post.id, {
+    const updates: any = {
       author_name: data.authorName,
       teacher_name: data.teacherName,
       school_name: data.schoolName,
@@ -81,7 +87,15 @@ export function EditPostDialog({ post, open, onOpenChange, onSave }: EditPostDia
       category: data.category,
       content: data.content,
       video_url: data.videoUrl || undefined,
-    });
+    };
+
+    if (selectedImage) {
+      updates.image_url = selectedImage;
+    } else if (post.image_url && !previewUrl) {
+      updates.image_url = null;
+    }
+
+    onSave(post.id, updates);
 
     toast.success('Post updated successfully!', {
       description: `"${data.title}" has been updated`,
@@ -189,6 +203,63 @@ export function EditPostDialog({ post, open, onOpenChange, onSave }: EditPostDia
             )}
           </div>
 
+          {/* Image Upload */}
+          <div className="space-y-2 text-left">
+            <Label className="text-sm font-semibold text-muted-foreground">
+              Cover Image 🖼️
+            </Label>
+            <div className="flex items-start gap-4">
+              {previewUrl ? (
+                <div className="relative w-32 h-24 rounded-lg overflow-hidden border border-slate-200 dark:border-slate-800 shrink-0 group">
+                  <img
+                    src={previewUrl}
+                    alt="Preview"
+                    className="w-full h-full object-cover"
+                  />
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setPreviewUrl(null);
+                      setSelectedImage(null);
+                    }}
+                    className="absolute top-1 right-1 p-1 bg-black/50 text-white rounded-full opacity-0 group-hover:opacity-100 transition-opacity"
+                  >
+                    <X className="w-3 h-3" />
+                  </button>
+                </div>
+              ) : (
+                <div className="w-32 h-24 rounded-lg border-2 border-dashed border-slate-200 dark:border-slate-800 flex items-center justify-center text-slate-400 shrink-0">
+                  <ImageIcon className="w-8 h-8 opacity-50" />
+                </div>
+              )}
+              <div className="flex-1">
+                <Input
+                  id="image-upload"
+                  type="file"
+                  accept="image/*"
+                  onChange={(e) => {
+                    const file = e.target.files?.[0];
+                    if (file) {
+                      setSelectedImage(file);
+                      setPreviewUrl(URL.createObjectURL(file));
+                    }
+                  }}
+                  className="hidden"
+                />
+                <Label
+                  htmlFor="image-upload"
+                  className="inline-flex items-center justify-center gap-2 px-4 py-2 bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-300 rounded-xl cursor-pointer transition-colors text-sm font-medium"
+                >
+                  <Upload className="w-4 h-4" />
+                  {previewUrl ? 'Change Image' : 'Upload Image'}
+                </Label>
+                <p className="text-xs text-muted-foreground mt-2">
+                  Recommended: 1200x630px or larger. JPG, PNG supported.
+                </p>
+              </div>
+            </div>
+          </div>
+
           {/* Title */}
           <div className="space-y-2 text-left">
             <Label htmlFor="edit-title" className="text-sm font-semibold text-muted-foreground">
@@ -245,7 +316,7 @@ export function EditPostDialog({ post, open, onOpenChange, onSave }: EditPostDia
               type="button"
               variant="outline"
               onClick={() => onOpenChange(false)}
-              className="rounded-xl h-11 border-slate-200 hover:bg-slate-50"
+              className="rounded-full h-11 border-2 border-slate-200 text-slate-500 hover:border-red-200 hover:bg-red-50 hover:text-red-600 transition-colors"
             >
               Cancel
             </Button>

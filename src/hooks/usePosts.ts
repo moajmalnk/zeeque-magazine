@@ -17,7 +17,33 @@ export function usePosts() {
 
   // Mutations
   const updateMutation = useMutation({
-    mutationFn: async ({ id, data }: { id: string; data: Partial<Post> }) => {
+    mutationFn: async ({ id, data }: { id: string; data: any }) => {
+      // Check if we need to send FormData (for file uploads)
+      const hasFiles =
+        (data.image_url && data.image_url instanceof Blob) ||
+        (data.video_file && data.video_file instanceof Blob);
+
+      if (hasFiles) {
+        const formData = new FormData();
+        Object.keys(data).forEach(key => {
+          const value = data[key];
+          if (value !== undefined && value !== null) {
+            if ((key === 'image_url' || key === 'video_file') && value instanceof Blob) {
+              const ext = value.type.split('/')[1] || 'bin';
+              formData.append(key, value, `upload.${ext}`);
+            } else {
+              formData.append(key, value);
+            }
+          }
+        });
+        const response = await api.patch(`/posts/${id}/`, formData, {
+          headers: {
+            'Content-Type': 'multipart/form-data',
+          },
+        });
+        return response.data;
+      }
+
       const response = await api.patch(`/posts/${id}/`, data);
       return response.data;
     },
@@ -73,7 +99,7 @@ export function usePosts() {
     },
   });
 
-  const updatePost = (postId: string, updates: Partial<Post>) => {
+  const updatePost = (postId: string, updates: any) => {
     updateMutation.mutate({ id: postId, data: updates });
   };
 
