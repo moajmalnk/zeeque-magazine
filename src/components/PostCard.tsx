@@ -21,7 +21,7 @@ function getVideoEmbedUrl(url: string): string | null {
     if (urlObj.hostname.includes('youtube.com') || urlObj.hostname.includes('youtu.be')) {
       const videoId = urlObj.searchParams.get('v') || urlObj.pathname.split('/').pop()?.split('?')[0];
       if (videoId) {
-        return `https://www.youtube.com/embed/${videoId}?autoplay=1&mute=1&controls=0&loop=1&playlist=${videoId}`;
+        return `https://www.youtube.com/embed/${videoId}?autoplay=1&mute=1&controls=0&loop=1&modestbranding=1&rel=0&showinfo=0&iv_load_policy=3&playlist=${videoId}`;
       }
     }
 
@@ -369,7 +369,7 @@ export function PostCard({ post, index = 0 }: PostCardProps) {
                   const embedUrl = getVideoEmbedUrl(post.video_url);
                   return embedUrl ? (
                     <iframe
-                      src={embedUrl.replace('autoplay=1&mute=1&controls=0&loop=1', 'autoplay=1')}
+                      src={embedUrl}
                       title={post.title}
                       className="w-full h-full"
                       allowFullScreen

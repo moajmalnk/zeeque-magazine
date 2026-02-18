@@ -1,0 +1,728 @@
+[
+  {
+    "label": "Zahra Park ZeeQue Preschool Koduvally (ZQC15/001)",
+    "value": "ZQC15/001",
+    "original_name": "Zahra Park ZeeQue Preschool Koduvally",
+    "code": "ZQC15/001"
+  },
+  {
+    "label": "MEMS ZeeQue Preschool Karanthur (ZQC15/002)",
+    "value": "ZQC15/002",
+    "original_name": "MEMS ZeeQue Preschool Karanthur",
+    "code": "ZQC15/002"
+  },
+  {
+    "label": "ZeeQue Preschool Poonoor (ZQC15/003)",
+    "value": "ZQC15/003",
+    "original_name": "ZeeQue Preschool Poonoor",
+    "code": "ZQC15/003"
+  },
+  {
+    "label": "MPS ZeeQue Preschool Koyilandy (ZQC16/005)",
+    "value": "ZQC16/005",
+    "original_name": "MPS ZeeQue Preschool Koyilandy",
+    "code": "ZQC16/005"
+  },
+  {
+    "label": "MPS ZeeQue Preschool Balussery (ZQC16/006)",
+    "value": "ZQC16/006",
+    "original_name": "MPS ZeeQue Preschool Balussery",
+    "code": "ZQC16/006"
+  },
+  {
+    "label": "MIS ZeeQue Preschool Eranhipaalam (ZQC16/007)",
+    "value": "ZQC16/007",
+    "original_name": "MIS ZeeQue Preschool Eranhipaalam",
+    "code": "ZQC16/007"
+  },
+  {
+    "label": "Markazu Swahaba ZeeQue Preschool Calicut (ZQC16/008)",
+    "value": "ZQC16/008",
+    "original_name": "Markazu Swahaba ZeeQue Preschool Calicut",
+    "code": "ZQC16/008"
+  },
+  {
+    "label": "CM City Kids ZeeQue Preschool Nallalam (ZQC16/009)",
+    "value": "ZQC16/009",
+    "original_name": "CM City Kids ZeeQue Preschool Nallalam",
+    "code": "ZQC16/009"
+  },
+  {
+    "label": "Hidaya ZeeQue Preschool Palazhi (ZQC16/010)",
+    "value": "ZQC16/010",
+    "original_name": "Hidaya ZeeQue Preschool Palazhi",
+    "code": "ZQC16/010"
+  },
+  {
+    "label": "Thwaiba ZeeQue Preschool Valliyad (ZQC16/012)",
+    "value": "ZQC16/012",
+    "original_name": "Thwaiba ZeeQue Preschool Valliyad",
+    "code": "ZQC16/012"
+  },
+  {
+    "label": "Swahaba Kids Zone ZeeQue Preschool Kaithapoyil (ZQC16/013)",
+    "value": "ZQC16/013",
+    "original_name": "Swahaba Kids Zone ZeeQue Preschool Kaithapoyil",
+    "code": "ZQC16/013"
+  },
+  {
+    "label": "Guidance ZeeQue Preschool Thiruvambady (ZQC16/015)",
+    "value": "ZQC16/015",
+    "original_name": "Guidance ZeeQue Preschool Thiruvambady",
+    "code": "ZQC16/015"
+  },
+  {
+    "label": "Apex ZeeQue Preschool Varam (ZQC16/017)",
+    "value": "ZQC16/017",
+    "original_name": "Apex ZeeQue Preschool Varam",
+    "code": "ZQC16/017"
+  },
+  {
+    "label": "Markaz ZeeQue Preschool Puthur Panoor (ZQC16/018)",
+    "value": "ZQC16/018",
+    "original_name": "Markaz ZeeQue Preschool Puthur Panoor",
+    "code": "ZQC16/018"
+  },
+  {
+    "label": "MDI ZeeQue Preschool Kallidukk (ZQC16/019)",
+    "value": "ZQC16/019",
+    "original_name": "MDI ZeeQue Preschool Kallidukk",
+    "code": "ZQC16/019"
+  },
+  {
+    "label": "Ainul Huda ZeeQue Preschool Keezhmadam (ZQC16/020)",
+    "value": "ZQC16/020",
+    "original_name": "Ainul Huda ZeeQue Preschool Keezhmadam",
+    "code": "ZQC16/020"
+  },
+  {
+    "label": "Zahra Garden ZeeQue Preschool Saidarpalli (ZQC16/021)",
+    "value": "ZQC16/021",
+    "original_name": "Zahra Garden ZeeQue Preschool Saidarpalli",
+    "code": "ZQC16/021"
+  },
+  {
+    "label": "Al Furqan ZeeQue Preschool Wandoor (ZQC16/023)",
+    "value": "ZQC16/023",
+    "original_name": "Al Furqan ZeeQue Preschool Wandoor",
+    "code": "ZQC16/023"
+  },
+  {
+    "label": "KEMS ZeeQue Preschool manjeri (ZQC16/024)",
+    "value": "ZQC16/024",
+    "original_name": "KEMS ZeeQue Preschool manjeri",
+    "code": "ZQC16/024"
+  },
+  {
+    "label": "Irshad ZeeQue Preschool Panthavoor (ZQC16/029)",
+    "value": "ZQC16/029",
+    "original_name": "Irshad ZeeQue Preschool Panthavoor",
+    "code": "ZQC16/029"
+  },
+  {
+    "label": "Vadee Marwa ZeeQue Preschool  Ayiroor (ZQC16/030)",
+    "value": "ZQC16/030",
+    "original_name": "Vadee Marwa ZeeQue Preschool  Ayiroor",
+    "code": "ZQC16/030"
+  },
+  {
+    "label": "Badrul Huda ZeeQue Preschool Varanakkara (ZQC16/031)",
+    "value": "ZQC16/031",
+    "original_name": "Badrul Huda ZeeQue Preschool Varanakkara",
+    "code": "ZQC16/031"
+  },
+  {
+    "label": "Nice ZeeQue Preschool Chelembra (ZQC16/032)",
+    "value": "ZQC16/032",
+    "original_name": "Nice ZeeQue Preschool Chelembra",
+    "code": "ZQC16/032"
+  },
+  {
+    "label": "MET ZeeQue Preschool Tirur (ZQC17/036)",
+    "value": "ZQC17/036",
+    "original_name": "MET ZeeQue Preschool Tirur",
+    "code": "ZQC17/036"
+  },
+  {
+    "label": "Madar ZeeQue Preschool Vadanappally (ZQC17/038)",
+    "value": "ZQC17/038",
+    "original_name": "Madar ZeeQue Preschool Vadanappally",
+    "code": "ZQC17/038"
+  },
+  {
+    "label": "Zahra Garden ZeeQue Preschool  Chengalayi (ZQC17/039)",
+    "value": "ZQC17/039",
+    "original_name": "Zahra Garden ZeeQue Preschool  Chengalayi",
+    "code": "ZQC17/039"
+  },
+  {
+    "label": "Salama Park ZeeQue Preschool Venkitang (ZQC17/042)",
+    "value": "ZQC17/042",
+    "original_name": "Salama Park ZeeQue Preschool Venkitang",
+    "code": "ZQC17/042"
+  },
+  {
+    "label": "Markazul Irshadiyya ZeeQue Preschool Palliparamba (ZQC17/044)",
+    "value": "ZQC17/044",
+    "original_name": "Markazul Irshadiyya ZeeQue Preschool Palliparamba",
+    "code": "ZQC17/044"
+  },
+  {
+    "label": "Manshau ZeeQue Preschool Mattool (ZQC17/047)",
+    "value": "ZQC17/047",
+    "original_name": "Manshau ZeeQue Preschool Mattool",
+    "code": "ZQC17/047"
+  },
+  {
+    "label": "Mujammau ZeeQue Preschool Thrikaripur (ZQC17/051)",
+    "value": "ZQC17/051",
+    "original_name": "Mujammau ZeeQue Preschool Thrikaripur",
+    "code": "ZQC17/051"
+  },
+  {
+    "label": "MPS ZeeQue Preschool Ar Nagar (ZQC17/052)",
+    "value": "ZQC17/052",
+    "original_name": "MPS ZeeQue Preschool Ar Nagar",
+    "code": "ZQC17/052"
+  },
+  {
+    "label": "Al Huda ZeeQue Preschool Kadampuzha (ZQC17/053)",
+    "value": "ZQC17/053",
+    "original_name": "Al Huda ZeeQue Preschool Kadampuzha",
+    "code": "ZQC17/053"
+  },
+  {
+    "label": "Naqshabandhi Garden ZeeQue Preschool Tanur (ZQC17/054)",
+    "value": "ZQC17/054",
+    "original_name": "Naqshabandhi Garden ZeeQue Preschool Tanur",
+    "code": "ZQC17/054"
+  },
+  {
+    "label": "Makhdoomiyya Garden ZeeQue Preschool  Vailathur (ZQC17/055)",
+    "value": "ZQC17/055",
+    "original_name": "Makhdoomiyya Garden ZeeQue Preschool  Vailathur",
+    "code": "ZQC17/055"
+  },
+  {
+    "label": "Ma'din Knowledge Garden ZeeQue Prechool South Punnayur (ZQC17/056)",
+    "value": "ZQC17/056",
+    "original_name": "Ma'din Knowledge Garden ZeeQue Prechool South Punnayur",
+    "code": "ZQC17/056"
+  },
+  {
+    "label": "Markaz Al Munawara ZeeQue Preschool Manappally (ZQC17/057)",
+    "value": "ZQC17/057",
+    "original_name": "Markaz Al Munawara ZeeQue Preschool Manappally",
+    "code": "ZQC17/057"
+  },
+  {
+    "label": "MDI ZeeQue Preschool Karulai (ZQC17/058)",
+    "value": "ZQC17/058",
+    "original_name": "MDI ZeeQue Preschool Karulai",
+    "code": "ZQC17/058"
+  },
+  {
+    "label": "Umariyya Kinder Garden ZeeQue Preschool Fort Kochi (ZQC17/059)",
+    "value": "ZQC17/059",
+    "original_name": "Umariyya Kinder Garden ZeeQue Preschool Fort Kochi",
+    "code": "ZQC17/059"
+  },
+  {
+    "label": "Algebra Global ZeeQue Preschool Koppam (ZQC17/060)",
+    "value": "ZQC17/060",
+    "original_name": "Algebra Global ZeeQue Preschool Koppam",
+    "code": "ZQC17/060"
+  },
+  {
+    "label": "Irshadiyya ZeeQue Preschool Kolathur (ZQC17/062)",
+    "value": "ZQC17/062",
+    "original_name": "Irshadiyya ZeeQue Preschool Kolathur",
+    "code": "ZQC17/062"
+  },
+  {
+    "label": "Izzathul Islam ZeeQue Preschool Moonniyur (ZQC17/063)",
+    "value": "ZQC17/063",
+    "original_name": "Izzathul Islam ZeeQue Preschool Moonniyur",
+    "code": "ZQC17/063"
+  },
+  {
+    "label": "Thajul Ulama ZeeQue Preschool Chiramanangad (ZQC17/064)",
+    "value": "ZQC17/064",
+    "original_name": "Thajul Ulama ZeeQue Preschool Chiramanangad",
+    "code": "ZQC17/064"
+  },
+  {
+    "label": "Markaz ZeeQue Preschool Kaikamba (ZQC17/065)",
+    "value": "ZQC17/065",
+    "original_name": "Markaz ZeeQue Preschool Kaikamba",
+    "code": "ZQC17/065"
+  },
+  {
+    "label": "Safara ZeeQue Preschool Kooriyad (ZQC17/066)",
+    "value": "ZQC17/066",
+    "original_name": "Safara ZeeQue Preschool Kooriyad",
+    "code": "ZQC17/066"
+  },
+  {
+    "label": "MJS ZeeQue Preschool Vidakuzha (ZQC17/067)",
+    "value": "ZQC17/067",
+    "original_name": "MJS ZeeQue Preschool Vidakuzha",
+    "code": "ZQC17/067"
+  },
+  {
+    "label": "Mueeniya ZeeQue Preschool Kakkur (ZQC17/068)",
+    "value": "ZQC17/068",
+    "original_name": "Mueeniya ZeeQue Preschool Kakkur",
+    "code": "ZQC17/068"
+  },
+  {
+    "label": "Majlis ZeeQue Preschool Uliyil (ZQC17/070)",
+    "value": "ZQC17/070",
+    "original_name": "Majlis ZeeQue Preschool Uliyil",
+    "code": "ZQC17/070"
+  },
+  {
+    "label": "Al Qadisia ZeeQue Preschool Kavalkatte (ZQC17/071)",
+    "value": "ZQC17/071",
+    "original_name": "Al Qadisia ZeeQue Preschool Kavalkatte",
+    "code": "ZQC17/071"
+  },
+  {
+    "label": "Majlis Edupark ZeeQue Preschool Mudipu (ZQC17/072)",
+    "value": "ZQC17/072",
+    "original_name": "Majlis Edupark ZeeQue Preschool Mudipu",
+    "code": "ZQC17/072"
+  },
+  {
+    "label": "Mayyalaviyya ZeeQue Preschool Mahe (ZQC18/073)",
+    "value": "ZQC18/073",
+    "original_name": "Mayyalaviyya ZeeQue Preschool Mahe",
+    "code": "ZQC18/073"
+  },
+  {
+    "label": "ICS ZeeQue Preschool SasthamCotta (ZQC18/074)",
+    "value": "ZQC18/074",
+    "original_name": "ICS ZeeQue Preschool SasthamCotta",
+    "code": "ZQC18/074"
+  },
+  {
+    "label": "Markaz Thaeleemul Ihsan ZeeQue Preschool Muloor (ZQC18/075)",
+    "value": "ZQC18/075",
+    "original_name": "Markaz Thaeleemul Ihsan ZeeQue Preschool Muloor",
+    "code": "ZQC18/075"
+  },
+  {
+    "label": "Ek Mohammed Darimi Usthad ZeeQue Preschool Keralapuram (ZQC18/076)",
+    "value": "ZQC18/076",
+    "original_name": "Ek Mohammed Darimi Usthad ZeeQue Preschool Keralapuram",
+    "code": "ZQC18/076"
+  },
+  {
+    "label": "MJM ZeeQue Preschool Bajpe (ZQC18/077)",
+    "value": "ZQC18/077",
+    "original_name": "MJM ZeeQue Preschool Bajpe",
+    "code": "ZQC18/077"
+  },
+  {
+    "label": "Zain ZeeQue Preschool Kodinji (ZQC18/082)",
+    "value": "ZQC18/082",
+    "original_name": "Zain ZeeQue Preschool Kodinji",
+    "code": "ZQC18/082"
+  },
+  {
+    "label": "MPS ZeeQue Preschool Aikkarappadi (ZQC18/083)",
+    "value": "ZQC18/083",
+    "original_name": "MPS ZeeQue Preschool Aikkarappadi",
+    "code": "ZQC18/083"
+  },
+  {
+    "label": "Ayyoobi ZeeQue Preschool Padinjarangadi (ZQC18/084)",
+    "value": "ZQC18/084",
+    "original_name": "Ayyoobi ZeeQue Preschool Padinjarangadi",
+    "code": "ZQC18/084"
+  },
+  {
+    "label": "Falah Green Vally ZeeQue Preschool Kalpatta (ZQC18/086)",
+    "value": "ZQC18/086",
+    "original_name": "Falah Green Vally ZeeQue Preschool Kalpatta",
+    "code": "ZQC18/086"
+  },
+  {
+    "label": "Markazul Abrar ZeeQue Preschool Mannarkkad (ZQC18/087)",
+    "value": "ZQC18/087",
+    "original_name": "Markazul Abrar ZeeQue Preschool Mannarkkad",
+    "code": "ZQC18/087"
+  },
+  {
+    "label": "Minhaj Edu Park ZeeQue Preschool Kuniya (ZQC18/088)",
+    "value": "ZQC18/088",
+    "original_name": "Minhaj Edu Park ZeeQue Preschool Kuniya",
+    "code": "ZQC18/088"
+  },
+  {
+    "label": "Al Mafas ZeeQue Preschool Moodibiri (ZQC18/092)",
+    "value": "ZQC18/092",
+    "original_name": "Al Mafas ZeeQue Preschool Moodibiri",
+    "code": "ZQC18/092"
+  },
+  {
+    "label": "Gazzali Garden ZeeQue Preschool Thirthahalli (ZQC18/098)",
+    "value": "ZQC18/098",
+    "original_name": "Gazzali Garden ZeeQue Preschool Thirthahalli",
+    "code": "ZQC18/098"
+  },
+  {
+    "label": "Hidaya ZeeQue Preschool Kombam (ZQC19/097)",
+    "value": "ZQC19/097",
+    "original_name": "Hidaya ZeeQue Preschool Kombam",
+    "code": "ZQC19/097"
+  },
+  {
+    "label": "Alif Kindergarten ZeeQue Preschool Vadakkanchery (ZQC19/099)",
+    "value": "ZQC19/099",
+    "original_name": "Alif Kindergarten ZeeQue Preschool Vadakkanchery",
+    "code": "ZQC19/099"
+  },
+  {
+    "label": "Zahra Park ZeeQue Preschool Old Beach (ZQC19/102)",
+    "value": "ZQC19/102",
+    "original_name": "Zahra Park ZeeQue Preschool Old Beach",
+    "code": "ZQC19/102"
+  },
+  {
+    "label": "ZeeQue Preschool Kayamkulam (ZQC19/103)",
+    "value": "ZQC19/103",
+    "original_name": "ZeeQue Preschool Kayamkulam",
+    "code": "ZQC19/103"
+  },
+  {
+    "label": "Safa Marva ZeeQue Preschool Honnavar (ZQC19/104)",
+    "value": "ZQC19/104",
+    "original_name": "Safa Marva ZeeQue Preschool Honnavar",
+    "code": "ZQC19/104"
+  },
+  {
+    "label": "Al- Qadisa ZeeQue Preschool Adiyar Kannur (ZQC19/108)",
+    "value": "ZQC19/108",
+    "original_name": "Al- Qadisa ZeeQue Preschool Adiyar Kannur",
+    "code": "ZQC19/108"
+  },
+  {
+    "label": "Misbah ZeeQue Preschool Katipalla (ZQC19/110)",
+    "value": "ZQC19/110",
+    "original_name": "Misbah ZeeQue Preschool Katipalla",
+    "code": "ZQC19/110"
+  },
+  {
+    "label": "Baqiyath ZeeQue Preschool Kavaratti North (ZQC19/115)",
+    "value": "ZQC19/115",
+    "original_name": "Baqiyath ZeeQue Preschool Kavaratti North",
+    "code": "ZQC19/115"
+  },
+  {
+    "label": "Alif ZeeQue Preschool Chetlat (ZQC19/116)",
+    "value": "ZQC19/116",
+    "original_name": "Alif ZeeQue Preschool Chetlat",
+    "code": "ZQC19/116"
+  },
+  {
+    "label": "ZeeQue Preschool Salalah, Oman (ZQC19/117)",
+    "value": "ZQC19/117",
+    "original_name": "ZeeQue Preschool Salalah, Oman",
+    "code": "ZQC19/117"
+  },
+  {
+    "label": "Markaz ZeeQue Preschool Kavaratti Central (ZQC19/119)",
+    "value": "ZQC19/119",
+    "original_name": "Markaz ZeeQue Preschool Kavaratti Central",
+    "code": "ZQC19/119"
+  },
+  {
+    "label": "Markaz Riviera ZeeQue Preschool Muvattuppuzha (ZQC20/123)",
+    "value": "ZQC20/123",
+    "original_name": "Markaz Riviera ZeeQue Preschool Muvattuppuzha",
+    "code": "ZQC20/123"
+  },
+  {
+    "label": "Misbah Zahra Garden ZeeQue Preschool Chaliyam (ZQC20/124)",
+    "value": "ZQC20/124",
+    "original_name": "Misbah Zahra Garden ZeeQue Preschool Chaliyam",
+    "code": "ZQC20/124"
+  },
+  {
+    "label": "Al Madeena ZeeQue Preschool Manjanade (ZQC20/125)",
+    "value": "ZQC20/125",
+    "original_name": "Al Madeena ZeeQue Preschool Manjanade",
+    "code": "ZQC20/125"
+  },
+  {
+    "label": "Thajul Ulama ZeeQue Preschool Derlaketta (ZQC20/131)",
+    "value": "ZQC20/131",
+    "original_name": "Thajul Ulama ZeeQue Preschool Derlaketta",
+    "code": "ZQC20/131"
+  },
+  {
+    "label": "Markazul Hidaya ZeeQue Preschool Kottamudi (ZQC21/126)",
+    "value": "ZQC21/126",
+    "original_name": "Markazul Hidaya ZeeQue Preschool Kottamudi",
+    "code": "ZQC21/126"
+  },
+  {
+    "label": "MES ZeeQue Preschool Amini (ZQC21/127)",
+    "value": "ZQC21/127",
+    "original_name": "MES ZeeQue Preschool Amini",
+    "code": "ZQC21/127"
+  },
+  {
+    "label": "Assaquafa ZeeQue Preschool Kadamath (ZQC21/128)",
+    "value": "ZQC21/128",
+    "original_name": "Assaquafa ZeeQue Preschool Kadamath",
+    "code": "ZQC21/128"
+  },
+  {
+    "label": "Markaz ZeeQue Preschool Andrott (ZQC21/129)",
+    "value": "ZQC21/129",
+    "original_name": "Markaz ZeeQue Preschool Andrott",
+    "code": "ZQC21/129"
+  },
+  {
+    "label": "Thanveerul Islam ZeeQue Preschool Agathi (ZQC21/130)",
+    "value": "ZQC21/130",
+    "original_name": "Thanveerul Islam ZeeQue Preschool Agathi",
+    "code": "ZQC21/130"
+  },
+  {
+    "label": "Orange ZeeQue Preschool Kizhishery (ZQC21/132)",
+    "value": "ZQC21/132",
+    "original_name": "Orange ZeeQue Preschool Kizhishery",
+    "code": "ZQC21/132"
+  },
+  {
+    "label": "Bliss Mountain ZeeQue Preschool Ullal (ZQC21/135)",
+    "value": "ZQC21/135",
+    "original_name": "Bliss Mountain ZeeQue Preschool Ullal",
+    "code": "ZQC21/135"
+  },
+  {
+    "label": "Edan Global ZeeQue Preschool Belandoor (ZQC22/136)",
+    "value": "ZQC22/136",
+    "original_name": "Edan Global ZeeQue Preschool Belandoor",
+    "code": "ZQC22/136"
+  },
+  {
+    "label": "Markaz ZeeQue Preschool Klari (ZQC22/137)",
+    "value": "ZQC22/137",
+    "original_name": "Markaz ZeeQue Preschool Klari",
+    "code": "ZQC22/137"
+  },
+  {
+    "label": "MJS ZeeQue Preschool Mouloodpura (ZQC22/138)",
+    "value": "ZQC22/138",
+    "original_name": "MJS ZeeQue Preschool Mouloodpura",
+    "code": "ZQC22/138"
+  },
+  {
+    "label": "MJS ZeeQue Preschool Nettor (ZQC22/139)",
+    "value": "ZQC22/139",
+    "original_name": "MJS ZeeQue Preschool Nettor",
+    "code": "ZQC22/139"
+  },
+  {
+    "label": "Al- Ihsan ZeeQue Preschool Kalpeni (ZQC22/141)",
+    "value": "ZQC22/141",
+    "original_name": "Al- Ihsan ZeeQue Preschool Kalpeni",
+    "code": "ZQC22/141"
+  },
+  {
+    "label": "Alif Global International ZeeQue Preschool MKC (ZQC22/146)",
+    "value": "ZQC22/146",
+    "original_name": "Alif Global International ZeeQue Preschool MKC",
+    "code": "ZQC22/146"
+  },
+  {
+    "label": "Garden Valley ZeeQue Preschool Karunagappally (ZQC23/147)",
+    "value": "ZQC23/147",
+    "original_name": "Garden Valley ZeeQue Preschool Karunagappally",
+    "code": "ZQC23/147"
+  },
+  {
+    "label": "Pearls And Petals ZeeQue Preschool Muthuvammal (ZQC23/148)",
+    "value": "ZQC23/148",
+    "original_name": "Pearls And Petals ZeeQue Preschool Muthuvammal",
+    "code": "ZQC23/148"
+  },
+  {
+    "label": "Alif Kindergarten ZeeQue Preschool Varavoor (ZQC23/149)",
+    "value": "ZQC23/149",
+    "original_name": "Alif Kindergarten ZeeQue Preschool Varavoor",
+    "code": "ZQC23/149"
+  },
+  {
+    "label": "Insight ZeeQuePreschool Thathamangalam (ZQC23/150)",
+    "value": "ZQC23/150",
+    "original_name": "Insight ZeeQuePreschool Thathamangalam",
+    "code": "ZQC23/150"
+  },
+  {
+    "label": "Roulathul Athfaal Zeeque Preschool Bandiyod (ZQC23/152)",
+    "value": "ZQC23/152",
+    "original_name": "Roulathul Athfaal Zeeque Preschool Bandiyod",
+    "code": "ZQC23/152"
+  },
+  {
+    "label": "Thwaiba  ZeeQue Prschool Areekode (ZQC23/155)",
+    "value": "ZQC23/155",
+    "original_name": "Thwaiba  ZeeQue Prschool Areekode",
+    "code": "ZQC23/155"
+  },
+  {
+    "label": "Makhdoomiyya ZeeQue Preschool Ponnani (ZQC24/157)",
+    "value": "ZQC24/157",
+    "original_name": "Makhdoomiyya ZeeQue Preschool Ponnani",
+    "code": "ZQC24/157"
+  },
+  {
+    "label": "Azeezia ZeeQue Preschool Madavana (ZQC24/158)",
+    "value": "ZQC24/158",
+    "original_name": "Azeezia ZeeQue Preschool Madavana",
+    "code": "ZQC24/158"
+  },
+  {
+    "label": "Markaz ZeeQue Preschool Paruthikkuzhi (ZQC24/159)",
+    "value": "ZQC24/159",
+    "original_name": "Markaz ZeeQue Preschool Paruthikkuzhi",
+    "code": "ZQC24/159"
+  },
+  {
+    "label": "Hidaya Garden ZeeQue Preschool Muttannur (ZQC24/160)",
+    "value": "ZQC24/160",
+    "original_name": "Hidaya Garden ZeeQue Preschool Muttannur",
+    "code": "ZQC24/160"
+  },
+  {
+    "label": "Quaf ZeeQue Preschool Naduvannur (ZQC24/161)",
+    "value": "ZQC24/161",
+    "original_name": "Quaf ZeeQue Preschool Naduvannur",
+    "code": "ZQC24/161"
+  },
+  {
+    "label": "Thaqwa Academy Of Islamic Education ZeeQue Preschool Pumpwell (ZQC24/162)",
+    "value": "ZQC24/162",
+    "original_name": "Thaqwa Academy Of Islamic Education ZeeQue Preschool Pumpwell",
+    "code": "ZQC24/162"
+  },
+  {
+    "label": "Markazul Hidaya ZeeQue Preschool Kotekar (ZQC24/163)",
+    "value": "ZQC24/163",
+    "original_name": "Markazul Hidaya ZeeQue Preschool Kotekar",
+    "code": "ZQC24/163"
+  },
+  {
+    "label": "Markaz ZeeQue Preschool Wimberly Gunj Andaman and Nicobar Islands (ZQC24/172)",
+    "value": "ZQC24/172",
+    "original_name": "Markaz ZeeQue Preschool Wimberly Gunj Andaman and Nicobar Islands",
+    "code": "ZQC24/172"
+  },
+  {
+    "label": "Malhar She Garden ZeeQue Preschool Manjeshwar (ZQC25/168)",
+    "value": "ZQC25/168",
+    "original_name": "Malhar She Garden ZeeQue Preschool Manjeshwar",
+    "code": "ZQC25/168"
+  },
+  {
+    "label": "Al - Basmala ZeeQue Preschool Nekkila (ZQC25/169)",
+    "value": "ZQC25/169",
+    "original_name": "Al - Basmala ZeeQue Preschool Nekkila",
+    "code": "ZQC25/169"
+  },
+  {
+    "label": "Markaz ZeeQue Preschool Calicut, Andaman and Nicobar Islands (ZQC25/170)",
+    "value": "ZQC25/170",
+    "original_name": "Markaz ZeeQue Preschool Calicut, Andaman and Nicobar Islands",
+    "code": "ZQC25/170"
+  },
+  {
+    "label": "Thwaiba Foundation ZeeQue Preschool Hospet (ZQC25/171)",
+    "value": "ZQC25/171",
+    "original_name": "Thwaiba Foundation ZeeQue Preschool Hospet",
+    "code": "ZQC25/171"
+  },
+  {
+    "label": "Olive ZeeQue Preschool Kilthan Island (ZQC25/174)",
+    "value": "ZQC25/174",
+    "original_name": "Olive ZeeQue Preschool Kilthan Island",
+    "code": "ZQC25/174"
+  },
+  {
+    "label": "Garden Vally ZeeQue Preschool Oachira (ZQC26/175)",
+    "value": "ZQC26/175",
+    "original_name": "Garden Vally ZeeQue Preschool Oachira",
+    "code": "ZQC26/175"
+  },
+  {
+    "label": "Garden Vally ZeeQue Preschool Panmana (ZQC26/176)",
+    "value": "ZQC26/176",
+    "original_name": "Garden Vally ZeeQue Preschool Panmana",
+    "code": "ZQC26/176"
+  },
+  {
+    "label": "Muhammed Irfan ZeeQue Preschool, Mannar (ZQC26/177)",
+    "value": "ZQC26/177",
+    "original_name": "Muhammed Irfan ZeeQue Preschool, Mannar",
+    "code": "ZQC26/177"
+  },
+  {
+    "label": "MTS ZeeQue Preschool Padanthorai (ZQC26/178)",
+    "value": "ZQC26/178",
+    "original_name": "MTS ZeeQue Preschool Padanthorai",
+    "code": "ZQC26/178"
+  },
+  {
+    "label": "AIES ZeeQue Preschool Kondotty (ZQC26/179)",
+    "value": "ZQC26/179",
+    "original_name": "AIES ZeeQue Preschool Kondotty",
+    "code": "ZQC26/179"
+  },
+  {
+    "label": "We Spark International ZeeQue Preschool Narokkavu , Edakkara (ZQC26/180)",
+    "value": "ZQC26/180",
+    "original_name": "We Spark International ZeeQue Preschool Narokkavu , Edakkara",
+    "code": "ZQC26/180"
+  },
+  {
+    "label": "Alathor Markaz ZeeQue Preschool (ZQC26/181)",
+    "value": "ZQC26/181",
+    "original_name": "Alathor Markaz ZeeQue Preschool",
+    "code": "ZQC26/181"
+  },
+  {
+    "label": "ZeeQue Preschool Pattarnadakkavu (ZQC26/182)",
+    "value": "ZQC26/182",
+    "original_name": "ZeeQue Preschool Pattarnadakkavu",
+    "code": "ZQC26/182"
+  },
+  {
+    "label": "ZeeQue Preschool Pallimukku (ZQC26/183)",
+    "value": "ZQC26/183",
+    "original_name": "ZeeQue Preschool Pallimukku",
+    "code": "ZQC26/183"
+  },
+  {
+    "label": "Kings & Queens ZeeQue Preschool, Kaipamangalam (ZQC26/184)",
+    "value": "ZQC26/184",
+    "original_name": "Kings & Queens ZeeQue Preschool, Kaipamangalam",
+    "code": "ZQC26/184"
+  },
+  {
+    "label": "Madeena Makhoom ZeeQue Preschool Virippadam (ZQC26/185)",
+    "value": "ZQC26/185",
+    "original_name": "Madeena Makhoom ZeeQue Preschool Virippadam",
+    "code": "ZQC26/185"
+  },
+  {
+    "label": "Badriyya ZeeQue Preschool Nediyanad (ZQC26/186)",
+    "value": "ZQC26/186",
+    "original_name": "Badriyya ZeeQue Preschool Nediyanad",
+    "code": "ZQC26/186"
+  }
+]

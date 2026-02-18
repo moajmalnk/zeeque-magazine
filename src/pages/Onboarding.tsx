@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useMemo } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
@@ -8,10 +8,25 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { toast } from 'sonner';
-import { Check, ClipboardList } from 'lucide-react';
+import { Check, ClipboardList, ChevronsUpDown, Search } from 'lucide-react';
+import { cn } from "@/lib/utils";
+import { Command as CommandPrimitive } from "cmdk";
+import {
+    Command,
+    CommandEmpty,
+    CommandGroup,
+    CommandInput,
+    CommandItem,
+    CommandList,
+} from "@/components/ui/command";
+import {
+    Popover,
+    PopoverContent,
+    PopoverTrigger,
+} from "@/components/ui/popover";
 import api from '@/lib/api';
+import schoolsData from '@/data/schools.json';
 
 // Schema for Students
 // Comprehensive Schema
@@ -50,10 +65,100 @@ const onboardingSchema = z.object({
 
 type OnboardingFormData = z.infer<typeof onboardingSchema>;
 
+const SchoolSelector = ({
+    value,
+    onChange
+}: {
+    value?: string;
+    onChange: (value: string) => void;
+}) => {
+    const [open, setOpen] = useState(false);
+    const schools = useMemo(() => schoolsData, []);
+
+    // Find the selected school object
+    const selectedSchool = useMemo(() => {
+        return schools.find((school) => school.value === value);
+    }, [value, schools]);
+
+    return (
+        <Popover open={open} onOpenChange={setOpen}>
+            <PopoverTrigger asChild>
+                <Button
+                    variant="outline"
+                    role="combobox"
+                    aria-expanded={open}
+                    className="w-full justify-between font-normal h-12 text-base rounded-xl border-slate-200 bg-background dark:bg-slate-900 dark:border-slate-700 dark:text-white hover:bg-slate-50 dark:hover:bg-slate-800 transition-colors shadow-sm"
+                >
+                    <span className={cn("truncate flex items-center gap-2", !value && "text-muted-foreground")}>
+                        {value ? (
+                            <>
+                                <span className="font-medium text-slate-700 dark:text-slate-200">{selectedSchool?.original_name}</span>
+                                {selectedSchool?.code && (
+                                    <span className="text-xs bg-slate-100 dark:bg-slate-800 text-slate-500 px-1.5 py-0.5 rounded-md font-mono border border-slate-200 dark:border-slate-700">
+                                        {selectedSchool.code}
+                                    </span>
+                                )}
+                            </>
+                        ) : (
+                            "Select school..."
+                        )}
+                    </span>
+                    <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-40" />
+                </Button>
+            </PopoverTrigger>
+            <PopoverContent className="w-[--radix-popover-trigger-width] p-0 shadow-xl border-slate-200 dark:border-slate-800 rounded-xl overflow-hidden" align="start">
+                <Command className="bg-white dark:bg-slate-950">
+                    <div className="flex items-center p-2 border-b border-slate-100 dark:border-slate-800">
+                        <Search className="mr-2 h-4 w-4 shrink-0 opacity-50 absolute left-4 z-10" />
+                        <CommandPrimitive.Input
+                            placeholder="Search school name or code..."
+                            className="flex h-10 w-full rounded-xl bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-800 py-3 pl-9 pr-3 text-sm outline-none placeholder:text-muted-foreground disabled:cursor-not-allowed disabled:opacity-50 focus:ring-2 focus:ring-primary/20 transition-all font-medium"
+                        />
+                    </div>
+                    <CommandList className="max-h-[300px] overflow-y-auto custom-scrollbar p-1">
+                        <CommandEmpty className="py-6 text-center text-sm text-muted-foreground">
+                            No school found.
+                        </CommandEmpty>
+                        <CommandGroup heading="Suggestions" className="px-1 text-slate-500 font-medium text-xs uppercase tracking-wider">
+                            {schools.map((school) => (
+                                <CommandItem
+                                    key={school.value}
+                                    value={school.label} // Search matches against the full label "Name (Code)"
+                                    onSelect={() => {
+                                        onChange(school.value);
+                                        setOpen(false);
+                                    }}
+                                    className="rounded-lg aria-selected:bg-slate-100 dark:aria-selected:bg-slate-800 my-0.5 py-2.5 px-3 cursor-pointer transition-colors"
+                                >
+                                    <Check
+                                        className={cn(
+                                            "mr-3 h-4 w-4 text-primary transition-opacity",
+                                            value === school.value ? "opacity-100" : "opacity-0"
+                                        )}
+                                    />
+                                    <div className="flex flex-col">
+                                        <span className="font-medium text-slate-700 dark:text-slate-200 text-sm">
+                                            {school.original_name}
+                                        </span>
+                                        {school.code && (
+                                            <span className="text-xs text-slate-400 font-mono mt-0.5">
+                                                {school.code}
+                                            </span>
+                                        )}
+                                    </div>
+                                </CommandItem>
+                            ))}
+                        </CommandGroup>
+                    </CommandList>
+                </Command>
+            </PopoverContent>
+        </Popover>
+    );
+};
+
 export default function Onboarding() {
     const navigate = useNavigate();
     const { role, email, logout } = useAuth(); // Assuming useAuth provides login/logout
-    const [step, setStep] = useState(1);
     const [isLoading, setIsLoading] = useState(false);
 
     const form = useForm<OnboardingFormData>({
@@ -159,23 +264,10 @@ export default function Onboarding() {
                             <div className="space-y-4 animate-in fade-in slide-in-from-top-2">
                                 <div className="space-y-2">
                                     <Label>School Name</Label>
-                                    <Select
-                                        onValueChange={(val) => form.setValue('school_name', val)}
-                                        defaultValue={form.getValues('school_name')}
-                                    >
-                                        <SelectTrigger className="w-full">
-                                            <SelectValue placeholder="Select your school" />
-                                        </SelectTrigger>
-                                        <SelectContent>
-                                            <SelectItem value="greenwood_high">Greenwood High School</SelectItem>
-                                            <SelectItem value="sunshine_academy">Sunshine Academy</SelectItem>
-                                            <SelectItem value="oak_valley_inter">Oak Valley International</SelectItem>
-                                            <SelectItem value="riverdale_public">Riverdale Public School</SelectItem>
-                                            <SelectItem value="st_marys_convent">St. Mary's Convent</SelectItem>
-                                            <SelectItem value="delhi_public_school">Delhi Public School</SelectItem>
-                                            <SelectItem value="kendriya_vidyalaya">Kendriya Vidyalaya</SelectItem>
-                                        </SelectContent>
-                                    </Select>
+                                    <SchoolSelector
+                                        value={form.watch('school_name')}
+                                        onChange={(val) => form.setValue('school_name', val)}
+                                    />
                                     {form.formState.errors.school_name && <p className="text-xs text-destructive">{form.formState.errors.school_name.message}</p>}
                                 </div>
                                 <div className="space-y-2">
@@ -189,23 +281,10 @@ export default function Onboarding() {
                             <div className="space-y-4 animate-in fade-in slide-in-from-top-2">
                                 <div className="space-y-2">
                                     <Label>{role === 'TEACHER' ? 'School Name' : "Child's School Name"}</Label>
-                                    <Select
-                                        onValueChange={(val) => form.setValue('school_name', val)}
-                                        defaultValue={form.getValues('school_name')}
-                                    >
-                                        <SelectTrigger className="w-full">
-                                            <SelectValue placeholder="Select school" />
-                                        </SelectTrigger>
-                                        <SelectContent>
-                                            <SelectItem value="greenwood_high">Greenwood High School</SelectItem>
-                                            <SelectItem value="sunshine_academy">Sunshine Academy</SelectItem>
-                                            <SelectItem value="oak_valley_inter">Oak Valley International</SelectItem>
-                                            <SelectItem value="riverdale_public">Riverdale Public School</SelectItem>
-                                            <SelectItem value="st_marys_convent">St. Mary's Convent</SelectItem>
-                                            <SelectItem value="delhi_public_school">Delhi Public School</SelectItem>
-                                            <SelectItem value="kendriya_vidyalaya">Kendriya Vidyalaya</SelectItem>
-                                        </SelectContent>
-                                    </Select>
+                                    <SchoolSelector
+                                        value={form.watch('school_name')}
+                                        onChange={(val) => form.setValue('school_name', val)}
+                                    />
                                     {form.formState.errors.school_name && <p className="text-xs text-destructive">{form.formState.errors.school_name.message}</p>}
                                 </div>
 
@@ -220,8 +299,6 @@ export default function Onboarding() {
                                 </div>
                             </div>
                         )}
-
-
 
                         <Button type="submit" className="w-full" disabled={isLoading}>
                             {isLoading ? 'Saving...' : 'Complete Profile'}

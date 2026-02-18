@@ -355,11 +355,11 @@ export function ReviewCard({ post, onApprove, onReject, onRestore, onDelete, onE
                   const urlObj = new URL(url);
                   if (urlObj.hostname.includes('youtube.com') || urlObj.hostname.includes('youtu.be')) {
                     const videoId = urlObj.searchParams.get('v') || urlObj.pathname.split('/').pop()?.split('?')[0];
-                    if (videoId) return `https://www.youtube.com/embed/${videoId}`;
+                    if (videoId) return `https://www.youtube.com/embed/${videoId}?autoplay=1&mute=1&controls=0&loop=1&modestbranding=1&rel=0&showinfo=0&iv_load_policy=3&playlist=${videoId}`;
                   }
                   if (urlObj.hostname.includes('vimeo.com')) {
                     const videoId = urlObj.pathname.split('/').pop();
-                    if (videoId) return `https://player.vimeo.com/video/${videoId}`;
+                    if (videoId) return `https://player.vimeo.com/video/${videoId}?autoplay=1&muted=1&background=1`;
                   }
                   return url;
                 } catch {
