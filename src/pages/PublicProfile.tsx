@@ -8,7 +8,11 @@ import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Dialog, DialogContent, DialogTitle, DialogHeader } from '@/components/ui/dialog';
 import { Badge } from '@/components/ui/badge';
-import { Loader2, Grid3x3, Users, Calendar, Palette, Link as LinkIcon } from 'lucide-react';
+import {
+    Loader2, Grid3x3, Users, Calendar, Palette, Link as LinkIcon,
+    X, MoreHorizontal, FileText, Share2, Heart, MessageCircle,
+    UserPlus, UserCheck, BadgeCheck
+} from 'lucide-react';
 import { toast } from 'sonner';
 import api from '@/lib/api';
 import { cn } from '@/lib/utils';
@@ -70,6 +74,25 @@ const MOCK_USERS_DATA: Record<string, any> = {
             content: "How modern biomimicry is shaping...", status: 'published', created_at: new Date().toISOString()
         }]
     },
+    // Adding admin/verified examples
+    'admin': {
+        id: 'admin', username: 'ZeeQue Admin', bio: 'Official administration account.',
+        profile_image: 'https://ui-avatars.com/api/?name=ZeeQue+Admin&background=0D8ABC&color=fff',
+        role: 'ADMIN',
+        posts: []
+    },
+    'school': {
+        id: 'school', username: 'ZeeQue High School', bio: 'Official school profile.',
+        profile_image: 'https://ui-avatars.com/api/?name=ZeeQue+High&background=6366f1&color=fff',
+        role: 'SCHOOL',
+        posts: []
+    },
+    'editorial': {
+        id: 'editorial', username: 'ZeeQue Editorial', bio: 'Curating the best content.',
+        profile_image: 'https://ui-avatars.com/api/?name=ZeeQue+Edit&background=10b981&color=fff',
+        role: 'EDITORIAL',
+        posts: []
+    }
 };
 
 
@@ -81,6 +104,10 @@ export default function PublicProfile() {
     const { data: user, isLoading: isUserLoading, isError } = useQuery({
         queryKey: ['user', userId],
         queryFn: async () => {
+            // Mock data fallback for dev
+            if (userId && (MOCK_USERS_DATA[userId] || userId === 'admin' || userId === 'school' || userId === 'editorial')) {
+                return MOCK_USERS_DATA[userId] || MOCK_USERS_DATA['mock-1']; // Fallback strictly to avoid crash if key missing but listed in logic
+            }
             if (userId && MOCK_USERS_DATA[userId]) return MOCK_USERS_DATA[userId];
             const response = await api.get(`/users/${userId}/`);
             return response.data;
@@ -88,9 +115,13 @@ export default function PublicProfile() {
         retry: 1
     });
 
+    // Determine verification status
+    const isVerified = user?.role === 'ADMIN' || user?.role === 'SCHOOL' || user?.role === 'EDITORIAL';
+
     // Fetch User Posts
     const { data: posts = [], isLoading: isPostsLoading } = useQuery({
         queryKey: ['user-posts', userId],
+        // ... (rest of query matches original except keeping same)
         enabled: !!userId,
         queryFn: async () => {
             if (userId && MOCK_USERS_DATA[userId]) return MOCK_USERS_DATA[userId].posts;
@@ -100,6 +131,17 @@ export default function PublicProfile() {
             return response.data;
         },
     });
+
+    const [isFollowing, setIsFollowing] = useState(false);
+
+    const toggleFollow = () => {
+        setIsFollowing(!isFollowing);
+        if (!isFollowing) {
+            toast.success(`You are now following ${user?.username}`);
+        } else {
+            toast.info(`Unfollowed ${user?.username}`);
+        }
+    };
 
     if (isUserLoading) {
         return (
@@ -159,7 +201,12 @@ export default function PublicProfile() {
                                 </div>
 
                                 {/* Identity */}
-                                <h1 className="text-2xl font-display font-bold text-foreground mb-1 break-all">{user.username}</h1>
+                                <div className="flex items-center gap-2 justify-center mb-1">
+                                    <h1 className="text-2xl font-display font-bold text-foreground break-all">{user.username}</h1>
+                                    {isVerified && (
+                                        <BadgeCheck className="w-6 h-6 text-blue-500 fill-blue-500 text-white" />
+                                    )}
+                                </div>
                                 {user.teacher_name && (
                                     <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-primary/10 text-primary text-xs font-semibold mb-4">
                                         <Users className="w-3.5 h-3.5" />
@@ -171,6 +218,32 @@ export default function PublicProfile() {
                                 <p className="text-sm text-muted-foreground leading-relaxed mb-6 line-clamp-4 break-words px-2">
                                     {user.bio || "No bio available."}
                                 </p>
+
+                                {/* Follow Action */}
+                                <div className="w-full px-2 mb-6">
+                                    <Button
+                                        onClick={toggleFollow}
+                                        variant={isFollowing ? "outline" : "default"}
+                                        className={cn(
+                                            "w-full rounded-full font-semibold shadow-sm transition-all duration-300",
+                                            isFollowing
+                                                ? "border-muted-foreground/20 text-muted-foreground hover:bg-red-50 hover:text-red-600 hover:border-red-200 dark:hover:bg-red-900/10 dark:hover:text-red-400"
+                                                : "bg-primary text-primary-foreground hover:brightness-110 shadow-primary/20"
+                                        )}
+                                    >
+                                        {isFollowing ? (
+                                            <>
+                                                <UserCheck className="w-4 h-4 mr-2" />
+                                                Following
+                                            </>
+                                        ) : (
+                                            <>
+                                                <UserPlus className="w-4 h-4 mr-2" />
+                                                Follow
+                                            </>
+                                        )}
+                                    </Button>
+                                </div>
 
                                 {/* Stats Grid */}
                                 <div className="grid grid-cols-3 gap-2 w-full border-t border-border/50 pt-6 mb-6">
@@ -304,59 +377,133 @@ export default function PublicProfile() {
 
             {/* Post Detail View Dialog */}
             <Dialog open={!!selectedPost} onOpenChange={(open) => !open && setSelectedPost(null)}>
-                <DialogContent className="max-w-3xl w-full p-0 overflow-hidden bg-card rounded-2xl border border-border/50 shadow-2xl flex flex-col md:flex-row h-[90vh] md:h-auto md:max-h-[85vh]">
-                    {/* Visual Media Side (Left/Top) */}
-                    {selectedPost?.image && (
-                        <div className="w-full md:w-1/2 bg-black flex items-center justify-center relative group">
-                            <div className="absolute inset-0 bg-black/10 backdrop-blur-[2px]" />
-                            <img
-                                src={selectedPost.image}
-                                alt={selectedPost.title}
-                                className="w-full h-full object-contain relative z-10 max-h-[40vh] md:max-h-full"
-                            />
-                        </div>
-                    )}
+                <DialogContent
+                    noContentWrapper
+                    hideCloseButton
+                    className="max-w-5xl w-[95vw] md:w-full rounded-2xl p-0 overflow-hidden bg-background text-foreground border-border shadow-2xl flex flex-col md:flex-row h-[85vh] md:h-[650px] gap-0 outline-none"
+                >
+                    {/* LEFT: Image Section */}
+                    <div className="w-full md:w-[40%] bg-black/95 flex items-center justify-center relative h-[40vh] md:h-full flex-shrink-0 border-r border-border/10 overflow-hidden p-6 md:p-12">
+                        {selectedPost?.image ? (
+                            <>
+                                {/* Subtle Gradient Backdrop for Depth */}
+                                <div
+                                    className="absolute inset-0 bg-gradient-to-b from-white/5 to-transparent opacity-20 pointer-events-none"
+                                />
 
-                    {/* Content Side (Right/Bottom) */}
-                    <div className={cn("flex flex-col flex-1 min-w-0 bg-card", !selectedPost?.image && "w-full")}>
-                        {/* Header */}
-                        <div className="p-4 md:p-6 border-b border-border/40 flex flex-col gap-2 bg-muted/10">
-                            <div className="flex items-center justify-between">
-                                <DialogTitle className="font-display font-bold text-xl md:text-2xl leading-tight pr-8">
-                                    {selectedPost?.title}
-                                </DialogTitle>
-                            </div>
+                                {/* Main Image - Floating Card Style */}
+                                <img
+                                    src={selectedPost.image}
+                                    alt={selectedPost.title}
+                                    className="w-full h-full object-contain relative z-10 rounded-lg shadow-2xl drop-shadow-2xl"
+                                />
+                            </>
+                        ) : (
+                            <div className="w-full h-full flex flex-col items-center justify-center bg-gradient-to-br from-slate-900 to-slate-800 p-8 text-center relative overflow-hidden">
+                                {/* Abstract Pattern Background */}
+                                <div className="absolute inset-0 opacity-10 bg-[url('https://www.transparenttextures.com/patterns/cubes.png')] mix-blend-overlay" />
 
-                            <div className="flex items-center gap-3 text-xs md:text-sm text-muted-foreground">
-                                <div className="flex items-center gap-1.5 bg-muted px-2 py-1 rounded-md">
-                                    <Calendar className="w-3.5 h-3.5" />
-                                    <span>{selectedPost && new Date(selectedPost.created_at).toLocaleDateString(undefined, { month: 'long', day: 'numeric', year: 'numeric' })}</span>
+                                {/* Large Background Icon */}
+                                <FileText className="absolute text-white/5 w-64 h-64 -bottom-12 -right-12 rotate-12" />
+
+                                {/* Content */}
+                                <div className="relative z-10 flex flex-col items-center max-w-md">
+                                    <div className="w-16 h-1 bg-gradient-to-r from-pink-500 to-violet-500 rounded-full mb-6" />
+                                    <h3 className="text-2xl md:text-3xl font-black text-transparent bg-clip-text bg-gradient-to-r from-white to-white/70 tracking-tight leading-tight mb-4 line-clamp-3">
+                                        {selectedPost?.title}
+                                    </h3>
+                                    <span className="text-xs font-bold text-white/40 uppercase tracking-[0.2em] border border-white/10 px-3 py-1 rounded-full">
+                                        {selectedPost?.category}
+                                    </span>
                                 </div>
-                                <Badge variant="outline" className="border-primary/20 bg-primary/5 text-primary">
-                                    {selectedPost?.category}
-                                </Badge>
-                                <Badge className="border-0 bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-400">
-                                    Published
-                                </Badge>
+                            </div>
+                        )}
+                        {/* Mobile Close Button Overlay */}
+                        <Button
+                            size="icon"
+                            variant="ghost"
+                            onClick={() => setSelectedPost(null)}
+                            className="absolute top-3 right-3 z-50 text-white/70 hover:bg-white/10 hover:text-white backdrop-blur-md rounded-full md:hidden"
+                        >
+                            <X className="w-5 h-5" />
+                        </Button>
+                    </div>
+
+                    {/* RIGHT: Content Section */}
+                    <div className="flex flex-col flex-1 min-w-0 bg-background w-full overflow-hidden">
+
+                        {/* 1. Header: User Info & Actions */}
+                        <div className="flex items-center justify-between p-6 border-b border-border shrink-0">
+                            <div className="flex items-center gap-3">
+                                <Avatar className="w-8 h-8 border border-border">
+                                    <AvatarImage src={user?.profile_image} />
+                                    <AvatarFallback className="bg-muted text-foreground text-xs">{user?.username?.[0]}</AvatarFallback>
+                                </Avatar>
+                                <div className="flex flex-col justify-center">
+                                    <span className="font-semibold text-sm text-foreground leading-none">
+                                        {user?.username}
+                                    </span>
+                                    {/* If post author is different from profile user (e.g. reshared), we could show it here. Assuming direct authorship for now or simplify. */}
+                                    <span className="text-[10px] text-muted-foreground mt-0.5">Author</span>
+                                </div>
+                            </div>
+
+                            <div className="flex items-center gap-1">
+                                <Button variant="ghost" size="icon" className="text-muted-foreground hover:text-foreground hover:bg-transparent">
+                                    <MoreHorizontal className="w-5 h-5" />
+                                </Button>
+                                <Button
+                                    variant="ghost"
+                                    size="icon"
+                                    onClick={() => setSelectedPost(null)}
+                                    className="text-muted-foreground hover:text-foreground hover:bg-transparent hidden md:flex"
+                                >
+                                    <X className="w-6 h-6" />
+                                </Button>
                             </div>
                         </div>
 
-                        {/* Scrollable Body */}
-                        <div className="flex-1 overflow-y-auto p-4 md:p-6 space-y-4">
-                            <div className="prose prose-sm md:prose-base dark:prose-invert max-w-none text-muted-foreground leading-relaxed whitespace-pre-wrap">
-                                <span className="float-left text-5xl font-black text-primary/20 mr-2 mt-0 leading-none">
-                                    {selectedPost?.content?.charAt(0)}
-                                </span>
-                                {selectedPost?.content}
+                        {/* 2. Scrollable Body: Content */}
+                        <div className="flex-1 overflow-y-auto px-6 py-6 md:px-8 custom-scrollbar bg-background">
+                            {/* Title */}
+                            <h2 className="text-3xl md:text-4xl font-black text-slate-800 dark:text-white mb-6 leading-tight tracking-tight font-display">
+                                {selectedPost?.title}
+                            </h2>
+
+                            {/* Body Text */}
+                            <div className="text-lg md:text-xl leading-loose text-slate-600 dark:text-slate-300 whitespace-pre-wrap font-medium pb-8">
+                                {/* Drop cap effect */}
+                                {selectedPost?.content && (
+                                    <>
+                                        <span className="float-left text-5xl md:text-6xl font-black text-primary mr-3 mt-1 leading-none transform -rotate-2">
+                                            {selectedPost.content.charAt(0)}
+                                        </span>
+                                        {selectedPost.content.slice(1)}
+                                    </>
+                                )}
+                            </div>
+
+                            <div className="flex items-center text-xs text-muted-foreground mt-4 pt-4 border-t border-border/40">
+                                <Calendar className="w-3.5 h-3.5 mr-1.5" />
+                                <span>Published on {selectedPost && new Date(selectedPost.created_at).toLocaleDateString(undefined, { month: 'long', day: 'numeric', year: 'numeric' })}</span>
                             </div>
                         </div>
 
-                        {/* Footer / Actions */}
-                        <div className="p-4 border-t border-border/40 bg-muted/5 flex justify-end gap-2">
-                            <Button variant="secondary" onClick={() => setSelectedPost(null)}>
-                                Close
+                        {/* Footer Actions (Optional) */}
+                        <div className="p-4 border-t border-border bg-muted/5 flex items-center justify-between gap-2 shrink-0">
+                            <div className="flex gap-2">
+                                <Button variant="ghost" size="sm" className="gap-2 text-muted-foreground hover:text-red-500 hover:bg-red-500/5">
+                                    <Heart className="w-4 h-4" /> Like
+                                </Button>
+                                <Button variant="ghost" size="sm" className="gap-2 text-muted-foreground hover:text-blue-500 hover:bg-blue-500/5">
+                                    <MessageCircle className="w-4 h-4" /> Comment
+                                </Button>
+                            </div>
+                            <Button variant="ghost" size="sm" className="gap-2 text-muted-foreground hover:text-primary hover:bg-primary/5">
+                                <Share2 className="w-4 h-4" /> Share
                             </Button>
                         </div>
+
                     </div>
                 </DialogContent>
             </Dialog>

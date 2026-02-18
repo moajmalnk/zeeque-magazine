@@ -10,7 +10,7 @@ import { FAQSection } from '@/components/FAQSection';
 import { usePosts } from '@/hooks/usePosts';
 import { Category } from '@/types/post';
 import { Button } from '@/components/ui/button';
-import { ArrowRight, Grid3x3, X, Heart, MessageCircle, Share2, MoreHorizontal, FileText } from 'lucide-react';
+import { ArrowRight, Grid3x3, X, Heart, MessageCircle, Share2, MoreHorizontal, FileText, BadgeCheck } from 'lucide-react';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Dialog, DialogContent, DialogTitle } from '@/components/ui/dialog';
 import { Badge } from '@/components/ui/badge';
@@ -18,6 +18,17 @@ import { cn } from '@/lib/utils';
 
 // Mock Data for Shared Posts (Student Work Approved by Admin)
 const SHARED_POSTS = [
+  {
+    id: 8,
+    sharedBy: { name: "ZeeQue High School", avatar: "https://ui-avatars.com/api/?name=ZeeQue+High&background=6366f1&color=fff", userId: "school", isVerified: true },
+    post: {
+      title: "Annual Science Fair: Registrations Open",
+      author: "Science Dept.",
+      category: "Science",
+      image: "https://images.unsplash.com/photo-1564325724739-bae0bd08762c?auto=format&fit=crop&w=600&q=80",
+      content: "Calling all innovators! The Annual ZeeQue Science Fair is back. This year's theme is 'Sustainable Solutions'. Prepare your projects, gather your data, and get ready to showcase your scientific brilliance. Registration deadline is next Friday."
+    }
+  },
   {
     id: 1,
     sharedBy: { name: "Mubashir", avatar: "https://images.unsplash.com/photo-1506794778202-cad84cf45f1d?w=100&h=100&fit=crop", userId: "mock-1" },
@@ -27,6 +38,17 @@ const SHARED_POSTS = [
       category: "Tech",
       image: "https://images.unsplash.com/photo-1485827404703-89b55fcc595e?auto=format&fit=crop&w=600&q=80",
       content: "Artificial Intelligence is transforming how we learn, but it cannot replace the human spark of creativity. In this article, I explore how tools like LLMs can act as partners in education rather than substitutes for critical thinking. We must learn to guide these systems to enhance our potential, not limit it."
+    }
+  },
+  {
+    id: 7,
+    sharedBy: { name: "ZeeQue Admin", avatar: "https://ui-avatars.com/api/?name=ZeeQue+Admin&background=0D8ABC&color=fff", userId: "admin", isVerified: true },
+    post: {
+      title: "Platform Update: New Creative Tools!",
+      author: "ZeeQue Team",
+      category: "Tech",
+      image: "https://images.unsplash.com/photo-1550751827-4bd374c3f58b?auto=format&fit=crop&w=600&q=80",
+      content: "We are excited to announce a suite of new tools for our creative community! From enhanced text editors to new image filters, expressing your ideas has never been easier. Check out the latest changelog to see what's new."
     }
   },
   {
@@ -63,6 +85,17 @@ const SHARED_POSTS = [
     }
   },
   {
+    id: 9,
+    sharedBy: { name: "ZeeQue Editorial", avatar: "https://ui-avatars.com/api/?name=ZeeQue+Edit&background=10b981&color=fff", userId: "editorial", isVerified: true },
+    post: {
+      title: "Editor's Pick: The Art of Storytelling",
+      author: "Editorial Team",
+      category: "Story",
+      image: "https://images.unsplash.com/photo-1457369804613-52c61a468e7d?auto=format&fit=crop&w=600&q=80",
+      content: "What makes a story truly grip the reader? Is it the characters, the plot, or the world-building? In this feature, we analyze top-rated stories from our platform and break down the elements that make them shine. A must-read for aspiring writers."
+    }
+  },
+  {
     id: 5,
     sharedBy: { name: "Abdulla", avatar: "https://images.unsplash.com/photo-1438761681033-6461ffad8d80?w=100&h=100&fit=crop", userId: "mock-5" },
     post: {
@@ -83,7 +116,7 @@ const SHARED_POSTS = [
       image: "https://images.unsplash.com/photo-1503387762-592deb58ef4e?auto=format&fit=crop&w=600&q=80",
       content: "How modern biomimicry is shaping the skylines of tomorrow. By studying termite mounds for cooling and lotus leaves for water resistance, architects are creating buildings that breathe and adapt to their environment, drastically reducing their carbon footprint."
     }
-  },
+  }
 ];
 
 // Helper for category colors (Gradients)
@@ -146,6 +179,19 @@ const SharedPostCard = ({ item, onClick }: { item: typeof SHARED_POSTS[0], onCli
           <span className="text-[10px] md:text-xs font-medium text-white max-w-[80px] truncate">
             {item.sharedBy.name}
           </span>
+          {/* @ts-ignore */}
+          {item.sharedBy.isVerified && (
+            <svg
+              className="w-3.5 h-3.5 ml-1 text-blue-500"
+              viewBox="0 0 24 24"
+              fill="currentColor"
+              xmlns="http://www.w3.org/2000/svg"
+            >
+              <path
+                d="M22.5 12.5C22.5 12.9 22.5 13.3 22.3 13.7C22.1 14.1 21.8 14.5 21.4 14.9L20.5 15.8C20.3 16 20.2 16.3 20.2 16.6V17.9C20.2 18.5 20 19.1 19.6 19.6C19.1 20 18.5 20.2 17.9 20.2H16.6C16.3 20.2 16 20.3 15.8 20.5L14.9 21.4C14.5 21.8 14.1 22.1 13.7 22.3C13.3 22.5 12.9 22.5 12.5 22.5C12.1 22.5 11.7 22.5 11.3 22.3C10.9 22.1 10.5 21.8 10.1 21.4L9.2 20.5C9 20.3 8.7 20.2 8.4 20.2H7.1C6.5 20.2 5.9 20 5.4 19.6C5 19.1 4.8 18.5 4.8 17.9V16.6C4.8 16.3 4.7 16 4.5 15.8L3.6 14.9C3.2 14.5 2.9 14.1 2.7 13.7C2.5 13.3 2.5 12.9 2.5 12.5C2.5 12.1 2.5 11.7 2.7 11.3C2.9 10.9 3.2 10.5 3.6 10.1L4.5 9.2C4.7 9 4.8 8.7 4.8 8.4V7.1C4.8 6.5 5 5.9 5.4 5.4C5.9 5 6.5 4.8 7.1 4.8H8.4C8.7 4.8 9 4.7 9.2 4.5L10.1 3.6C10.5 3.2 10.9 2.9 11.3 2.7C11.7 2.5 12.1 2.5 12.5 2.5C12.9 2.5 13.3 2.5 13.7 2.7C14.1 2.9 14.5 3.2 14.9 3.6L15.8 4.5C16 4.7 16.3 4.8 16.6 4.8H17.9C18.5 4.8 19.1 5 19.6 5.4C20 5.9 20.2 6.5 20.2 7.1V8.4C20.2 8.7 20.3 9 20.5 9.2L21.4 10.1C21.8 10.5 22.1 10.9 22.3 11.3C22.5 11.7 22.5 12.1 22.5 12.5ZM10.4 15.6L16.6 9.4L15.2 8L10.4 12.8L8.4 10.8L7 12.2L10.4 15.6Z"
+              />
+            </svg>
+          )}
         </Link>
       </div>
 
@@ -386,9 +432,24 @@ const Index = () => {
                     <AvatarFallback className="bg-muted text-foreground text-xs">{selectedSharedPost?.sharedBy.name[0]}</AvatarFallback>
                   </Avatar>
                   <div className="flex flex-col justify-center">
-                    <span className="font-semibold text-sm text-foreground leading-none">
-                      {selectedSharedPost?.sharedBy.name}
-                    </span>
+                    <div className="flex items-center gap-1.5">
+                      <span className="font-semibold text-sm text-foreground leading-none">
+                        {selectedSharedPost?.sharedBy.name}
+                      </span>
+                      {/* @ts-ignore */}
+                      {selectedSharedPost?.sharedBy.isVerified && (
+                        <svg
+                          className="w-4 h-4 text-blue-500"
+                          viewBox="0 0 24 24"
+                          fill="currentColor"
+                          xmlns="http://www.w3.org/2000/svg"
+                        >
+                          <path
+                            d="M22.5 12.5C22.5 12.9 22.5 13.3 22.3 13.7C22.1 14.1 21.8 14.5 21.4 14.9L20.5 15.8C20.3 16 20.2 16.3 20.2 16.6V17.9C20.2 18.5 20 19.1 19.6 19.6C19.1 20 18.5 20.2 17.9 20.2H16.6C16.3 20.2 16 20.3 15.8 20.5L14.9 21.4C14.5 21.8 14.1 22.1 13.7 22.3C13.3 22.5 12.9 22.5 12.5 22.5C12.1 22.5 11.7 22.5 11.3 22.3C10.9 22.1 10.5 21.8 10.1 21.4L9.2 20.5C9 20.3 8.7 20.2 8.4 20.2H7.1C6.5 20.2 5.9 20 5.4 19.6C5 19.1 4.8 18.5 4.8 17.9V16.6C4.8 16.3 4.7 16 4.5 15.8L3.6 14.9C3.2 14.5 2.9 14.1 2.7 13.7C2.5 13.3 2.5 12.9 2.5 12.5C2.5 12.1 2.5 11.7 2.7 11.3C2.9 10.9 3.2 10.5 3.6 10.1L4.5 9.2C4.7 9 4.8 8.7 4.8 8.4V7.1C4.8 6.5 5 5.9 5.4 5.4C5.9 5 6.5 4.8 7.1 4.8H8.4C8.7 4.8 9 4.7 9.2 4.5L10.1 3.6C10.5 3.2 10.9 2.9 11.3 2.7C11.7 2.5 12.1 2.5 12.5 2.5C12.9 2.5 13.3 2.5 13.7 2.7C14.1 2.9 14.5 3.2 14.9 3.6L15.8 4.5C16 4.7 16.3 4.8 16.6 4.8H17.9C18.5 4.8 19.1 5 19.6 5.4C20 5.9 20.2 6.5 20.2 7.1V8.4C20.2 8.7 20.3 9 20.5 9.2L21.4 10.1C21.8 10.5 22.1 10.9 22.3 11.3C22.5 11.7 22.5 12.1 22.5 12.5ZM10.4 15.6L16.6 9.4L15.2 8L10.4 12.8L8.4 10.8L7 12.2L10.4 15.6Z"
+                          />
+                        </svg>
+                      )}
+                    </div>
                     {selectedSharedPost?.post.author !== selectedSharedPost?.sharedBy.name && (
                       <span className="text-[10px] text-muted-foreground mt-0.5">Author: {selectedSharedPost?.post.author}</span>
                     )}
