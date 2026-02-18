@@ -12,6 +12,7 @@ interface AuthState {
   role: UserRole | null;
   username: string | null;
   school_name: string | null;
+  is_onboarded: boolean;
   isLoading: boolean;
 }
 
@@ -22,6 +23,7 @@ export function useAuth() {
     role: null,
     username: null,
     school_name: null,
+    is_onboarded: false,
     isLoading: true,
   });
 
@@ -39,6 +41,7 @@ export function useAuth() {
           role: parsedUser.role || null,
           username: parsedUser.username || null,
           school_name: parsedUser.school_name || null,
+          is_onboarded: parsedUser.is_onboarded || false,
           isLoading: false,
         });
 
@@ -62,11 +65,11 @@ export function useAuth() {
         password
       });
 
-      const { access, refresh, role, username, school_name } = response.data;
+      const { access, refresh, role, username, school_name, is_onboarded } = response.data;
 
       // 2. Store Tokens & User Data
       localStorage.setItem(AUTH_KEY, JSON.stringify({ access, refresh }));
-      localStorage.setItem(USER_KEY, JSON.stringify({ email, role, username, school_name }));
+      localStorage.setItem(USER_KEY, JSON.stringify({ email, role, username, school_name, is_onboarded }));
 
       // 3. Update API defaults
       // 3. Update API defaults (Handled by interceptor now)
@@ -79,6 +82,7 @@ export function useAuth() {
         role: role,
         username: username,
         school_name: school_name,
+        is_onboarded: is_onboarded,
         isLoading: false,
       });
 
@@ -100,6 +104,7 @@ export function useAuth() {
       role: null,
       username: null,
       school_name: null,
+      is_onboarded: false,
       isLoading: false,
     });
   }, []);
@@ -110,6 +115,7 @@ export function useAuth() {
     role: authState.role,
     username: authState.username,
     school_name: authState.school_name,
+    is_onboarded: authState.is_onboarded,
     isLoading: authState.isLoading,
     login,
     logout,

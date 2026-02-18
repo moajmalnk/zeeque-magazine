@@ -51,6 +51,15 @@ export default function Login() {
       // Small delay to ensure localStorage is written
       await new Promise(resolve => setTimeout(resolve, 100));
 
+      // Check onboarding status
+      const userDataStr = localStorage.getItem('zeeque_user_data');
+      const userData = userDataStr ? JSON.parse(userDataStr) : null;
+
+      if (userData && !userData.is_onboarded) {
+        navigate('/onboarding', { replace: true });
+        return;
+      }
+
       // Redirect to the page they were trying to access, or editorial dashboard
       const from = (location.state as any)?.from?.pathname || '/editorial';
 
@@ -88,14 +97,14 @@ export default function Login() {
             <Card className="border-2 border-border/60 shadow-xl bg-card/95 backdrop-blur-md overflow-hidden">
               <CardHeader className="text-center space-y-2 pb-4 pt-6">
                 <div className="mx-auto w-14 h-14 rounded-2xl bg-gradient-to-tr from-primary/20 to-primary/5 flex items-center justify-center mb-2 shadow-inner ring-1 ring-primary/20">
-                  <Lock className="w-7 h-7 text-primary" />
+                  <LogIn className="w-7 h-7 text-primary" />
                 </div>
                 <div>
                   <CardTitle className="font-display text-2xl font-bold tracking-tight">
-                    Editorial Access
+                    Welcome Back
                   </CardTitle>
                   <CardDescription className="text-sm px-4">
-                    Sign in to manage submissions and content
+                    Sign in to your account
                   </CardDescription>
                 </div>
               </CardHeader>
@@ -180,12 +189,19 @@ export default function Login() {
                       </span>
                     )}
                   </Button>
+
+                  <div className="text-center pt-2">
+                    <span className="text-sm text-muted-foreground">Don't have an account? </span>
+                    <Link to="/signup" className="text-sm font-semibold text-secondary hover:underline">
+                      Sign Up
+                    </Link>
+                  </div>
                 </form>
               </CardContent>
             </Card>
 
             <div className="mt-6 text-center text-xs text-muted-foreground/60">
-              &copy; {new Date().getFullYear()} ZeeQue. Authorized access only.
+              &copy; {new Date().getFullYear()} ZeeQue.
             </div>
           </div>
         </div>

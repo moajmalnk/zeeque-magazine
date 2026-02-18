@@ -50,8 +50,8 @@
   :root {
     /* Core brand colors - Vibrant & Bolder (Harder Colors) */
 
-    /* Background: Crisp White to make colors POP */
-    --background: 0 0% 100%;
+    /* Background: Lighter Soft Pastel Green */
+    --background: 100 45% 98%;
 
     /* Foreground: Deepest Indigo/Black */
     --foreground: 260 40% 10%;
@@ -351,34 +351,6 @@
     }
   }
 
-  .animate-bounce-gentle {
-    animation: bounce-gentle 3s ease-in-out infinite;
-  }
-
-  .animate-wiggle {
-    animation: wiggle 0.5s ease-in-out;
-  }
-
-  .animate-float {
-    animation: float 6s ease-in-out infinite;
-  }
-
-  .animate-sparkle {
-    animation: sparkle 3s ease-in-out infinite;
-  }
-
-  .animate-slide-up {
-    animation: slide-up 0.5s ease-out forwards;
-  }
-
-  .animate-fade-in {
-    animation: fade-in 0.6s ease-out forwards;
-  }
-
-  .animate-scale-in {
-    animation: scale-in 0.4s ease-out forwards;
-  }
-
   /* Staggered animation delays */
   .animation-delay-100 {
     animation-delay: 100ms;
@@ -498,6 +470,30 @@
     display: none;
   }
 
+  /* ELEGANT THIN SCROLLBAR */
+  .scrollbar-elegant {
+    scrollbar-width: thin;
+    scrollbar-color: hsl(var(--primary)) transparent;
+  }
+
+  .scrollbar-elegant::-webkit-scrollbar {
+    width: 4px;
+    height: 4px;
+  }
+
+  .scrollbar-elegant::-webkit-scrollbar-track {
+    background: transparent;
+  }
+
+  .scrollbar-elegant::-webkit-scrollbar-thumb {
+    background: hsl(var(--primary));
+    border-radius: 50px;
+  }
+
+  .scrollbar-elegant::-webkit-scrollbar-thumb:hover {
+    background: hsl(var(--primary) / 0.8);
+  }
+
   .custom-scrollbar::-webkit-scrollbar {
     width: 8px;
     height: 8px;
@@ -538,6 +534,34 @@
     background: linear-gradient(180deg,
         hsl(var(--primary) / 0.8) 0%,
         hsl(var(--primary) / 0.7) 100%);
+  }
+
+  .animate-bounce-gentle {
+    animation: bounce-gentle 3s ease-in-out infinite;
+  }
+
+  .animate-wiggle {
+    animation: wiggle 0.5s ease-in-out;
+  }
+
+  .animate-float {
+    animation: float 6s ease-in-out infinite;
+  }
+
+  .animate-sparkle {
+    animation: sparkle 3s ease-in-out infinite;
+  }
+
+  .animate-slide-up {
+    animation: slide-up 0.5s ease-out forwards;
+  }
+
+  .animate-fade-in {
+    animation: fade-in 0.6s ease-out forwards;
+  }
+
+  .animate-scale-in {
+    animation: scale-in 0.4s ease-out forwards;
   }
 
   /* Enhanced focus styles for accessibility */

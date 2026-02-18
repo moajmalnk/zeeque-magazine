@@ -11,7 +11,7 @@ export function HeroSection() {
   }, []);
 
   return (
-    <section className="relative pt-8 pb-20 md:pt-12 md:pb-32 overflow-hidden bg-background">
+    <section className="relative pt-8 pb-12 md:pt-12 md:pb-24 overflow-hidden bg-background">
       {/* Magical Background Gradients - Stronger & more visible */}
       <div className="absolute top-0 right-0 w-[500px] h-[500px] bg-secondary/30 rounded-full blur-[100px] -translate-y-1/2 translate-x-1/2" />
       <div className="absolute bottom-0 left-0 w-[400px] h-[400px] bg-primary/30 rounded-full blur-[80px] translate-y-1/2 -translate-x-1/2" />
@@ -26,7 +26,7 @@ export function HeroSection() {
       <div className="absolute top-40 right-[15%] opacity-70 animate-float animation-delay-500 hidden md:block">
         <div className="text-6xl filter drop-shadow-md">🎈</div>
       </div>
-      <div className="absolute bottom-20 left-[20%] opacity-80 animate-float animation-delay-200 hidden md:block">
+      <div className="absolute bottom-10 left-[20%] opacity-80 animate-float animation-delay-200 hidden md:block">
         <div className="text-5xl filter drop-shadow-md">🎨</div>
       </div>
 

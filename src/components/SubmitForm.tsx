@@ -15,6 +15,8 @@ import { usePosts } from '@/hooks/usePosts';
 import { useAuth } from '@/hooks/useAuth';
 import imageCompression from 'browser-image-compression';
 
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+
 // --- Form Schema ---
 // Made teacher/school optional to prevent validation blocks on hidden fields.
 // We will handle required logic in the UI or backend if needed.
@@ -22,6 +24,8 @@ const submitSchema = z.object({
   authorName: z.string().min(1, "What's your name?").max(50),
   teacherName: z.string().optional(),
   schoolName: z.string().optional(),
+  email: z.string().email("Invalid email").optional().or(z.literal('')),
+  phoneNumber: z.string().optional(),
   title: z.string().min(1, "Give it a title!").max(100),
   category: z.enum(['stories', 'poems', 'drawings', 'news', 'video', 'other']),
   content: z.string().min(10, "Write a little bit more!").max(2000),
@@ -31,6 +35,18 @@ const submitSchema = z.object({
 type SubmitFormData = z.infer<typeof submitSchema>;
 
 const categories: Category[] = ['stories', 'poems', 'drawings', 'news', 'video', 'other'];
+
+const MOCK_SCHOOLS = [
+  "Greenwood High",
+  "Sunshine Elementary",
+  "Oakridge International",
+  "Maple Leaf Academy",
+  "Riverdale Public School",
+  "St. Mary's Convent",
+  "Springfield High",
+  "Global Tech School",
+  "Other"
+];
 
 // --- Helper Components ---
 
@@ -75,7 +91,11 @@ export function SubmitForm() {
 
   // Wizard State
   const [currentStep, setCurrentStep] = useState(1);
-  const TOTAL_STEPS = 4;
+  const TOTAL_STEPS = 5;
+
+  // Role Selection State
+  const [userType, setUserType] = useState<'student' | 'teacher' | 'parent' | null>(null);
+  const [isZeeQue, setIsZeeQue] = useState<boolean | null>(null);
 
   const isTeacher = role === 'TEACHER' || role === 'ADMIN';
 
@@ -85,6 +105,8 @@ export function SubmitForm() {
       authorName: '',
       teacherName: '',
       schoolName: '',
+      email: '',
+      phoneNumber: '',
       title: '',
       category: 'stories',
       content: '',
@@ -100,55 +122,128 @@ export function SubmitForm() {
     }
   }, [isTeacher, username, school_name, form]);
 
+  // --- PERSISTENCE LOGIC ---
+  const STORAGE_KEY = 'zeeque_submit_form_state';
+
+  // 1. Load data on mount
+  useEffect(() => {
+    const savedData = localStorage.getItem(STORAGE_KEY);
+    if (savedData) {
+      try {
+        const parsed = JSON.parse(savedData);
+        // Only restore if valid
+        if (parsed.step) setCurrentStep(parsed.step);
+        if (parsed.userType) setUserType(parsed.userType);
+        if (parsed.isZeeQue !== undefined) setIsZeeQue(parsed.isZeeQue);
+        if (parsed.formData) {
+          // Merge saved data with current form values (to keep defaults if missing)
+          const currentValues = form.getValues();
+          form.reset({ ...currentValues, ...parsed.formData });
+        }
+        toast.info("Welcome back! We restored your progress.", { duration: 3000, icon: '📂' });
+      } catch (error) {
+        console.error("Error restoring form state:", error);
+      }
+    }
+  }, []);
+
+  // 2. Save data on change
+  useEffect(() => {
+    const saveData = () => {
+      const data = {
+        step: currentStep,
+        userType,
+        isZeeQue,
+        formData: form.getValues()
+      };
+      localStorage.setItem(STORAGE_KEY, JSON.stringify(data));
+    };
+
+    // Save immediately on step/role change
+    saveData();
+
+    // Subscribe to form changes
+    const subscription = form.watch(() => saveData());
+    return () => subscription.unsubscribe();
+  }, [currentStep, userType, isZeeQue, form]);
+  // -------------------------
+
   const handleNext = async () => {
     let fieldsToValidate: (keyof SubmitFormData)[] = [];
 
-    // Step 1 Validation
+    // Step 1: Role Selection (No form validation needed, handled by UI state)
     if (currentStep === 1) {
-      fieldsToValidate = ['authorName'];
+      if (!userType || isZeeQue === null) {
+        toast.error("Please tell us who you are!");
+        return;
+      }
+      setCurrentStep(2);
+      return;
+    }
 
-      const isInputVisible = !isTeacher || role === 'ADMIN';
+    // Step 2: Identity (Old Step 1)
+    if (currentStep === 2) {
+      // Common field
+      let fieldsToValidate: (keyof SubmitFormData)[] = ['authorName'];
 
-      // Always validate authorName
       const isAuthorValid = await form.trigger('authorName');
       if (!isAuthorValid) {
-        toast.error("Please enter the student's name");
+        toast.error("Please enter your name");
         return;
       }
 
-      // If School/Teacher inputs are visible, manually enforce they are not empty
-      if (isInputVisible) {
+      if (isZeeQue) {
+        // ZeeQue User: Require School & Teacher
         const values = form.getValues();
         let hasError = false;
 
         if (!values.schoolName?.trim()) {
-          form.setError('schoolName', {
-            type: 'manual',
-            message: 'School name is required'
-          });
+          form.setError('schoolName', { type: 'manual', message: 'School name is required' });
           hasError = true;
         }
-
         if (!values.teacherName?.trim()) {
-          form.setError('teacherName', {
-            type: 'manual',
-            message: 'Teacher name is required'
-          });
+          form.setError('teacherName', { type: 'manual', message: 'Teacher name is required' });
           hasError = true;
         }
 
         if (hasError) {
-          toast.error("Please fill in all required fields");
+          toast.error("Please fill in your school and teacher details");
+          return;
+        }
+      } else {
+        // Guest User: Require Email & Phone
+        const values = form.getValues();
+        let hasError = false;
+
+        // Manual validation for email format if z.string().email() isn't strictly enforced in schema yet
+        // But we will add it to schema as optional() so trigger works if we want, or manual.
+        // Let's rely on manual check for empty first, then schema format if provided.
+
+        if (!values.email?.trim()) {
+          form.setError('email', { type: 'manual', message: 'Email is required' });
+          hasError = true;
+        } else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(values.email)) {
+          form.setError('email', { type: 'manual', message: 'Invalid email address' });
+          hasError = true;
+        }
+
+        if (!values.phoneNumber?.trim()) {
+          form.setError('phoneNumber', { type: 'manual', message: 'Phone number is required' });
+          hasError = true;
+        }
+
+        if (hasError) {
+          toast.error("Please fill in your contact details");
           return;
         }
       }
     }
 
-    if (currentStep === 2) fieldsToValidate = ['category'];
-    if (currentStep === 3) fieldsToValidate = ['title', 'content'];
+    if (currentStep === 3) fieldsToValidate = ['category'];
+    if (currentStep === 4) fieldsToValidate = ['title', 'content'];
 
-    // For step 2 & 3, standard trigger is sufficient
-    if (currentStep > 1) {
+    // For step 3 & 4
+    if (currentStep > 2) {
       const isValid = await form.trigger(fieldsToValidate);
       if (!isValid) {
         toast.error("Oops! Can you check the red fields?");
@@ -162,6 +257,13 @@ export function SubmitForm() {
   };
 
   const handleBack = () => {
+    if (currentStep === 1) {
+      if (userType) {
+        setUserType(null); // Go back to role selection
+        setIsZeeQue(null);
+      }
+      return;
+    }
     setCurrentStep((prev) => Math.max(prev - 1, 1));
   };
 
@@ -216,8 +318,6 @@ export function SubmitForm() {
 
   const onSubmit = async (data: SubmitFormData) => {
     // PREVENT PREMATURE SUBMISSION:
-    // If we are not on the last step, legitimate "Enter" key presses might trigger this.
-    // We should treat "Enter" as "Next" if not done.
     if (currentStep < TOTAL_STEPS) {
       handleNext();
       return;
@@ -236,7 +336,6 @@ export function SubmitForm() {
     setIsSubmitting(true);
 
     try {
-      // Artificial delay for UX (optional, but nice)
       await new Promise(resolve => setTimeout(resolve, 1000));
 
       await addPost({
@@ -246,12 +345,13 @@ export function SubmitForm() {
         title: data.title,
         category: data.category,
         content: data.content,
-        // Ensure we send null/undefined correctly for optional files
         image_url: selectedImage || undefined,
         video_file: selectedVideo || undefined,
         video_url: (!selectedVideo && data.videoUrl) ? data.videoUrl : undefined,
       });
 
+      // Clear saved progress on success
+      localStorage.removeItem(STORAGE_KEY);
       setIsSuccess(true);
     } catch (error: any) {
       console.error("Submission error:", error);
@@ -292,40 +392,139 @@ export function SubmitForm() {
       <GuideMascot
         mood={currentStep === TOTAL_STEPS ? 'excited' : 'happy'}
         message={
-          currentStep === 1 ? "Hi! Let's get started. Who are you?" :
-            currentStep === 2 ? "Ooh, fun! What kind of art is this?" :
-              currentStep === 3 ? "Tell me all about your masterpiece!" :
-                currentStep === 4 ? isTeacher ? "Upload the files here." : "Do you have a picture or video to show?" :
-                  "Almost done! Ready to send?"
+          currentStep === 1 ? (userType ? "Are you part of the ZeeQue family?" : "Hi! Let's get started. Who are you?") :
+            currentStep === 2 ? "Nice to meet you! What's your name?" :
+              currentStep === 3 ? "Ooh, fun! What kind of art is this?" :
+                currentStep === 4 ? "Tell me all about your masterpiece!" :
+                  currentStep === 5 ? isTeacher ? "Upload the files here." : "Do you have a picture or video to show?" :
+                    "Almost done! Ready to send?"
         }
       />
 
-      <Card className="border-0 shadow-sm bg-white/50 backdrop-blur-xl rounded-[1.5rem] overflow-visible dark:bg-slate-900/80 dark:border dark:border-slate-800">
+      <Card className="border-0 shadow-sm bg-white backdrop-blur-xl rounded-[1.5rem] overflow-visible dark:bg-slate-900/80 dark:border dark:border-slate-800">
         <CardContent className="p-6">
           <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
 
-            {/* STEP 1: IDENTITY */}
+            {/* STEP 1: ROLE SELECTION */}
             {currentStep === 1 && (
+              <div className="animate-in slide-in-from-right duration-500">
+                {!userType ? (
+                  <div className="grid grid-cols-1 gap-4">
+                    <button
+                      type="button"
+                      onClick={() => setUserType('student')}
+                      className="flex items-center p-4 rounded-xl border-2 border-slate-100 hover:border-primary/50 hover:bg-primary/5 transition-all text-left gap-4 group bg-white dark:bg-slate-800 dark:border-slate-700 w-full"
+                    >
+                      <div className="h-12 w-12 rounded-full bg-blue-100 text-blue-600 flex items-center justify-center shrink-0 group-hover:scale-110 transition-transform">
+                        <span className="text-2xl">🎓</span>
+                      </div>
+                      <div>
+                        <h3 className="font-bold text-lg text-slate-800 dark:text-slate-100">I am a Student</h3>
+                        <p className="text-sm text-slate-500">I want to share my work</p>
+                      </div>
+                    </button>
+
+                    <button
+                      type="button"
+                      onClick={() => setUserType('teacher')}
+                      className="flex items-center p-4 rounded-xl border-2 border-slate-100 hover:border-emerald-500/50 hover:bg-emerald-500/5 transition-all text-left gap-4 group bg-white dark:bg-slate-800 dark:border-slate-700 w-full"
+                    >
+                      <div className="h-12 w-12 rounded-full bg-emerald-100 text-emerald-600 flex items-center justify-center shrink-0 group-hover:scale-110 transition-transform">
+                        <span className="text-2xl">👩‍🏫</span>
+                      </div>
+                      <div>
+                        <h3 className="font-bold text-lg text-slate-800 dark:text-slate-100">I am a Teacher</h3>
+                        <p className="text-sm text-slate-500">Submitting for my class</p>
+                      </div>
+                    </button>
+
+                    <button
+                      type="button"
+                      onClick={() => setUserType('parent')}
+                      className="flex items-center p-4 rounded-xl border-2 border-slate-100 hover:border-purple-500/50 hover:bg-purple-500/5 transition-all text-left gap-4 group bg-white dark:bg-slate-800 dark:border-slate-700 w-full"
+                    >
+                      <div className="h-12 w-12 rounded-full bg-purple-100 text-purple-600 flex items-center justify-center shrink-0 group-hover:scale-110 transition-transform">
+                        <span className="text-2xl">👨‍👩‍👧</span>
+                      </div>
+                      <div>
+                        <h3 className="font-bold text-lg text-slate-800 dark:text-slate-100">I am a Parent</h3>
+                        <p className="text-sm text-slate-500">Submitting for my child</p>
+                      </div>
+                    </button>
+                  </div>
+                ) : (
+                  <div className="grid grid-cols-1 gap-4 animate-in slide-in-from-right duration-300">
+                    <button
+                      type="button"
+                      onClick={() => { setIsZeeQue(true); setCurrentStep(2); }}
+                      className="flex items-center p-6 rounded-2xl border-2 border-primary/20 bg-primary/5 hover:bg-primary/10 transition-all text-left gap-4 group w-full shadow-sm hover:shadow-md"
+                    >
+                      <div className="h-14 w-14 rounded-full bg-white text-primary shadow-sm flex items-center justify-center shrink-0 group-hover:scale-110 transition-transform">
+                        <span className="text-3xl">✨</span>
+                      </div>
+                      <div>
+                        <h3 className="font-bold text-xl text-primary">I am a ZeeQue {userType.charAt(0).toUpperCase() + userType.slice(1)}</h3>
+                        <p className="text-base text-primary/70">I have a verified account</p>
+                      </div>
+                    </button>
+
+                    <button
+                      type="button"
+                      onClick={() => { setIsZeeQue(false); setCurrentStep(2); }}
+                      className="flex items-center p-6 rounded-2xl border-2 border-slate-100 hover:bg-slate-50 transition-all text-left gap-4 group bg-white dark:bg-slate-800 dark:border-slate-700 dark:hover:bg-slate-700 w-full"
+                    >
+                      <div className="h-14 w-14 rounded-full bg-slate-100 text-slate-500 flex items-center justify-center shrink-0 group-hover:scale-110 transition-transform dark:bg-slate-900">
+                        <span className="text-3xl">🌍</span>
+                      </div>
+                      <div>
+                        <h3 className="font-bold text-xl text-slate-700 dark:text-slate-200">I am not a ZeeQue {userType.charAt(0).toUpperCase() + userType.slice(1)}</h3>
+                        <p className="text-base text-slate-500">I am a guest user</p>
+                      </div>
+                    </button>
+
+                    <Button
+                      type="button"
+                      variant="ghost"
+                      onClick={() => setUserType(null)}
+                      className="mt-4 text-slate-400 hover:text-slate-600 dark:hover:text-slate-300 mx-auto"
+                    >
+                      <ArrowLeft className="w-4 h-4 mr-2" /> Back to Role Selection
+                    </Button>
+                  </div>
+                )}
+              </div>
+            )}
+
+            {/* STEP 2: IDENTITY (Old Step 1) */}
+            {currentStep === 2 && (
               <div className="space-y-4 animate-in slide-in-from-right duration-500">
                 <div className="space-y-2">
                   <Label className="text-base md:text-lg font-bold text-slate-700 dark:text-slate-200">My Name Is...</Label>
                   <Input
                     {...form.register('authorName')}
                     placeholder="Type your name here..."
-                    className="h-11 text-base rounded-xl border-slate-200 focus:border-primary focus:ring-4 focus:ring-primary/10 transition-all bg-white dark:bg-slate-900 dark:border-slate-700 dark:text-white dark:placeholder:text-slate-500"
+                    className="h-11 text-base rounded-xl border-slate-200 focus:border-primary focus:ring-4 focus:ring-primary/10 transition-all bg-background dark:bg-slate-900 dark:border-slate-700 dark:text-white dark:placeholder:text-slate-500"
                   />
                   {form.formState.errors.authorName && <p className="text-red-500 font-bold ml-2 text-sm">⚠️ {form.formState.errors.authorName.message}</p>}
                 </div>
 
-                {(!isTeacher || role === 'ADMIN') && (
+                {isZeeQue ? (
                   <>
                     <div className="space-y-2">
                       <Label className="text-base md:text-lg font-bold text-slate-700 dark:text-slate-200">I Go To School At...</Label>
-                      <Input
-                        {...form.register('schoolName')}
-                        placeholder="My School Name"
-                        className="h-11 text-base rounded-xl border-slate-200 focus:border-amber-500 focus:ring-4 focus:ring-amber-500/10 transition-all bg-white dark:bg-slate-900 dark:border-slate-700 dark:text-white dark:placeholder:text-slate-500"
-                      />
+                      <Select
+                        onValueChange={(val) => form.setValue('schoolName', val)}
+                        defaultValue={form.watch('schoolName')}
+                      >
+                        <SelectTrigger className="h-11 text-base rounded-xl border-slate-200 focus:border-amber-500 focus:ring-4 focus:ring-amber-500/10 transition-all bg-background dark:bg-slate-900 dark:border-slate-700 dark:text-white">
+                          <SelectValue placeholder="Select your school" />
+                        </SelectTrigger>
+                        <SelectContent>
+                          {MOCK_SCHOOLS.map((school) => (
+                            <SelectItem key={school} value={school} className="cursor-pointer">{school}</SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
                       {form.formState.errors.schoolName && <p className="text-red-500 font-bold ml-2 text-sm">⚠️ {form.formState.errors.schoolName.message}</p>}
                     </div>
                     <div className="space-y-2">
@@ -333,17 +532,41 @@ export function SubmitForm() {
                       <Input
                         {...form.register('teacherName')}
                         placeholder="My Teacher's Name"
-                        className="h-11 text-base rounded-xl border-slate-200 focus:border-sky-500 focus:ring-4 focus:ring-sky-500/10 transition-all bg-white dark:bg-slate-900 dark:border-slate-700 dark:text-white dark:placeholder:text-slate-500"
+                        className="h-11 text-base rounded-xl border-slate-200 focus:border-sky-500 focus:ring-4 focus:ring-sky-500/10 transition-all bg-background dark:bg-slate-900 dark:border-slate-700 dark:text-white dark:placeholder:text-slate-500"
                       />
                       {form.formState.errors.teacherName && <p className="text-red-500 font-bold ml-2 text-sm">⚠️ {form.formState.errors.teacherName.message}</p>}
+                    </div>
+                  </>
+                ) : (
+                  <>
+                    <div className="space-y-2">
+                      <Label className="text-base md:text-lg font-bold text-slate-700 dark:text-slate-200">My Email Is...</Label>
+                      <Input
+                        {...form.register('email')}
+                        type="email"
+                        placeholder="example@email.com"
+                        className="h-11 text-base rounded-xl border-slate-200 focus:border-green-500 focus:ring-4 focus:ring-green-500/10 transition-all bg-background dark:bg-slate-900 dark:border-slate-700 dark:text-white dark:placeholder:text-slate-500"
+                      />
+                      {/* Note: TypeScript might complain if 'email' is not in SubmitFormData. I handled the schema update above, so inference should work. */}
+                      {(form.formState.errors as any).email && <p className="text-red-500 font-bold ml-2 text-sm">⚠️ {(form.formState.errors as any).email.message}</p>}
+                    </div>
+                    <div className="space-y-2">
+                      <Label className="text-base md:text-lg font-bold text-slate-700 dark:text-slate-200">My Phone Number Is...</Label>
+                      <Input
+                        {...form.register('phoneNumber')}
+                        type="tel"
+                        placeholder="+1 (555) 000-0000"
+                        className="h-11 text-base rounded-xl border-slate-200 focus:border-purple-500 focus:ring-4 focus:ring-purple-500/10 transition-all bg-background dark:bg-slate-900 dark:border-slate-700 dark:text-white dark:placeholder:text-slate-500"
+                      />
+                      {(form.formState.errors as any).phoneNumber && <p className="text-red-500 font-bold ml-2 text-sm">⚠️ {(form.formState.errors as any).phoneNumber.message}</p>}
                     </div>
                   </>
                 )}
               </div>
             )}
 
-            {/* STEP 2: CATEGORY */}
-            {currentStep === 2 && (
+            {/* STEP 3: CATEGORY (Old Step 2) */}
+            {currentStep === 3 && (
               <div className="grid grid-cols-2 md:grid-cols-3 gap-3 animate-in slide-in-from-right duration-500">
                 {categories.map((cat) => (
                   <button
@@ -364,8 +587,8 @@ export function SubmitForm() {
               </div>
             )}
 
-            {/* STEP 3: DETAILS */}
-            {currentStep === 3 && (
+            {/* STEP 4: DETAILS (Old Step 3) */}
+            {currentStep === 4 && (
               <div className="space-y-4 animate-in slide-in-from-right duration-500">
                 <div className="space-y-2">
                   <Label className="text-base md:text-lg font-bold text-slate-700 dark:text-slate-200">
@@ -388,7 +611,7 @@ export function SubmitForm() {
                       if (cat === 'other') return 'My Amazing Project...';
                       return 'The Magical Adventure...';
                     })()}
-                    className="h-11 text-base rounded-xl border-slate-200 bg-white dark:bg-slate-900 dark:border-slate-700 dark:text-white dark:placeholder:text-slate-500"
+                    className="h-11 text-base rounded-xl border-slate-200 bg-background dark:bg-slate-900 dark:border-slate-700 dark:text-white dark:placeholder:text-slate-500"
                   />
                   {form.formState.errors.title && <p className="text-red-500 font-bold ml-2 text-sm">⚠️ {form.formState.errors.title.message}</p>}
                 </div>
@@ -416,7 +639,7 @@ export function SubmitForm() {
                         if (cat === 'other') return 'This is a project about...';
                         return 'Once upon a time...';
                       })()}
-                      className="min-h-[120px] text-base rounded-xl border-slate-200 p-4 leading-relaxed bg-white dark:bg-slate-900 dark:border-slate-700 dark:text-white dark:placeholder:text-slate-500"
+                      className="min-h-[120px] text-base rounded-xl border-slate-200 p-4 leading-relaxed bg-background dark:bg-slate-900 dark:border-slate-700 dark:text-white dark:placeholder:text-slate-500"
                     />
                     <div className="flex justify-between items-center mt-2 px-1">
                       <div className="text-sm">
@@ -444,8 +667,8 @@ export function SubmitForm() {
               </div>
             )}
 
-            {/* STEP 4: UPLOAD */}
-            {currentStep === 4 && (
+            {/* STEP 5: UPLOAD (Old Step 4) */}
+            {currentStep === 5 && (
               <div className="space-y-5 animate-in slide-in-from-right duration-500">
                 {form.watch('category') === 'video' ? (
                   <div className="space-y-4">
@@ -454,7 +677,7 @@ export function SubmitForm() {
                       <Input
                         {...form.register('videoUrl')}
                         placeholder="https://youtube.com/..."
-                        className="h-11 text-base rounded-xl bg-white dark:bg-slate-800 dark:border-slate-700 dark:text-white"
+                        className="h-11 text-base rounded-xl bg-background dark:bg-slate-800 dark:border-slate-700 dark:text-white"
                       />
                     </div>
                     <div className="relative border-2 border-dashed border-slate-200 dark:border-slate-700 rounded-2xl p-6 hover:bg-slate-50 dark:hover:bg-slate-800 transition-colors text-center cursor-pointer">
@@ -519,7 +742,7 @@ export function SubmitForm() {
 
             {/* NAVIGATION BUTTONS */}
             <div className="flex flex-col-reverse md:flex-row gap-3 md:gap-4 pt-6">
-              {currentStep > 1 && (
+              {currentStep > 1 ? (
                 <Button
                   type="button"
                   variant="ghost"
@@ -528,22 +751,26 @@ export function SubmitForm() {
                 >
                   <ArrowLeft className="mr-2 w-4 h-4" /> Back
                 </Button>
+              ) : (
+                <div className="hidden"></div> // Hide back button on First step (handled differently inside step 1 if needed, but visually we hide the main nav actions for Step 1 as it has its own buttons)
               )}
 
-              <Button
-                key={`btn-step-${currentStep}`}
-                type={currentStep < TOTAL_STEPS ? "button" : "submit"}
-                onClick={currentStep < TOTAL_STEPS ? handleNext : undefined}
-                disabled={isSubmitting}
-                className={`flex-1 h-12 rounded-xl text-base font-bold transition-all shadow-md active:scale-95 ${currentStep < TOTAL_STEPS
-                  ? "bg-slate-900 text-white hover:bg-slate-800 hover:scale-[1.02] shadow-xl shadow-slate-400/20 dark:shadow-black/40 dark:bg-primary dark:hover:bg-primary/90"
-                  : "bg-gradient-to-r from-primary to-accent text-white hover:opacity-90 hover:scale-[1.02] shadow-primary/25"}`}
-              >
-                {currentStep < TOTAL_STEPS
-                  ? <>Next Step <ArrowRight className="ml-2 w-4 h-4" /></>
-                  : (isSubmitting ? <><Sparkles className="animate-spin mr-2" /> Sending...</> : <><PartyPopper className="mr-2" /> Finish & Send!</>)
-                }
-              </Button>
+              {currentStep > 1 && (
+                <Button
+                  key={`btn-step-${currentStep}`}
+                  type={currentStep < TOTAL_STEPS ? "button" : "submit"}
+                  onClick={currentStep < TOTAL_STEPS ? handleNext : undefined}
+                  disabled={isSubmitting}
+                  className={`flex-1 h-12 rounded-xl text-base font-bold transition-all shadow-md active:scale-95 ${currentStep < TOTAL_STEPS
+                    ? "bg-slate-900 text-white hover:bg-slate-800 hover:scale-[1.02] shadow-xl shadow-slate-400/20 dark:shadow-black/40 dark:bg-primary dark:hover:bg-primary/90"
+                    : "bg-gradient-to-r from-primary to-accent text-white hover:opacity-90 hover:scale-[1.02] shadow-primary/25"}`}
+                >
+                  {currentStep < TOTAL_STEPS
+                    ? <>Next Step <ArrowRight className="ml-2 w-4 h-4" /></>
+                    : (isSubmitting ? <><Sparkles className="animate-spin mr-2" /> Sending...</> : <><PartyPopper className="mr-2" /> Finish & Send!</>)
+                  }
+                </Button>
+              )}
             </div>
 
           </form>

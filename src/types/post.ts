@@ -11,6 +11,7 @@ export interface Post {
   category: Category;
   content: string;
   image_url?: string;
+  image?: string;
   video_url?: string;
   video_file?: string;
   status: PostStatus;

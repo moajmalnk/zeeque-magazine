@@ -1,11 +1,12 @@
 import { Link, useLocation, useNavigate } from 'react-router-dom';
 import { useTheme } from 'next-themes';
 import { Button } from '@/components/ui/button';
-import { PenLine, BookOpen, FileText, Moon, Sun, HelpCircle, LogIn, Users, LogOut, Menu, Sparkles, ShieldQuestion, Layers, GraduationCap } from 'lucide-react';
+import { PenLine, BookOpen, FileText, Moon, Sun, HelpCircle, LogIn, Users, LogOut, Menu, Sparkles, ShieldQuestion, Layers, GraduationCap, User, ChevronDown, UserCircle, Settings, Plus } from 'lucide-react';
 import { motion } from 'framer-motion';
 import { useAuth } from '@/hooks/useAuth';
 import { useEffect, useState } from 'react';
 import { toast } from 'sonner';
+import { createPortal } from 'react-dom';
 import {
   Sheet,
   SheetContent,
@@ -14,16 +15,113 @@ import {
   SheetTrigger,
 } from '@/components/ui/sheet';
 import {
-  AlertDialog,
-  AlertDialogAction,
-  AlertDialogCancel,
-  AlertDialogContent,
-  AlertDialogDescription,
-  AlertDialogFooter,
-  AlertDialogHeader,
-  AlertDialogTitle,
-  AlertDialogTrigger,
-} from '@/components/ui/alert-dialog';
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuGroup,
+  DropdownMenuItem,
+  DropdownMenuLabel,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+
+// Floating Create Button Component (Portal)
+const FloatingCreateButton = () => {
+  return createPortal(
+    <Link
+      to="/submit"
+      className="fixed bottom-6 right-6 z-50 group flex flex-col items-center justify-center p-4"
+      title="Create New Post"
+    >
+      {/* Tooltip Label (Desktop) */}
+      <span className="absolute right-full mr-2 top-1/2 -translate-y-1/2 px-4 py-2 bg-white/95 dark:bg-slate-900/95 text-foreground text-sm font-bold rounded-2xl shadow-xl border border-border/50 opacity-0 group-hover:opacity-100 transition-all duration-300 translate-x-4 group-hover:translate-x-0 whitespace-nowrap hidden md:block backdrop-blur-md pointer-events-none z-20">
+        Start Creating!
+      </span>
+
+      <div className="relative w-24 h-24 md:w-28 md:h-28 flex items-center justify-center">
+
+        {/* Continuous Water Ripple/Pulse Animation */}
+        <div className="absolute inset-0 flex items-center justify-center -z-10 pointer-events-none">
+          {/* Layer 1 */}
+          <motion.div
+            className="absolute w-full h-full rounded-full bg-primary/20 dark:bg-primary/30"
+            animate={{
+              scale: [0, 2.2],
+              opacity: [0, 0.5, 0]
+            }}
+            transition={{
+              duration: 4,
+              repeat: Infinity,
+              ease: "easeOut",
+              times: [0, 0.2, 1] // Fade in quickly then fade out slowly
+            }}
+          />
+          {/* Layer 2 */}
+          <motion.div
+            className="absolute w-full h-full rounded-full bg-primary/15 dark:bg-primary/25"
+            animate={{
+              scale: [0, 2.2],
+              opacity: [0, 0.5, 0]
+            }}
+            transition={{
+              duration: 4,
+              repeat: Infinity,
+              ease: "easeOut",
+              delay: 1,
+              times: [0, 0.2, 1]
+            }}
+          />
+          {/* Layer 3 */}
+          <motion.div
+            className="absolute w-full h-full rounded-full bg-primary/10 dark:bg-primary/20"
+            animate={{
+              scale: [0, 2.2],
+              opacity: [0, 0.5, 0]
+            }}
+            transition={{
+              duration: 4,
+              repeat: Infinity,
+              ease: "easeOut",
+              delay: 2,
+              times: [0, 0.2, 1]
+            }}
+          />
+          {/* Layer 4 */}
+          <motion.div
+            className="absolute w-full h-full rounded-full bg-primary/5 dark:bg-primary/10"
+            animate={{
+              scale: [0, 2.2],
+              opacity: [0, 0.5, 0]
+            }}
+            transition={{
+              duration: 4,
+              repeat: Infinity,
+              ease: "easeOut",
+              delay: 3,
+              times: [0, 0.2, 1]
+            }}
+          />
+        </div>
+
+        {/* Interactive Mascot Container */}
+        <div className="relative w-full h-full transition-transform duration-300 ease-out transform group-hover:scale-110 group-hover:-rotate-6 group-active:scale-95 z-10">
+          {/* Mascot Image - Free-standing with shadow */}
+          <img
+            src="/images/mascot1.png"
+            alt="Create"
+            className="w-full h-full object-contain drop-shadow-[0_8px_16px_rgba(0,0,0,0.2)] filter transition-all duration-300"
+          />
+
+          {/* Plus Icon Badge */}
+          <div className="absolute -bottom-1 -right-1 md:bottom-0 md:right-0 w-8 h-8 md:w-10 md:h-10 bg-primary text-white rounded-full flex items-center justify-center shadow-lg shadow-primary/30 border-[3px] border-white dark:border-slate-950 transform group-hover:scale-110 group-hover:rotate-90 transition-all duration-300">
+            <Plus className="w-3 h-3 md:w-4 md:h-4 stroke-[3]" />
+          </div>
+        </div>
+      </div>
+    </Link>,
+    document.body
+  );
+};
 
 // Text-Only "Morph" Tab Component
 const NavTab = ({
@@ -36,7 +134,8 @@ const NavTab = ({
   activeShadow,
   hoverColor,
   onClick,
-  mobile
+  mobile,
+  className
 }: any) => {
 
   return (
@@ -53,6 +152,7 @@ const NavTab = ({
           ? `${activeColor} scale-105 z-10`
           : `text-muted-foreground hover:bg-primary/5 dark:hover:bg-primary/20 ${hoverColor} hover:scale-105`
         }
+        ${className || ''}
       `}
     >
       {isActive && !mobile && (
@@ -91,9 +191,24 @@ const NavTab = ({
   );
 };
 
-const NavItems = ({ mobile = false, onItemClick, onLogout }: { mobile?: boolean; onItemClick?: () => void; onLogout: () => void }) => {
+const NavItems = ({
+  mobile = false,
+  onItemClick,
+  onLogout,
+  isAuthenticated,
+  role,
+  username,
+  email
+}: {
+  mobile?: boolean;
+  onItemClick?: () => void;
+  onLogout: () => void;
+  isAuthenticated: boolean;
+  role: string | null;
+  username: string | null;
+  email: string | null;
+}) => {
   const location = useLocation();
-  const { isAuthenticated, role } = useAuth();
   const { pathname } = location;
 
   return (
@@ -129,25 +244,27 @@ const NavItems = ({ mobile = false, onItemClick, onLogout }: { mobile?: boolean;
         <>
           <div className="w-px h-6 bg-border/40 mx-2 hidden md:block" />
 
-          <NavTab
-            to="/editorial"
-            label="Editor"
-            icon={Layers}
-            isActive={pathname.startsWith('/editorial')}
-            activeBg="bg-gradient-to-r from-purple-400 to-violet-500"
-            activeColor="text-white"
-            activeShadow="shadow-[0_8px_16px_-6px_rgba(168,85,247,0.5)]"
-            hoverColor="hover:text-purple-500"
-            onClick={onItemClick}
-            mobile={mobile}
-          />
+          {['ADMIN', 'EDITORIAL'].includes(role || '') && (
+            <NavTab
+              to="/editorial"
+              label="Editorial"
+              icon={Layers}
+              isActive={pathname.startsWith('/editorial')}
+              activeBg="bg-gradient-to-r from-purple-400 to-violet-500"
+              activeColor="text-white"
+              activeShadow="shadow-[0_8px_16px_-6px_rgba(168,85,247,0.5)]"
+              hoverColor="hover:text-purple-500"
+              onClick={onItemClick}
+              mobile={mobile}
+            />
+          )}
 
           {role === 'ADMIN' && (
             <NavTab
-              to="/teachers"
-              label="Teachers"
-              icon={GraduationCap}
-              isActive={pathname.startsWith('/teachers')}
+              to="/users"
+              label="Users"
+              icon={Users}
+              isActive={pathname.startsWith('/users')}
               activeBg="bg-gradient-to-r from-indigo-400 to-blue-600"
               activeColor="text-white"
               activeShadow="shadow-[0_8px_16px_-6px_rgba(99,102,241,0.5)]"
@@ -159,66 +276,99 @@ const NavItems = ({ mobile = false, onItemClick, onLogout }: { mobile?: boolean;
         </>
       )}
 
-      {/* Primary Action 'Create' */}
-      <NavTab
-        to="/submit"
-        label="Create"
-        icon={Sparkles}
-        isActive={pathname === '/submit'}
-        activeBg="bg-gradient-to-r from-primary to-accent"
-        activeColor="text-white"
-        activeShadow="shadow-[0_8px_20px_-6px_rgba(236,72,153,0.5)]"
-        hoverColor="hover:text-pink-500"
-        onClick={onItemClick}
-        mobile={mobile}
-      />
+      {/* Primary Action 'Create' removed from navbar and moved to Floating Button */}
 
-      {/* Auth State (Login/Logout) */}
+      {/* User Profile & Auth - Desktop Dropdown / Mobile List */}
       {isAuthenticated ? (
-        <AlertDialog>
-          <AlertDialogTrigger asChild>
-            <button
-              className={`
-                relative flex items-center justify-center font-bold tracking-wide transition-all duration-300 ease-out select-none group
-                ${mobile
-                  ? 'w-full py-4 px-6 text-lg justify-start text-red-500 hover:bg-red-50 gap-4'
-                  : 'ml-2 h-10 px-5 text-sm rounded-full border border-red-200 dark:border-red-900/50 text-red-600 dark:text-red-400 hover:bg-red-50 dark:hover:bg-red-950/30 hover:border-red-300 dark:hover:border-red-800 shadow-sm hover:shadow-md'
-                }
-              `}
+        mobile ? (
+          // Mobile View: Enhanced User Section
+          <div className="mt-6 pt-6 border-t border-border">
+            <h4 className="text-xs font-bold text-muted-foreground uppercase tracking-widest px-2 mb-4">Account</h4>
+
+            {/* User Profile Card */}
+            <Link
+              to="/profile"
+              onClick={onItemClick}
+              className="flex items-center gap-4 p-3 rounded-xl bg-muted/50 hover:bg-muted transition-colors mb-3 group"
             >
-              {mobile ? (
-                <span className="flex items-center gap-3">
-                  <div className="p-2 rounded-full bg-red-100 dark:bg-red-900/20 text-red-500">
-                    <LogOut className="w-5 h-5" />
-                  </div>
-                  Logout
-                </span>
-              ) : (
-                <span className="flex items-center gap-2">
-                  <span>Logout</span> <LogOut className="w-4 h-4 transition-transform group-hover:translate-x-1" />
-                </span>
-              )}
-            </button>
-          </AlertDialogTrigger>
-          <AlertDialogContent>
-            <AlertDialogHeader>
-              <AlertDialogTitle>Are you absolutely sure?</AlertDialogTitle>
-              <AlertDialogDescription>
-                You are about to log out of your account.
-              </AlertDialogDescription>
-            </AlertDialogHeader>
-            <AlertDialogFooter>
-              <AlertDialogCancel>Cancel</AlertDialogCancel>
-              <AlertDialogAction onClick={() => {
+              <Avatar className="h-12 w-12 border-2 border-background shadow-sm group-hover:scale-105 transition-transform">
+                <AvatarImage src="" />
+                <AvatarFallback className="bg-primary/10 text-primary font-bold">
+                  {username?.[0]?.toUpperCase() || 'U'}
+                </AvatarFallback>
+              </Avatar>
+              <div className="flex flex-col min-w-0">
+                <span className="font-bold text-foreground truncate">{username || 'User'}</span>
+                <span className="text-xs text-muted-foreground truncate">{email}</span>
+                <span className="text-[10px] text-primary font-medium mt-1">View Profile</span>
+              </div>
+            </Link>
+
+            {/* Logout Button */}
+            <button
+              onClick={() => {
                 if (onItemClick) onItemClick();
                 onLogout();
-              }} className="bg-red-500 hover:bg-red-600 focus:ring-red-500">
-                Logout
-              </AlertDialogAction>
-            </AlertDialogFooter>
-          </AlertDialogContent>
-        </AlertDialog>
+              }}
+              className="flex items-center gap-3 w-full p-3 rounded-xl text-red-600 dark:text-red-400 hover:bg-red-50 dark:hover:bg-red-900/20 transition-colors font-semibold text-sm"
+            >
+              <div className="p-2 rounded-lg bg-red-100 dark:bg-red-900/30">
+                <LogOut className="w-4 h-4" />
+              </div>
+              Sign out
+            </button>
+          </div>
+        ) : (
+          // Desktop View: Dropdown
+          <div className="ml-2">
+            <DropdownMenu>
+              <DropdownMenuTrigger asChild>
+                <div className="flex items-center gap-2 pl-1 pr-3 py-1 bg-background/50 hover:bg-muted/50 border border-border/40 rounded-full cursor-pointer transition-all duration-200 hover:shadow-sm group select-none">
+                  <Avatar className="h-8 w-8 border border-border/50 transition-transform group-hover:scale-105">
+                    <AvatarImage src="" alt={username || 'User'} /> {/* Add user avatar url if available */}
+                    <AvatarFallback className="bg-gradient-to-br from-primary/20 to-primary/10 text-primary text-xs font-bold">
+                      {username?.[0]?.toUpperCase() || 'U'}
+                    </AvatarFallback>
+                  </Avatar>
+                  <span className="text-sm font-semibold max-w-[100px] truncate group-hover:text-foreground/80 transition-colors">
+                    {username || 'User'}
+                  </span>
+                  <ChevronDown className="w-3.5 h-3.5 text-muted-foreground/70 group-hover:text-foreground transition-colors" />
+                </div>
+              </DropdownMenuTrigger>
+              <DropdownMenuContent align="end" className="w-56 rounded-xl shadow-lg border-border/50 backdrop-blur-sm bg-background/95">
+                <DropdownMenuLabel className="font-normal">
+                  <div className="flex flex-col space-y-1">
+                    <p className="text-sm font-medium leading-none">{username}</p>
+                    <p className="text-xs leading-none text-muted-foreground break-all">
+                      {email}
+                    </p>
+                  </div>
+                </DropdownMenuLabel>
+                <DropdownMenuSeparator />
+                <DropdownMenuGroup>
+                  <DropdownMenuItem asChild>
+                    <Link to="/profile" className="cursor-pointer flex items-center gap-2">
+                      <User className="w-4 h-4" />
+                      <span>Profile</span>
+                    </Link>
+                  </DropdownMenuItem>
+                  {/* Settings could go here */}
+                </DropdownMenuGroup>
+                <DropdownMenuSeparator />
+                <DropdownMenuItem
+                  className="text-red-500 focus:text-red-500 focus:bg-red-50 dark:focus:bg-red-950/20 cursor-pointer flex items-center gap-2"
+                  onClick={onLogout}
+                >
+                  <LogOut className="w-4 h-4" />
+                  <span>Logout</span>
+                </DropdownMenuItem>
+              </DropdownMenuContent>
+            </DropdownMenu>
+          </div>
+        )
       ) : (
+        // Login Button (Unauthenticated)
         <Link
           to="/login"
           onClick={onItemClick}
@@ -254,7 +404,7 @@ const NavItems = ({ mobile = false, onItemClick, onLogout }: { mobile?: boolean;
 export function Header() {
   const navigate = useNavigate();
   const { theme, setTheme } = useTheme();
-  const { logout } = useAuth();
+  const { logout, isAuthenticated, role, username, email } = useAuth();
   const [mounted, setMounted] = useState(false);
   const [logoError, setLogoError] = useState(false);
   const [mobileOpen, setMobileOpen] = useState(false);
@@ -271,96 +421,116 @@ export function Header() {
   };
 
   return (
-    <header className="sticky top-0 z-50 w-full bg-background/80 backdrop-blur-xl border-b border-border/40 shadow-sm">
-      <div className="container flex h-20 md:h-24 items-center justify-between px-4 md:px-8">
-        {/* Logo Area */}
-        <Link to="/" className="flex items-center gap-3 group transition-opacity hover:opacity-80 duration-300">
+    <>
+      <header className="sticky top-0 z-50 w-full bg-white/80 dark:bg-background/80 backdrop-blur-xl border-b border-border/40 shadow-sm">
+        <div className="container flex h-20 md:h-24 items-center justify-between px-4 md:px-8">
+          {/* Logo Area */}
+          <Link to="/" className="flex items-center gap-3 group transition-opacity hover:opacity-80 duration-300">
 
-          <img
-            src={theme === 'dark' ? '/favicon-dark.png' : '/favicon-light.png'}
-            alt="ZeeQue Logo"
-            className="h-20 md:h-24 w-auto object-contain transition-all duration-300 filter drop-shadow-sm hover:scale-105"
-            onError={() => setLogoError(true)}
-          />
+            <img
+              src={theme === 'dark' ? '/favicon-dark.png' : '/favicon-light.png'}
+              alt="ZeeQue Logo"
+              className="h-20 md:h-24 w-auto object-contain transition-all duration-300 filter drop-shadow-sm hover:scale-105"
+              onError={() => setLogoError(true)}
+            />
 
 
-        </Link>
+          </Link>
 
-        {/* Desktop Navigation */}
-        <nav className="hidden md:flex items-center gap-2">
-          <NavItems onLogout={handleLogout} />
+          {/* Desktop Navigation */}
+          <nav className="hidden md:flex items-center gap-2">
+            <NavItems
+              onLogout={handleLogout}
+              isAuthenticated={isAuthenticated}
+              role={role}
+              username={username}
+              email={email}
+            />
 
-          <Button
-            variant="ghost"
-            size="icon"
-            className="h-9 w-9 rounded-full ml-2 transition-all duration-200 hover:bg-muted"
-            onClick={() => setTheme(theme === 'dark' ? 'light' : 'dark')}
-            title={theme === 'dark' ? 'Switch to light mode' : 'Switch to dark mode'}
-          >
-            {mounted ? (
-              theme === 'dark' ? (
-                <Sun className="h-4 w-4 text-yellow-400" />
-              ) : (
-                <Moon className="h-4 w-4 text-slate-700" />
-              )
-            ) : (
-              <Sun className="h-4 w-4 text-yellow-400" />
-            )}
-          </Button>
-        </nav>
-
-        {/* Mobile Navigation */}
-        <div className="flex md:hidden items-center gap-3">
-          {/* Modern Glass Capsule */}
-          <div className="flex items-center gap-1 bg-background/40 backdrop-blur-md border border-border/50 rounded-full p-1 pl-2 shadow-sm">
             <Button
               variant="ghost"
               size="icon"
-              className="h-9 w-9 rounded-full hover:bg-accent/50 transition-colors"
+              className="h-9 w-9 rounded-full ml-2 transition-all duration-200 hover:bg-muted"
               onClick={() => setTheme(theme === 'dark' ? 'light' : 'dark')}
+              title={theme === 'dark' ? 'Switch to light mode' : 'Switch to dark mode'}
             >
-              <motion.div
-                initial={false}
-                animate={{ rotate: theme === 'dark' ? 90 : 0 }}
-                transition={{ type: "spring", stiffness: 200, damping: 15 }}
-              >
-                {mounted ? (
-                  theme === 'dark' ? (
-                    <Sun className="h-5 w-5 text-yellow-400 fill-yellow-400/20" />
-                  ) : (
-                    <Moon className="h-5 w-5 text-indigo-500 fill-indigo-500/20" />
-                  )
-                ) : null}
-              </motion.div>
+              {mounted ? (
+                theme === 'dark' ? (
+                  <Sun className="h-4 w-4 text-yellow-400" />
+                ) : (
+                  <Moon className="h-4 w-4 text-slate-700" />
+                )
+              ) : (
+                <Sun className="h-4 w-4 text-yellow-400" />
+              )}
             </Button>
+          </nav>
 
-            <div className="w-px h-4 bg-border/50 mx-1" />
 
-            <Sheet open={mobileOpen} onOpenChange={setMobileOpen}>
-              <SheetTrigger asChild>
-                <Button variant="ghost" size="icon" className="h-10 w-10 shrink-0 rounded-full hover:bg-accent/50 group">
-                  <div className="flex flex-col gap-1.5 items-end justify-center w-6">
-                    <span className="w-6 h-0.5 bg-foreground rounded-full transition-all group-hover:w-4 group-aria-expanded:rotate-45 group-aria-expanded:translate-y-2" />
-                    <span className="w-4 h-0.5 bg-foreground/70 rounded-full transition-all group-hover:w-6 group-aria-expanded:opacity-0" />
-                    <span className="w-5 h-0.5 bg-foreground rounded-full transition-all group-hover:w-3 group-aria-expanded:-rotate-45 group-aria-expanded:-translate-y-2" />
+          {/* Mobile Navigation */}
+          <div className="flex md:hidden items-center gap-3">
+            {/* Modern Glass Capsule */}
+            <div className="flex items-center gap-1 bg-background/40 backdrop-blur-md border border-border/50 rounded-full p-1 pl-2 shadow-sm">
+              <Button
+                variant="ghost"
+                size="icon"
+                className="h-9 w-9 rounded-full hover:bg-accent/50 transition-colors"
+                onClick={() => setTheme(theme === 'dark' ? 'light' : 'dark')}
+              >
+                <motion.div
+                  initial={false}
+                  animate={{ rotate: theme === 'dark' ? 90 : 0 }}
+                  transition={{ type: "spring", stiffness: 200, damping: 15 }}
+                >
+                  {mounted ? (
+                    theme === 'dark' ? (
+                      <Sun className="h-5 w-5 text-yellow-400 fill-yellow-400/20" />
+                    ) : (
+                      <Moon className="h-5 w-5 text-indigo-500 fill-indigo-500/20" />
+                    )
+                  ) : null}
+                </motion.div>
+              </Button>
+
+              <div className="w-px h-4 bg-border/50 mx-1" />
+
+              <Sheet open={mobileOpen} onOpenChange={setMobileOpen}>
+                <SheetTrigger asChild>
+                  <Button variant="ghost" size="icon" className="h-10 w-10 shrink-0 rounded-full hover:bg-accent/50 group">
+                    <div className="flex flex-col gap-1.5 items-end justify-center w-6">
+                      <span className="w-6 h-0.5 bg-foreground rounded-full transition-all group-hover:w-4 group-aria-expanded:rotate-45 group-aria-expanded:translate-y-2" />
+                      <span className="w-4 h-0.5 bg-foreground/70 rounded-full transition-all group-hover:w-6 group-aria-expanded:opacity-0" />
+                      <span className="w-5 h-0.5 bg-foreground rounded-full transition-all group-hover:w-3 group-aria-expanded:-rotate-45 group-aria-expanded:-translate-y-2" />
+                    </div>
+                    <span className="sr-only">Toggle menu</span>
+                  </Button>
+                </SheetTrigger>
+                <SheetContent side="right" className="w-[300px] sm:w-[400px] flex flex-col gap-6 pt-10">
+                  <SheetHeader className="text-left px-2">
+                    <SheetTitle className="flex items-center gap-2">
+                      <span className="font-display text-xl font-bold">Menu</span>
+                    </SheetTitle>
+                  </SheetHeader>
+                  <div className="flex flex-col gap-2">
+                    <NavItems
+                      mobile
+                      onItemClick={() => setMobileOpen(false)}
+                      onLogout={handleLogout}
+                      isAuthenticated={isAuthenticated}
+                      role={role}
+                      username={username}
+                      email={email}
+                    />
                   </div>
-                  <span className="sr-only">Toggle menu</span>
-                </Button>
-              </SheetTrigger>
-              <SheetContent side="right" className="w-[300px] sm:w-[400px] flex flex-col gap-6 pt-10">
-                <SheetHeader className="text-left px-2">
-                  <SheetTitle className="flex items-center gap-2">
-                    <span className="font-display text-xl font-bold">Menu</span>
-                  </SheetTitle>
-                </SheetHeader>
-                <div className="flex flex-col gap-2">
-                  <NavItems mobile onItemClick={() => setMobileOpen(false)} onLogout={handleLogout} />
-                </div>
-              </SheetContent>
-            </Sheet>
+                </SheetContent>
+              </Sheet>
+            </div>
           </div>
         </div>
-      </div>
-    </header>
+      </header>
+
+      {/* Global Floating Create Button */}
+      <FloatingCreateButton />
+    </>
   );
 }

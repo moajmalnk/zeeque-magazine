@@ -8,9 +8,13 @@ import Index from "./pages/Index";
 import Submit from "./pages/Submit";
 import Editorial from "./pages/Editorial";
 import Login from "./pages/Login";
+import Signup from "./pages/Signup";
+import Onboarding from "./pages/Onboarding";
 import Guidelines from "./pages/Guidelines";
 import AllCreatives from "./pages/AllCreatives";
-import Teachers from "./pages/Teachers";
+import Users from "./pages/Users";
+import Profile from "./pages/Profile";
+import PublicProfile from "./pages/PublicProfile";
 import NotFound from "./pages/NotFound";
 import { ProtectedRoute } from "./components/ProtectedRoute";
 
@@ -34,19 +38,30 @@ const App = () => (
             <Route path="/guidelines" element={<Guidelines />} />
             <Route path="/all-creatives" element={<AllCreatives />} />
             <Route path="/login" element={<Login />} />
+            <Route path="/signup" element={<Signup />} />
+            <Route path="/onboarding" element={<Onboarding />} />
+            <Route
+              path="/profile"
+              element={
+                <ProtectedRoute>
+                  <Profile />
+                </ProtectedRoute>
+              }
+            />
+            <Route path="/profile/:userId" element={<PublicProfile />} />
             <Route
               path="/editorial"
               element={
-                <ProtectedRoute>
+                <ProtectedRoute allowedRoles={['ADMIN', 'EDITORIAL']}>
                   <Editorial />
                 </ProtectedRoute>
               }
             />
             <Route
-              path="/teachers"
+              path="/users"
               element={
-                <ProtectedRoute>
-                  <Teachers />
+                <ProtectedRoute allowedRoles={['ADMIN']}>
+                  <Users />
                 </ProtectedRoute>
               }
             />
