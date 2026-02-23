@@ -106,7 +106,20 @@ export function useAuth() {
     }
   }, []);
 
-  const logout = useCallback(() => {
+  const logout = useCallback(async () => {
+    // Blacklist the refresh token on the backend so it cannot be reused
+    try {
+      const tokenString = localStorage.getItem(AUTH_KEY);
+      if (tokenString) {
+        const { refresh } = JSON.parse(tokenString);
+        if (refresh) {
+          await api.post('/token/blacklist/', { refresh });
+        }
+      }
+    } catch {
+      // Silently ignore — we still clear the local session regardless
+    }
+
     localStorage.removeItem(AUTH_KEY);
     localStorage.removeItem(USER_KEY);
     delete api.defaults.headers.common['Authorization'];

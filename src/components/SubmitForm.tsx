@@ -456,10 +456,7 @@ export function SubmitForm() {
       return;
     }
 
-    if ((data.category === 'drawings' || data.category === 'poems') && !selectedImage) {
-      toast.error(`Please upload an image for your ${data.category === 'poems' ? 'poem' : 'drawing'}!`);
-      return;
-    }
+
 
     setIsSubmitting(true);
 
@@ -894,8 +891,8 @@ export function SubmitForm() {
                         <p className="text-lg font-bold text-slate-600 dark:text-slate-200 mb-1">
                           {(() => {
                             const cat = form.watch('category');
-                            if (cat === 'drawings') return 'Upload your Artwork (Required)';
-                            if (cat === 'poems') return 'Add an illustration (Required)';
+                            if (cat === 'drawings') return 'Upload your Artwork (Optional)';
+                            if (cat === 'poems') return 'Add an illustration (Optional)';
                             return 'Add a Picture?';
                           })()}
                         </p>
