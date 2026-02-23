@@ -1045,9 +1045,9 @@ export default function Users() {
                         <div className="relative z-10 flex flex-col items-center">
                             <div className="relative mb-6">
                                 {/* Colorful Border Container */}
-                                <div className={cn("p-1.5 rounded-[2.5rem] bg-gradient-to-br shadow-2xl", getRoleColor(viewingUser?.role).bg)}>
-                                    <div className="bg-white dark:bg-zinc-950 p-1 rounded-[2.2rem]">
-                                        <div className="h-32 w-32 rounded-[2rem] bg-muted flex items-center justify-center text-4xl font-display font-bold text-primary overflow-hidden shadow-inner ring-1 ring-black/5">
+                                <div className={cn("p-1.5 rounded-3xl bg-gradient-to-br shadow-2xl", getRoleColor(viewingUser?.role).bg)}>
+                                    <div className="bg-white dark:bg-zinc-950 p-1 rounded-[1.3rem]">
+                                        <div className="h-32 w-32 rounded-2xl bg-muted flex items-center justify-center text-4xl font-display font-bold text-primary overflow-hidden shadow-inner ring-1 ring-black/5">
                                             {viewingUser?.profile_image ? (
                                                 <img src={getImageUrl(viewingUser.profile_image)} alt={viewingUser?.username} className="w-full h-full object-cover" />
                                             ) : (

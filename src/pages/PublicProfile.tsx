@@ -578,20 +578,20 @@ export default function PublicProfile() {
 
                                 {/* Stats Grid */}
                                 <div className="grid grid-cols-3 gap-2 w-full border-t border-border/50 pt-6 mb-6">
-                                    <div className="flex flex-col items-center p-2 rounded-xl bg-muted/20">
+                                    <div className="flex flex-col items-center p-2 rounded-2xl bg-muted/20">
                                         <span className="text-xl font-bold font-display text-foreground">{posts.length}</span>
                                         <span className="text-[10px] uppercase font-semibold text-muted-foreground tracking-wider">Posts</span>
                                     </div>
                                     <button
                                         onClick={() => setViewingList('followers')}
-                                        className="flex flex-col items-center p-2 rounded-xl bg-muted/20 hover:bg-muted/40 transition-colors cursor-pointer group/stat"
+                                        className="flex flex-col items-center p-2 rounded-2xl bg-muted/20 hover:bg-muted/40 transition-colors cursor-pointer group/stat"
                                     >
                                         <span className="text-xl font-bold font-display text-foreground group-hover/stat:text-primary transition-colors">{user.followers_count || 0}</span>
                                         <span className="text-[10px] uppercase font-semibold text-muted-foreground tracking-wider">Followers</span>
                                     </button>
                                     <button
                                         onClick={() => setViewingList('following')}
-                                        className="flex flex-col items-center p-2 rounded-xl bg-muted/20 hover:bg-muted/40 transition-colors cursor-pointer group/stat"
+                                        className="flex flex-col items-center p-2 rounded-2xl bg-muted/20 hover:bg-muted/40 transition-colors cursor-pointer group/stat"
                                     >
                                         <span className="text-xl font-bold font-display text-foreground group-hover/stat:text-primary transition-colors">{user.following_count || 0}</span>
                                         <span className="text-[10px] uppercase font-semibold text-muted-foreground tracking-wider">Following</span>

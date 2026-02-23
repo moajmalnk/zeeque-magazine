@@ -293,7 +293,7 @@ export function PostCard({ post, index = 0 }: PostCardProps) {
     <>
       <div
         className={cn(
-          "bg-white dark:bg-slate-900 border border-slate-100 dark:border-slate-800 rounded-[2rem] overflow-hidden shadow-[0_2px_20px_rgb(0,0,0,0.04)] hover:shadow-[0_8px_30px_rgb(0,0,0,0.08)] dark:shadow-none transition-all duration-300 flex flex-col h-full group",
+          "bg-white dark:bg-slate-900 border border-slate-100 dark:border-slate-800 rounded-2xl overflow-hidden shadow-[0_2px_20px_rgb(0,0,0,0.04)] hover:shadow-[0_8px_30px_rgb(0,0,0,0.08)] dark:shadow-none transition-all duration-300 flex flex-col h-full group",
           index > 0 && `animate-in fade-in slide-in-from-bottom-8 duration-700 delay-${Math.min(index * 100, 500)}`
         )}
       >
@@ -392,6 +392,7 @@ export function PostCard({ post, index = 0 }: PostCardProps) {
             <img
               src={getImageUrl(post.image_url)}
               alt={post.title}
+              loading="lazy"
               className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-105"
             />
           ) : (

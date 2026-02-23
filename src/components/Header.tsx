@@ -248,18 +248,20 @@ const NavItems = ({
         mobile={mobile}
       />
 
-      <NavTab
-        to="/community"
-        label="Explore"
-        icon={Search}
-        isActive={pathname === '/community'}
-        activeBg="bg-gradient-to-r from-emerald-400 to-teal-500"
-        activeColor="text-white"
-        activeShadow="shadow-[0_8px_16px_-6px_rgba(16,185,129,0.5)]"
-        hoverColor="hover:text-emerald-500"
-        onClick={onItemClick}
-        mobile={mobile}
-      />
+      {isAuthenticated && (
+        <NavTab
+          to="/community"
+          label="Explore"
+          icon={Search}
+          isActive={pathname === '/community'}
+          activeBg="bg-gradient-to-r from-emerald-400 to-teal-500"
+          activeColor="text-white"
+          activeShadow="shadow-[0_8px_16px_-6px_rgba(16,185,129,0.5)]"
+          hoverColor="hover:text-emerald-500"
+          onClick={onItemClick}
+          mobile={mobile}
+        />
+      )}
 
       <NavTab
         to="/guidelines"

@@ -302,57 +302,57 @@ export default function Community() {
 
                 {/* Results List */}
                 <section className="container max-w-3xl pb-24 px-4 min-h-[50vh]">
-                    {isLoading ? (
-                        <div className="space-y-4">
-                            {Array.from({ length: 10 }).map((_, i) => (
-                                <div key={i} className="flex items-center gap-4 p-4 rounded-2xl bg-muted/20 border border-border/40">
-                                    <Skeleton className="w-12 h-12 rounded-full" />
-                                    <div className="flex-1 space-y-2">
-                                        <Skeleton className="h-4 w-1/3" />
-                                        <Skeleton className="h-3 w-1/4" />
+                    <div className="bg-white dark:bg-slate-900/40 border border-slate-200 dark:border-slate-800/60 rounded-2xl shadow-sm overflow-hidden p-2 sm:p-4 animate-in fade-in duration-700">
+                        {isLoading ? (
+                            <div className="space-y-2">
+                                {Array.from({ length: 10 }).map((_, i) => (
+                                    <div key={i} className="flex items-center gap-4 p-4 rounded-xl bg-muted/5 dark:bg-muted/10 border border-border/10">
+                                        <Skeleton className="w-12 h-12 rounded-full" />
+                                        <div className="flex-1 space-y-2">
+                                            <Skeleton className="h-4 w-1/3" />
+                                            <Skeleton className="h-3 w-1/4" />
+                                        </div>
+                                        <Skeleton className="w-20 h-9 rounded-full" />
                                     </div>
-                                    <Skeleton className="w-20 h-9 rounded-full" />
-                                </div>
-                            ))}
-                        </div>
-                    ) : (data?.pages[0].results.length === 0) ? (
-                        <div className="flex flex-col items-center justify-center py-24 text-center text-muted-foreground">
-                            <div className="bg-muted/50 p-6 rounded-full mb-4">
-                                <Search className="w-8 h-8 opacity-50" />
+                                ))}
                             </div>
-                            <h3 className="text-xl font-semibold mb-2 text-foreground">No users found</h3>
-                            <p className="max-w-xs mx-auto">We couldn't find anyone matching "{searchTerm}". Try a different name or role.</p>
-                        </div>
-                    ) : (
-                        <div className="space-y-2">
-                            {data?.pages.map((page, i) => (
-                                <UserListPage
-                                    key={i}
-                                    results={page.results}
-                                    handleFollow={handleFollowToggle}
-                                    activeRoleColor={getButtonClasses(activeRole)}
-                                    isAuthenticated={!!currentUser}
-                                />
-                            ))}
-
-                            {/* Load More Trigger */}
-                            {hasNextPage && (
-                                <div className="flex justify-center pt-8">
-                                    <Button
-                                        variant="ghost"
-                                        onClick={() => fetchNextPage()}
-                                        disabled={isFetchingNextPage}
-                                        className="rounded-full px-8 text-muted-foreground hover:text-foreground"
-                                    >
-                                        {isFetchingNextPage ? (
-                                            <Skeleton className="w-4 h-4 mr-2 rounded-full bg-muted-foreground/20" />
-                                        ) : null}
-                                        {isFetchingNextPage ? 'Loading more...' : 'Show more results'}
-                                    </Button>
+                        ) : (data?.pages[0].results.length === 0) ? (
+                            <div className="flex flex-col items-center justify-center py-24 text-center text-muted-foreground">
+                                <div className="bg-muted/30 dark:bg-muted/10 p-6 rounded-full mb-4">
+                                    <Search className="w-8 h-8 opacity-50" />
                                 </div>
-                            )}
-                        </div>
-                    )}
+                                <h3 className="text-xl font-semibold mb-2 text-foreground">No users found</h3>
+                                <p className="max-w-xs mx-auto">We couldn't find anyone matching "{searchTerm}". Try a different name or role.</p>
+                            </div>
+                        ) : (
+                            <div className="flex flex-col divide-y divide-border/10 dark:divide-white/5">
+                                {data?.pages.map((page, i) => (
+                                    <UserListPage
+                                        key={i}
+                                        results={page.results}
+                                        handleFollow={handleFollowToggle}
+                                        activeRoleColor={getButtonClasses(activeRole)}
+                                        isAuthenticated={!!currentUser}
+                                    />
+                                ))}
+                                {hasNextPage && (
+                                    <div className="flex justify-center pt-8 pb-4">
+                                        <Button
+                                            variant="ghost"
+                                            onClick={() => fetchNextPage()}
+                                            disabled={isFetchingNextPage}
+                                            className="rounded-full px-8 text-muted-foreground hover:text-foreground hover:bg-muted/50"
+                                        >
+                                            {isFetchingNextPage ? (
+                                                <Skeleton className="w-4 h-4 mr-2 rounded-full bg-muted-foreground/20" />
+                                            ) : null}
+                                            {isFetchingNextPage ? 'Loading more...' : 'Show more results'}
+                                        </Button>
+                                    </div>
+                                )}
+                            </div>
+                        )}
+                    </div>
                 </section>
             </main>
             <Footer />
@@ -404,7 +404,7 @@ function UserListPage({ results, handleFollow, activeRoleColor, isAuthenticated 
                 <div
                     key={user.id}
                     onClick={() => handleProfileClick(user.id)}
-                    className="group flex items-center gap-4 p-3 rounded-2xl hover:bg-muted/50 transition-colors duration-200 cursor-pointer"
+                    className="group flex items-center gap-4 p-4 rounded-xl hover:bg-muted/30 dark:hover:bg-white/[0.02] transition-colors duration-200 cursor-pointer"
                 >
                     {/* Avatar with optional verified badge */}
                     <div className="relative shrink-0">

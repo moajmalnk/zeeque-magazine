@@ -125,53 +125,56 @@ const SharedPostCard = ({ post, onClick, isLatestSort = false, isFollowingSort =
 
   return (
     <div
-      className="relative flex-shrink-0 w-36 h-56 md:w-48 md:h-72 rounded-xl overflow-hidden cursor-pointer hover:scale-[1.02] hover:-translate-y-1 transition-all duration-300 group shadow-md hover:shadow-xl border border-border/10 bg-muted transform-gpu [backface-visibility:hidden] isolation-isolate [mask-image:radial-gradient(white,black)]"
+      className="relative flex-shrink-0 w-36 h-56 md:w-48 md:h-72 rounded-2xl overflow-hidden cursor-pointer hover:scale-[1.02] hover:-translate-y-1 transition-all duration-300 group shadow-md hover:shadow-xl border border-border/10 bg-muted transform-gpu [backface-visibility:hidden] isolation-isolate [mask-image:radial-gradient(white,black)]"
       onClick={onClick}
       onMouseEnter={handleMouseEnter}
       onMouseLeave={handleMouseLeave}
     >
       {/* Background/Image/Video Layer */}
-      {displayImage && !imgError ? (
-        <img
-          src={getImageUrl(displayImage)}
-          alt={post.title}
-          className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-105"
-          onError={() => setImgError(true)}
-        />
-      ) : post.video_file ? (
-        <video
-          ref={videoRef}
-          src={getImageUrl(post.video_file)}
-          muted
-          playsInline
-          loop
-          className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-105"
-        />
-      ) : post.video_url && getVideoEmbedUrl(post.video_url) ? (
-        <div className="w-full h-full relative bg-slate-900 group-hover:scale-105 transition-transform duration-700 overflow-hidden">
-          <div className="absolute inset-0 flex items-center justify-center">
-            {/* Wrapper to center and crop the video */}
-            <iframe
-              src={getVideoEmbedUrl(post.video_url)}
-              className="min-w-[177.77vh] min-h-[100vh] w-auto h-auto absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 pointer-events-none scale-[0.6] md:scale-[0.8]" // Scale down slightly to fit card context better while maintaining cover
-              allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
-              title={post.title}
-              tabIndex={-1}
-            />
+      {
+        displayImage && !imgError ? (
+          <img
+            src={getImageUrl(displayImage)}
+            alt={post.title}
+            loading="lazy"
+            className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-105"
+            onError={() => setImgError(true)}
+          />
+        ) : post.video_file ? (
+          <video
+            ref={videoRef}
+            src={getImageUrl(post.video_file)}
+            muted
+            playsInline
+            loop
+            className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-105"
+          />
+        ) : post.video_url && getVideoEmbedUrl(post.video_url) ? (
+          <div className="w-full h-full relative bg-slate-900 group-hover:scale-105 transition-transform duration-700 overflow-hidden">
+            <div className="absolute inset-0 flex items-center justify-center">
+              {/* Wrapper to center and crop the video */}
+              <iframe
+                src={getVideoEmbedUrl(post.video_url)}
+                className="min-w-[177.77vh] min-h-[100vh] w-auto h-auto absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 pointer-events-none scale-[0.6] md:scale-[0.8]" // Scale down slightly to fit card context better while maintaining cover
+                allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+                title={post.title}
+                tabIndex={-1}
+              />
+            </div>
+            {/* Block Start Overlay to prevent interaction and allow card click */}
+            <div className="absolute inset-0 bg-transparent z-10" />
           </div>
-          {/* Block Start Overlay to prevent interaction and allow card click */}
-          <div className="absolute inset-0 bg-transparent z-10" />
-        </div>
-      ) : (
-        // Attractive Fallback if Image Fails
-        <div className={`w-full h-full flex flex-col items-center justify-center p-4 text-center group-hover:scale-105 transition-transform duration-700 ${getCategoryColor(post.category)}`}>
-          {/* Abstract Texture Overlay */}
-          <div className="absolute inset-0 opacity-20 mix-blend-overlay" style={{ backgroundImage: 'radial-gradient(circle, rgba(255,255,255,0.3) 1px, transparent 1px)', backgroundSize: '16px 16px' }} />
+        ) : (
+          // Attractive Fallback if Image Fails
+          <div className={`w-full h-full flex flex-col items-center justify-center p-4 text-center group-hover:scale-105 transition-transform duration-700 ${getCategoryColor(post.category)}`}>
+            {/* Abstract Texture Overlay */}
+            <div className="absolute inset-0 opacity-20 mix-blend-overlay" style={{ backgroundImage: 'radial-gradient(circle, rgba(255,255,255,0.3) 1px, transparent 1px)', backgroundSize: '16px 16px' }} />
 
-          <FileText className="w-8 h-8 md:w-10 md:h-10 text-white/60 mb-3 relative z-10" />
-          {/* Title removed from here to avoid duplication with the bottom caption */}
-        </div>
-      )}
+            <FileText className="w-8 h-8 md:w-10 md:h-10 text-white/60 mb-3 relative z-10" />
+            {/* Title removed from here to avoid duplication with the bottom caption */}
+          </div>
+        )
+      }
 
       {/* Dark Overlay for Text Readability: Stronger for images, lighter for solid colors */}
       <div
@@ -302,7 +305,7 @@ const SharedPostCard = ({ post, onClick, isLatestSort = false, isFollowingSort =
           </div>
         </div>
       </div>
-    </div>
+    </div >
   );
 };
 
@@ -926,12 +929,41 @@ const Index = () => {
                         </>
                       )
                     ) : (
-                      <>
-                        <div className="bg-muted/30 p-4 rounded-full mb-3 ring-1 ring-border/50">
-                          {spotlightSort === 'latest' ? <Sparkles className="w-8 h-8 text-emerald-500/50" /> : <Flame className="w-8 h-8 text-orange-500/50" />}
+                      <div className="flex flex-col items-center">
+                        <div className="relative mb-5 group cursor-default inline-block">
+                          {/* Pulsing Glow */}
+                          <div className={cn(
+                            "absolute inset-0 rounded-full blur-xl animate-pulse transition-all duration-500",
+                            spotlightSort === 'latest' ? "bg-emerald-500/20" : "bg-orange-500/20"
+                          )} />
+
+                          {/* Mascot Circle */}
+                          <div className={cn(
+                            "relative w-24 h-24 sm:w-28 sm:h-28 rounded-full flex items-center justify-center border-2 shadow-lg transition-transform duration-500 overflow-hidden",
+                            spotlightSort === 'latest' ? "bg-gradient-to-br from-emerald-500/10 to-emerald-500/5 border-emerald-500/20" : "bg-gradient-to-br from-orange-500/10 to-orange-500/5 border-orange-500/20"
+                          )}>
+                            <img
+                              src="/images/mascot1.png"
+                              alt="No posts"
+                              className="w-[120%] h-[120%] object-contain drop-shadow-md translate-y-2 transition-transform duration-500"
+                            />
+                          </div>
+
+                          {/* Icon Badge */}
+                          <div className={cn(
+                            "absolute -bottom-2 -right-2 text-white w-9 h-9 rounded-full flex items-center justify-center border-4 border-background shadow-lg z-10",
+                            spotlightSort === 'latest' ? "bg-emerald-500" : "bg-orange-500"
+                          )}>
+                            {spotlightSort === 'latest' ? <Sparkles className="w-5 h-5" /> : <Flame className="w-5 h-5" />}
+                          </div>
                         </div>
-                        <p className="text-muted-foreground">No posts found to display right now.</p>
-                      </>
+                        <h3 className="text-lg font-semibold text-foreground mb-1">
+                          {spotlightSort === 'latest' ? "Nothing Fresh Yet! ✨" : "Staying Cool! 🧊"}
+                        </h3>
+                        <p className="text-muted-foreground text-sm max-w-[200px] mx-auto">
+                          No posts found to display right now. Check back soon!
+                        </p>
+                      </div>
                     )}
                   </div>
                 )}

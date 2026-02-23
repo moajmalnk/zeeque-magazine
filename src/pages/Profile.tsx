@@ -588,7 +588,7 @@ export default function Profile() {
                                     {isPostsLoading ? (
                                         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
                                             {[1, 2, 3, 4, 5, 6].map((i) => (
-                                                <div key={i} className="bg-card border border-border/40 rounded-3xl overflow-hidden aspect-[4/5] flex flex-col">
+                                                <div key={i} className="bg-card border border-border/40 rounded-2xl overflow-hidden aspect-[4/5] flex flex-col">
                                                     <Skeleton className="flex-1 rounded-none" />
                                                     <div className="p-5 space-y-3">
                                                         <Skeleton className="h-4 w-2/3" />

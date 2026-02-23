@@ -541,7 +541,7 @@ export function SubmitForm() {
         }
       />
 
-      <Card className="border-0 shadow-sm bg-white backdrop-blur-xl rounded-[1.5rem] overflow-visible dark:bg-slate-900/80 dark:border dark:border-slate-800">
+      <Card className="border-0 shadow-sm bg-white backdrop-blur-xl rounded-2xl overflow-visible dark:bg-slate-900/80 dark:border dark:border-slate-800">
         <CardContent className="p-6">
           <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
 

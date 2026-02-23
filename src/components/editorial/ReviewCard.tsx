@@ -293,7 +293,7 @@ export function ReviewCard({ post, onApprove, onReject, onRestore, onDelete, onE
           <div className="absolute inset-0 bg-gradient-to-br from-primary/10 to-purple-500/10 rounded-[2rem] transform translate-y-2 scale-[0.95] blur-xl opacity-0 group-hover:opacity-100 transition-all duration-500" />
 
           <Card
-            className="relative flex flex-col h-full border-0 shadow-lg shadow-slate-200/50 dark:shadow-black/20 bg-white dark:bg-slate-900/90 backdrop-blur-sm rounded-3xl overflow-hidden transition-all duration-300 group-hover:-translate-y-1 ring-1 ring-slate-100 dark:ring-slate-800 cursor-pointer"
+            className="relative flex flex-col h-full border-0 shadow-lg shadow-slate-200/50 dark:shadow-black/20 bg-white dark:bg-slate-900/90 backdrop-blur-sm rounded-2xl overflow-hidden transition-all duration-300 group-hover:-translate-y-1 ring-1 ring-slate-100 dark:ring-slate-800 cursor-pointer"
             onClick={() => setShowPreviewDialog(true)}
           >
             <CardHeader className="p-4 flex-shrink-0">
@@ -476,7 +476,7 @@ export function ReviewCard({ post, onApprove, onReject, onRestore, onDelete, onE
         <DialogContent
           noContentWrapper
           hideCloseButton
-          className="max-w-[1100px] w-[95vw] h-[92vh] md:h-[80vh] p-0 border dark:border-white/10 rounded-[2.5rem] md:!rounded-[3rem] bg-white dark:bg-zinc-950 shadow-2xl overflow-y-auto md:overflow-hidden flex flex-col z-[100] outline-none scrollbar-hide"
+          className="max-w-[1100px] w-[95vw] h-[92vh] md:h-[80vh] p-0 border dark:border-white/10 rounded-2xl md:!rounded-2xl bg-white dark:bg-zinc-950 shadow-2xl overflow-y-auto md:overflow-hidden flex flex-col z-[100] outline-none scrollbar-hide"
         >
           <div className="flex flex-col md:flex-row h-auto md:h-full overflow-visible md:overflow-hidden">
             {/* Left Column: Media & Branding - Responsive height */}
@@ -516,7 +516,7 @@ export function ReviewCard({ post, onApprove, onReject, onRestore, onDelete, onE
 
               {/* Media Container */}
               <div className="absolute inset-0 flex items-center justify-center p-4 md:p-8">
-                <div className="relative w-full h-full rounded-[2rem] overflow-hidden shadow-2xl border border-white/10 bg-black/5 group-hover/media:scale-[1.02] transition-transform duration-700">
+                <div className="relative w-full h-full rounded-2xl overflow-hidden shadow-2xl border border-white/10 bg-black/5 group-hover/media:scale-[1.02] transition-transform duration-700">
                   {post.video_url || post.video_file ? (
                     <VideoPlayer src={post.video_file} url={post.video_url} />
                   ) : post.image_url ? (
@@ -562,7 +562,7 @@ export function ReviewCard({ post, onApprove, onReject, onRestore, onDelete, onE
               {/* Scrollable Body - Unified on mobile */}
               <div className="flex-none md:flex-1 overflow-visible md:overflow-y-auto p-6 md:p-8 pt-0 space-y-8 scrollbar-elegant">
                 {/* Author Info Card */}
-                <div className="bg-white dark:bg-zinc-900/50 p-6 rounded-[2rem] border border-slate-100 dark:border-zinc-800/50 shadow-sm flex items-center gap-4">
+                <div className="bg-white dark:bg-zinc-900/50 p-6 rounded-2xl border border-slate-100 dark:border-zinc-800/50 shadow-sm flex items-center gap-4">
                   <div className={cn("w-14 h-14 rounded-2xl flex items-center justify-center font-black text-lg tracking-tighter shadow-inner", avatarColor)}>
                     {getInitials(post.author_name)}
                   </div>
@@ -585,7 +585,7 @@ export function ReviewCard({ post, onApprove, onReject, onRestore, onDelete, onE
                     <FileText className="w-4 h-4 text-primary opacity-50" />
                     <span className="text-[10px] font-black uppercase tracking-widest text-muted-foreground">The Narrative</span>
                   </div>
-                  <div className="bg-white dark:bg-zinc-900/40 p-8 rounded-[2.5rem] border border-slate-100 dark:border-zinc-800/50 relative">
+                  <div className="bg-white dark:bg-zinc-900/40 p-8 rounded-2xl border border-slate-100 dark:border-zinc-800/50 relative">
                     <div className="absolute top-4 right-6 text-slate-100 dark:text-zinc-800 text-6xl font-serif pointer-events-none select-none">“</div>
                     <p className="text-slate-600 dark:text-slate-300 text-base md:text-lg leading-relaxed whitespace-pre-wrap font-medium">
                       {post.content}

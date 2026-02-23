@@ -89,8 +89,8 @@
     --input: 220 20% 90%;
     --ring: 340 100% 55%;
 
-    /* Super rounded shapes */
-    --radius: 1.5rem;
+    /* Standard professional rounded shapes (16px) */
+    --radius: 1.0rem;
 
     /* Extended vibrant palette for categories - Solid "Hard" Colors */
     --stories: 320 85% 60%;
