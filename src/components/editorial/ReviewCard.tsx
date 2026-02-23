@@ -408,7 +408,7 @@ export function ReviewCard({ post, onApprove, onReject, onRestore, onDelete, onE
               {post.status === 'pending' && (
                 <div className="flex flex-col sm:flex-row gap-2 w-full">
                   <AlertDialog open={showRejectDialog} onOpenChange={setShowRejectDialog}>
-                    <AlertDialogContent>
+                    <AlertDialogContent className="z-[200]">
                       <AlertDialogHeader>
                         <AlertDialogTitle>Reject this submission?</AlertDialogTitle>
                         <AlertDialogDescription>
@@ -693,7 +693,7 @@ export function ReviewCard({ post, onApprove, onReject, onRestore, onDelete, onE
 
       {/* Global Delete Confirmation Dialog - Works for all states */}
       <AlertDialog open={showDeleteDialog} onOpenChange={setShowDeleteDialog}>
-        <AlertDialogContent>
+        <AlertDialogContent className="z-[200]">
           <AlertDialogHeader>
             <AlertDialogTitle className="text-red-600 flex items-center gap-2">
               <Trash2 className="w-5 h-5" />
@@ -733,7 +733,7 @@ export function ReviewCard({ post, onApprove, onReject, onRestore, onDelete, onE
       {/* Feature Toggle Confirmation Dialog */}
       {onToggleFeature && (
         <AlertDialog open={showFeatureDialog} onOpenChange={setShowFeatureDialog}>
-          <AlertDialogContent>
+          <AlertDialogContent className="z-[200]">
             <AlertDialogHeader>
               <AlertDialogTitle className="flex items-center gap-2 text-amber-500">
                 {post.is_featured ? 'Remove from featured?' : 'Feature this post?'}

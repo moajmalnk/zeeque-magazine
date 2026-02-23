@@ -39,7 +39,7 @@ export function ApproveDialog({ open, onOpenChange, post, onApprove }: ApproveDi
 
   return (
     <AlertDialog open={open} onOpenChange={onOpenChange}>
-      <AlertDialogContent className="max-w-md">
+      <AlertDialogContent className="max-w-md z-[200]">
         <AlertDialogHeader>
           <AlertDialogTitle className="font-display text-xl">
             Approve and Publish Submission
