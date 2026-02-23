@@ -170,6 +170,19 @@ export function PostCard({ post, index = 0 }: PostCardProps) {
     }
   };
 
+  const handleProfileClick = (e: React.MouseEvent) => {
+    e.stopPropagation();
+    if (!isLoggedIn) {
+      toast.info("Please log in to view profiles.", {
+        action: { label: "Log In", onClick: () => navigate('/login') }
+      });
+      return;
+    }
+    if (post.author_id) {
+      navigate(`/profile/${post.author_id}`);
+    }
+  };
+
   const likeMutation = useMutation({
     mutationFn: async () => {
       const { data } = await api.post(`/posts/${post.id}/like/`);
@@ -299,11 +312,14 @@ export function PostCard({ post, index = 0 }: PostCardProps) {
       >
         {/* --- Card Header: User Info --- */}
         <div className="p-4 px-5 flex items-center justify-between">
-          <div className="flex items-center gap-3">
+          <div
+            className="flex items-center gap-3 cursor-pointer group/author transition-opacity hover:opacity-80"
+            onClick={handleProfileClick}
+          >
             {/* Role-colored avatar fallback + verified tick */}
             <div className="relative shrink-0">
               <div className={cn(
-                "w-10 h-10 rounded-full flex items-center justify-center font-bold text-sm border-2 transition-all overflow-hidden",
+                "w-10 h-10 rounded-full flex items-center justify-center font-bold text-sm border-2 transition-all overflow-hidden group-hover/author:ring-2 group-hover/author:ring-primary/20",
                 post.author_image ? "" : getRoleColor(post.author_role).avatar,
                 getRoleColor(post.author_role).border
               )}>
@@ -321,7 +337,7 @@ export function PostCard({ post, index = 0 }: PostCardProps) {
             </div>
             <div className="flex flex-col min-w-0">
               <div className="flex items-center gap-2">
-                <span className="text-sm font-bold text-slate-900 dark:text-slate-100 leading-none truncate">
+                <span className="text-sm font-bold text-slate-900 dark:text-slate-100 leading-none truncate group-hover/author:text-primary transition-colors">
                   {post.author_name}
                 </span>
                 {post.author_role && (

@@ -1,4 +1,6 @@
 import { useState, useRef } from 'react';
+import { useNavigate } from 'react-router-dom';
+import { useAuth } from '@/hooks/useAuth';
 import { Post, categoryLabels, categoryIcons } from '@/types/post';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardFooter, CardHeader } from '@/components/ui/card';
@@ -175,6 +177,8 @@ const VideoPlayer = ({ src, url }: VideoPlayerProps) => {
 };
 
 export function ReviewCard({ post, onApprove, onReject, onRestore, onDelete, onEdit, onToggleFeature }: ReviewCardProps) {
+  const navigate = useNavigate();
+  const { isAuthenticated: isLoggedIn } = useAuth();
   const submittedDate = format(new Date(post.created_at), 'MMM d, yyyy');
   const [showApproveDialog, setShowApproveDialog] = useState(false);
   const [showRejectDialog, setShowRejectDialog] = useState(false);
@@ -183,6 +187,19 @@ export function ReviewCard({ post, onApprove, onReject, onRestore, onDelete, onE
   const [showPreviewDialog, setShowPreviewDialog] = useState(false);
   const [showEditDialog, setShowEditDialog] = useState(false);
   const [showFeatureDialog, setShowFeatureDialog] = useState(false);
+
+  const handleProfileClick = (e: React.MouseEvent) => {
+    e.stopPropagation();
+    if (!isLoggedIn) {
+      toast.info("Please log in to view profiles.", {
+        action: { label: "Log In", onClick: () => navigate('/login') }
+      });
+      return;
+    }
+    if (post.author_id) {
+      navigate(`/profile/${post.author_id}`);
+    }
+  };
 
   const handleApprove = (featured: boolean) => {
     if (!onApprove) return;
@@ -562,13 +579,16 @@ export function ReviewCard({ post, onApprove, onReject, onRestore, onDelete, onE
               {/* Scrollable Body - Unified on mobile */}
               <div className="flex-none md:flex-1 overflow-visible md:overflow-y-auto p-6 md:p-8 pt-0 space-y-8 scrollbar-elegant">
                 {/* Author Info Card */}
-                <div className="bg-white dark:bg-zinc-900/50 p-6 rounded-2xl border border-slate-100 dark:border-zinc-800/50 shadow-sm flex items-center gap-4">
-                  <div className={cn("w-14 h-14 rounded-2xl flex items-center justify-center font-black text-lg tracking-tighter shadow-inner", avatarColor)}>
+                <div
+                  className="bg-white dark:bg-zinc-900/50 p-6 rounded-2xl border border-slate-100 dark:border-zinc-800/50 shadow-sm flex items-center gap-4 cursor-pointer group/author hover:bg-slate-50 dark:hover:bg-zinc-800/50 transition-all"
+                  onClick={handleProfileClick}
+                >
+                  <div className={cn("w-14 h-14 rounded-2xl flex items-center justify-center font-black text-lg tracking-tighter shadow-inner group-hover/author:scale-105 transition-transform", avatarColor)}>
                     {getInitials(post.author_name)}
                   </div>
                   <div className="flex-1 min-w-0">
                     <p className="text-[10px] font-black uppercase tracking-[0.2em] text-muted-foreground mb-0.5">Author Identity</p>
-                    <h4 className="font-bold text-slate-800 dark:text-slate-100 truncate">{post.author_name}</h4>
+                    <h4 className="font-bold text-slate-800 dark:text-slate-100 truncate group-hover/author:text-primary transition-colors">{post.author_name}</h4>
                     <p className="text-xs text-slate-500 dark:text-slate-400 italic flex items-center gap-1.5">
                       <School className="w-3 h-3 opacity-50" />
                       {post.teacher_name || post.school_name || "Independent Creator"}
@@ -609,60 +629,62 @@ export function ReviewCard({ post, onApprove, onReject, onRestore, onDelete, onE
               </div>
 
               {/* Sticky Footer Actions - Professional Row */}
-              <div className="p-6 md:p-8 bg-white/90 dark:bg-black/90 backdrop-blur-xl border-t border-slate-100 dark:border-zinc-800/50 flex flex-col sm:flex-row items-center gap-3 shrink-0">
-                {/* 1. Edit Action - Available for all since admins may need to fix typos */}
-                {onEdit && (
-                  <Button
-                    variant="ghost"
-                    className="w-full sm:h-12 px-6 py-3 rounded-[1.25rem] bg-indigo-50/50 dark:bg-indigo-500/10 text-indigo-600 dark:text-indigo-400 hover:bg-indigo-100 dark:hover:bg-indigo-500/20 font-bold transition-all sm:flex-1 border border-indigo-100/50 dark:border-indigo-500/20"
-                    onClick={() => {
-                      setShowPreviewDialog(false);
-                      setShowEditDialog(true);
-                    }}
-                  >
-                    <Edit className="w-4 h-4 mr-2" /> Edit
-                  </Button>
-                )}
+              <div className="p-4 sm:p-5 bg-white/95 dark:bg-black/95 backdrop-blur-xl border-t border-slate-100 dark:border-zinc-800/50 shrink-0">
+                <div className="flex flex-col gap-3">
+                  {/* Primary Action - Always Full Width on Mobile for prominence */}
+                  {post.status === 'pending' || post.status === 'rejected' ? (
+                    <Button
+                      className="w-full h-12 px-6 rounded-2xl bg-gradient-to-r from-emerald-500 to-teal-500 hover:from-emerald-600 hover:to-teal-600 text-white font-bold shadow-xl shadow-emerald-500/20 hover:scale-[1.01] active:scale-[0.98] transition-all border-b-4 border-emerald-700/30 text-sm sm:text-base"
+                      onClick={() => setShowApproveDialog(true)}
+                    >
+                      <Check className="w-5 h-5 mr-2 stroke-[3px]" /> Approve & Publish Submission
+                    </Button>
+                  ) : (
+                    <Button
+                      variant="outline"
+                      className="w-full h-12 rounded-2xl border-slate-200 dark:border-zinc-800 text-slate-500 font-bold bg-slate-50/50 dark:bg-zinc-900/50"
+                      disabled
+                    >
+                      <Check className="w-5 h-5 mr-2" /> Already Published
+                    </Button>
+                  )}
 
-                {/* 2. Reject Action (Only for pending) */}
-                {post.status === 'pending' && onReject && (
-                  <Button
-                    variant="ghost"
-                    className="w-full sm:h-12 px-6 py-3 rounded-[1.25rem] bg-rose-50/50 dark:bg-rose-500/10 text-rose-600 dark:text-rose-400 hover:bg-rose-100 dark:hover:bg-rose-500/20 font-bold transition-all sm:flex-1 border border-rose-100/50 dark:border-rose-500/20"
-                    onClick={() => setShowRejectDialog(true)}
-                  >
-                    <X className="w-4 h-4 mr-2 stroke-[3px]" /> Reject
-                  </Button>
-                )}
+                  {/* Secondary Actions Group */}
+                  <div className="grid grid-cols-3 gap-2">
+                    {onEdit && (
+                      <Button
+                        variant="ghost"
+                        className="h-11 px-2 sm:px-4 rounded-xl bg-indigo-50/50 dark:bg-indigo-500/10 text-indigo-600 dark:text-indigo-400 hover:bg-indigo-100 dark:hover:bg-indigo-500/20 font-bold transition-all border border-indigo-100/50 dark:border-indigo-500/20 text-xs sm:text-sm"
+                        onClick={() => {
+                          setShowPreviewDialog(false);
+                          setShowEditDialog(true);
+                        }}
+                      >
+                        <Edit className="w-4 h-4 mr-1.5 sm:mr-2" /> Edit
+                      </Button>
+                    )}
 
-                {/* 3. Approve / Restore Action */}
-                {post.status === 'pending' || post.status === 'rejected' ? (
-                  <Button
-                    className="w-full sm:h-12 px-8 py-3 rounded-[1.25rem] bg-gradient-to-r from-emerald-500 to-teal-500 hover:from-emerald-600 hover:to-teal-600 text-white font-bold shadow-xl shadow-emerald-500/20 hover:scale-[1.02] active:scale-95 transition-all sm:flex-[1.5] border-b-4 border-emerald-700/30"
-                    onClick={() => setShowApproveDialog(true)}
-                  >
-                    <Check className="w-4 h-4 mr-2 stroke-[3px]" /> Approve & Publish
-                  </Button>
-                ) : (
-                  <Button
-                    variant="outline"
-                    className="w-full sm:h-12 rounded-[1.25rem] border-slate-200 dark:border-zinc-800 text-slate-500 font-bold sm:flex-[1.5] bg-slate-50/50 dark:bg-zinc-900/50"
-                    disabled
-                  >
-                    <Check className="w-4 h-4 mr-2" /> Already Published
-                  </Button>
-                )}
+                    {post.status === 'pending' && onReject && (
+                      <Button
+                        variant="ghost"
+                        className="h-11 px-2 sm:px-4 rounded-xl bg-rose-50/50 dark:bg-rose-500/10 text-rose-600 dark:text-rose-400 hover:bg-rose-100 dark:hover:bg-rose-500/20 font-bold transition-all border border-rose-100/50 dark:border-rose-500/20 text-xs sm:text-sm"
+                        onClick={() => setShowRejectDialog(true)}
+                      >
+                        <X className="w-4 h-4 mr-1.5 sm:mr-2 stroke-[3px]" /> Reject
+                      </Button>
+                    )}
 
-                {/* 4. Delete Action */}
-                {onDelete && (
-                  <Button
-                    variant="ghost"
-                    className="w-full sm:h-12 px-6 py-3 rounded-[1.25rem] bg-slate-50 dark:bg-white/5 text-slate-600 dark:text-slate-400 hover:bg-rose-50 hover:text-rose-600 dark:hover:bg-rose-500/10 dark:hover:text-rose-400 font-bold transition-all sm:flex-1 border border-slate-200/50 dark:border-white/5"
-                    onClick={() => setShowDeleteDialog(true)}
-                  >
-                    <Trash2 className="w-4 h-4 mr-2" /> Delete
-                  </Button>
-                )}
+                    {onDelete && (
+                      <Button
+                        variant="ghost"
+                        className="h-11 px-2 sm:px-4 rounded-xl bg-slate-50 dark:bg-white/5 text-slate-600 dark:text-slate-400 hover:bg-rose-50 hover:text-rose-600 dark:hover:bg-rose-500/10 dark:hover:text-rose-400 font-bold transition-all border border-slate-200/50 dark:border-white/5 text-xs sm:text-sm"
+                        onClick={() => setShowDeleteDialog(true)}
+                      >
+                        <Trash2 className="w-4 h-4 mr-1.5 sm:mr-2" /> Delete
+                      </Button>
+                    )}
+                  </div>
+                </div>
               </div>
             </div>
           </div>

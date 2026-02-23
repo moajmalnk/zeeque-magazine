@@ -934,13 +934,13 @@ const Index = () => {
                           {/* Pulsing Glow */}
                           <div className={cn(
                             "absolute inset-0 rounded-full blur-xl animate-pulse transition-all duration-500",
-                            spotlightSort === 'latest' ? "bg-emerald-500/20" : "bg-orange-500/20"
+                            spotlightSort === 'latest' ? "bg-sky-500/20" : "bg-orange-500/20"
                           )} />
 
                           {/* Mascot Circle */}
                           <div className={cn(
                             "relative w-24 h-24 sm:w-28 sm:h-28 rounded-full flex items-center justify-center border-2 shadow-lg transition-transform duration-500 overflow-hidden",
-                            spotlightSort === 'latest' ? "bg-gradient-to-br from-emerald-500/10 to-emerald-500/5 border-emerald-500/20" : "bg-gradient-to-br from-orange-500/10 to-orange-500/5 border-orange-500/20"
+                            spotlightSort === 'latest' ? "bg-gradient-to-br from-blue-500/10 to-sky-500/5 border-blue-500/20" : "bg-gradient-to-br from-orange-500/10 to-orange-500/5 border-orange-500/20"
                           )}>
                             <img
                               src="/images/mascot1.png"
@@ -952,7 +952,7 @@ const Index = () => {
                           {/* Icon Badge */}
                           <div className={cn(
                             "absolute -bottom-2 -right-2 text-white w-9 h-9 rounded-full flex items-center justify-center border-4 border-background shadow-lg z-10",
-                            spotlightSort === 'latest' ? "bg-emerald-500" : "bg-orange-500"
+                            spotlightSort === 'latest' ? "bg-blue-500" : "bg-orange-500"
                           )}>
                             {spotlightSort === 'latest' ? <Sparkles className="w-5 h-5" /> : <Flame className="w-5 h-5" />}
                           </div>

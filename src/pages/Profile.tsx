@@ -13,7 +13,7 @@ import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter, DialogDescription } from '@/components/ui/dialog';
 import { Badge } from '@/components/ui/badge';
-import { Grid, Bookmark, Users, Settings, PlusCircle, Heart, MessageCircle, Share2, MapPin, Link as LinkIcon, Image as ImageIcon, Calendar, Award, CheckCircle2, Grid3x3, Palette, PenLine, Star, X, BadgeCheck, FileText, UserPlus, UserCheck, MoreHorizontal, User as UserIcon } from 'lucide-react';
+import { Grid, Bookmark, Users, Settings, PlusCircle, Heart, MessageCircle, Share2, MapPin, Link as LinkIcon, Image as ImageIcon, Calendar, Award, CheckCircle2, Grid3x3, Palette, PenLine, Star, X, BadgeCheck, FileText, UserPlus, UserCheck, MoreHorizontal, User as UserIcon, Lock, Eye, EyeOff, ChevronDown, ChevronUp, Shield } from 'lucide-react';
 import {
     DropdownMenu,
     DropdownMenuContent,
@@ -67,6 +67,16 @@ const profileSchema = z.object({
     bio: z.string().max(150, "Bio must be less than 150 characters").optional(),
     website: z.string().url("Please enter a valid URL").optional().or(z.literal('')),
     phone_number: z.string().optional(),
+});
+
+// Zod Schema for Password Change
+const passwordSchema = z.object({
+    old_password: z.string().min(1, "Current password is required"),
+    new_password: z.string().min(6, "New password must be at least 6 characters"),
+    confirm_password: z.string().min(1, "Please confirm your password"),
+}).refine((data) => data.new_password === data.confirm_password, {
+    message: "Passwords do not match",
+    path: ['confirm_password'],
 });
 
 type ProfileFormData = z.infer<typeof profileSchema>;
@@ -144,6 +154,10 @@ export default function Profile() {
     const [isEditOpen, setIsEditOpen] = useState(false);
     const [profileImage, setProfileImage] = useState<File | null>(null);
     const [imagePreview, setImagePreview] = useState<string | null>(null);
+    const [isPasswordSectionOpen, setIsPasswordSectionOpen] = useState(false);
+    const [showOldPass, setShowOldPass] = useState(false);
+    const [showNewPass, setShowNewPass] = useState(false);
+    const [showConfirmPass, setShowConfirmPass] = useState(false);
     // --- Post Detail State & Interactions ---
     const [selectedPost, setSelectedPost] = useState<Post | null>(null);
     const [commentText, setCommentText] = useState("");
@@ -407,6 +421,57 @@ export default function Profile() {
 
     const onSubmit = (data: ProfileFormData) => {
         updateProfileMutation.mutate(data);
+    };
+
+    // Password form
+    type PasswordFormData = z.infer<typeof passwordSchema>;
+    const passwordForm = useForm<PasswordFormData>({
+        resolver: zodResolver(passwordSchema),
+        defaultValues: { old_password: '', new_password: '', confirm_password: '' },
+    });
+    const newPasswordValue = passwordForm.watch('new_password');
+
+    const getPasswordStrength = (password: string): { label: string; color: string; width: string } => {
+        if (!password) return { label: '', color: '', width: '0%' };
+        if (password.length < 6) return { label: 'Too Short', color: 'bg-red-500', width: '20%' };
+        const hasUpper = /[A-Z]/.test(password);
+        const hasLower = /[a-z]/.test(password);
+        const hasNumber = /[0-9]/.test(password);
+        const hasSpecial = /[^A-Za-z0-9]/.test(password);
+        const score = [hasUpper, hasLower, hasNumber, hasSpecial].filter(Boolean).length;
+        if (password.length >= 12 && score >= 4) return { label: 'Very Strong', color: 'bg-emerald-500', width: '100%' };
+        if (password.length >= 8 && score >= 3) return { label: 'Strong', color: 'bg-green-500', width: '75%' };
+        if (score >= 2) return { label: 'Fair', color: 'bg-amber-500', width: '50%' };
+        return { label: 'Weak', color: 'bg-red-400', width: '25%' };
+    };
+
+    const passwordStrength = getPasswordStrength(newPasswordValue);
+
+    const changePasswordMutation = useMutation({
+        mutationFn: async (data: PasswordFormData) => {
+            const response = await api.post('/users/change_password/', {
+                old_password: data.old_password,
+                new_password: data.new_password,
+            });
+            return response.data;
+        },
+        onSuccess: () => {
+            toast.success('Password updated successfully! 🔐', { description: 'Your account is now secured with the new password.' });
+            passwordForm.reset();
+            setIsPasswordSectionOpen(false);
+        },
+        onError: (error: any) => {
+            const errData = error?.response?.data;
+            if (errData?.old_password) {
+                passwordForm.setError('old_password', { message: errData.old_password[0] });
+            } else {
+                toast.error('Password change failed', { description: errData?.detail || 'Please try again.' });
+            }
+        },
+    });
+
+    const onPasswordSubmit = (data: PasswordFormData) => {
+        changePasswordMutation.mutate(data);
     };
 
     if (isUserLoading) {
@@ -963,6 +1028,123 @@ export default function Profile() {
                                             placeholder="Tell the community about your creative journey..."
                                             className="resize-none h-32 rounded-[2rem] border-slate-200 dark:border-zinc-800 bg-slate-50/50 dark:bg-zinc-900/50 p-4 leading-relaxed"
                                         />
+                                    </div>
+
+                                    {/* Password Change Section */}
+                                    <div className="border border-slate-200 dark:border-zinc-800 rounded-2xl overflow-hidden">
+                                        <button
+                                            type="button"
+                                            onClick={() => setIsPasswordSectionOpen(!isPasswordSectionOpen)}
+                                            className="w-full flex items-center justify-between p-4 sm:p-5 text-left hover:bg-slate-50 dark:hover:bg-zinc-900/50 transition-colors"
+                                        >
+                                            <div className="flex items-center gap-3">
+                                                <div className="w-8 h-8 rounded-xl bg-primary/10 flex items-center justify-center">
+                                                    <Lock className="w-4 h-4 text-primary" />
+                                                </div>
+                                                <div>
+                                                    <p className="text-sm font-bold text-foreground">Change Password</p>
+                                                    <p className="text-xs text-muted-foreground">Keep your account secure</p>
+                                                </div>
+                                            </div>
+                                            {isPasswordSectionOpen
+                                                ? <ChevronUp className="w-4 h-4 text-muted-foreground" />
+                                                : <ChevronDown className="w-4 h-4 text-muted-foreground" />}
+                                        </button>
+
+                                        {isPasswordSectionOpen && (
+                                            <form
+                                                id="password-form"
+                                                onSubmit={passwordForm.handleSubmit(onPasswordSubmit)}
+                                                className="p-4 sm:p-6 border-t border-slate-100 dark:border-zinc-800 space-y-4 bg-slate-50/50 dark:bg-zinc-900/30"
+                                            >
+                                                {/* Current Password */}
+                                                <div className="space-y-1.5">
+                                                    <Label className="text-xs font-bold text-foreground/70 ml-1">Current Password</Label>
+                                                    <div className="relative">
+                                                        <Input
+                                                            {...passwordForm.register('old_password')}
+                                                            type={showOldPass ? 'text' : 'password'}
+                                                            placeholder="Enter your current password"
+                                                            className="h-11 pr-11 rounded-xl border-slate-200 dark:border-zinc-800 bg-white dark:bg-zinc-900"
+                                                        />
+                                                        <button type="button" onClick={() => setShowOldPass(!showOldPass)}
+                                                            className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground transition-colors">
+                                                            {showOldPass ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
+                                                        </button>
+                                                    </div>
+                                                    {passwordForm.formState.errors.old_password && (
+                                                        <p className="text-xs text-red-500 ml-1">{passwordForm.formState.errors.old_password.message}</p>
+                                                    )}
+                                                </div>
+
+                                                {/* New Password */}
+                                                <div className="space-y-1.5">
+                                                    <Label className="text-xs font-bold text-foreground/70 ml-1">New Password</Label>
+                                                    <div className="relative">
+                                                        <Input
+                                                            {...passwordForm.register('new_password')}
+                                                            type={showNewPass ? 'text' : 'password'}
+                                                            placeholder="Create a strong new password"
+                                                            className="h-11 pr-11 rounded-xl border-slate-200 dark:border-zinc-800 bg-white dark:bg-zinc-900"
+                                                        />
+                                                        <button type="button" onClick={() => setShowNewPass(!showNewPass)}
+                                                            className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground transition-colors">
+                                                            {showNewPass ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
+                                                        </button>
+                                                    </div>
+                                                    {/* Strength Meter */}
+                                                    {newPasswordValue && (
+                                                        <div className="space-y-1 px-1">
+                                                            <div className="w-full bg-slate-200 dark:bg-zinc-700 rounded-full h-1.5 overflow-hidden">
+                                                                <div
+                                                                    className={cn("h-full rounded-full transition-all duration-500", passwordStrength.color)}
+                                                                    style={{ width: passwordStrength.width }}
+                                                                />
+                                                            </div>
+                                                            <p className={cn("text-[10px] font-bold", passwordStrength.color.replace('bg-', 'text-'))}>
+                                                                {passwordStrength.label}
+                                                            </p>
+                                                        </div>
+                                                    )}
+                                                    {passwordForm.formState.errors.new_password && (
+                                                        <p className="text-xs text-red-500 ml-1">{passwordForm.formState.errors.new_password.message}</p>
+                                                    )}
+                                                </div>
+
+                                                {/* Confirm New Password */}
+                                                <div className="space-y-1.5">
+                                                    <Label className="text-xs font-bold text-foreground/70 ml-1">Confirm New Password</Label>
+                                                    <div className="relative">
+                                                        <Input
+                                                            {...passwordForm.register('confirm_password')}
+                                                            type={showConfirmPass ? 'text' : 'password'}
+                                                            placeholder="Repeat your new password"
+                                                            className="h-11 pr-11 rounded-xl border-slate-200 dark:border-zinc-800 bg-white dark:bg-zinc-900"
+                                                        />
+                                                        <button type="button" onClick={() => setShowConfirmPass(!showConfirmPass)}
+                                                            className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground transition-colors">
+                                                            {showConfirmPass ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
+                                                        </button>
+                                                    </div>
+                                                    {passwordForm.formState.errors.confirm_password && (
+                                                        <p className="text-xs text-red-500 ml-1">{passwordForm.formState.errors.confirm_password.message}</p>
+                                                    )}
+                                                </div>
+
+                                                <Button
+                                                    type="submit"
+                                                    form="password-form"
+                                                    disabled={changePasswordMutation.isPending}
+                                                    className="w-full h-11 rounded-xl font-bold bg-primary hover:brightness-110 shadow-md shadow-primary/20"
+                                                >
+                                                    {changePasswordMutation.isPending ? (
+                                                        <><Skeleton className="w-4 h-4 mr-2 rounded-full bg-white/30" /> Updating...</>
+                                                    ) : (
+                                                        <><Shield className="w-4 h-4 mr-2" /> Update Password</>
+                                                    )}
+                                                </Button>
+                                            </form>
+                                        )}
                                     </div>
                                 </form>
                             </div>
