@@ -1029,124 +1029,128 @@ export default function Profile() {
                                             className="resize-none h-32 rounded-[2rem] border-slate-200 dark:border-zinc-800 bg-slate-50/50 dark:bg-zinc-900/50 p-4 leading-relaxed"
                                         />
                                     </div>
-
-                                    {/* Password Change Section */}
-                                    <div className="border border-slate-200 dark:border-zinc-800 rounded-2xl overflow-hidden">
-                                        <button
-                                            type="button"
-                                            onClick={() => setIsPasswordSectionOpen(!isPasswordSectionOpen)}
-                                            className="w-full flex items-center justify-between p-4 sm:p-5 text-left hover:bg-slate-50 dark:hover:bg-zinc-900/50 transition-colors"
-                                        >
-                                            <div className="flex items-center gap-3">
-                                                <div className="w-8 h-8 rounded-xl bg-primary/10 flex items-center justify-center">
-                                                    <Lock className="w-4 h-4 text-primary" />
-                                                </div>
-                                                <div>
-                                                    <p className="text-sm font-bold text-foreground">Change Password</p>
-                                                    <p className="text-xs text-muted-foreground">Keep your account secure</p>
-                                                </div>
-                                            </div>
-                                            {isPasswordSectionOpen
-                                                ? <ChevronUp className="w-4 h-4 text-muted-foreground" />
-                                                : <ChevronDown className="w-4 h-4 text-muted-foreground" />}
-                                        </button>
-
-                                        {isPasswordSectionOpen && (
-                                            <form
-                                                id="password-form"
-                                                onSubmit={passwordForm.handleSubmit(onPasswordSubmit)}
-                                                className="p-4 sm:p-6 border-t border-slate-100 dark:border-zinc-800 space-y-4 bg-slate-50/50 dark:bg-zinc-900/30"
-                                            >
-                                                {/* Current Password */}
-                                                <div className="space-y-1.5">
-                                                    <Label className="text-xs font-bold text-foreground/70 ml-1">Current Password</Label>
-                                                    <div className="relative">
-                                                        <Input
-                                                            {...passwordForm.register('old_password')}
-                                                            type={showOldPass ? 'text' : 'password'}
-                                                            placeholder="Enter your current password"
-                                                            className="h-11 pr-11 rounded-xl border-slate-200 dark:border-zinc-800 bg-white dark:bg-zinc-900"
-                                                        />
-                                                        <button type="button" onClick={() => setShowOldPass(!showOldPass)}
-                                                            className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground transition-colors">
-                                                            {showOldPass ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
-                                                        </button>
-                                                    </div>
-                                                    {passwordForm.formState.errors.old_password && (
-                                                        <p className="text-xs text-red-500 ml-1">{passwordForm.formState.errors.old_password.message}</p>
-                                                    )}
-                                                </div>
-
-                                                {/* New Password */}
-                                                <div className="space-y-1.5">
-                                                    <Label className="text-xs font-bold text-foreground/70 ml-1">New Password</Label>
-                                                    <div className="relative">
-                                                        <Input
-                                                            {...passwordForm.register('new_password')}
-                                                            type={showNewPass ? 'text' : 'password'}
-                                                            placeholder="Create a strong new password"
-                                                            className="h-11 pr-11 rounded-xl border-slate-200 dark:border-zinc-800 bg-white dark:bg-zinc-900"
-                                                        />
-                                                        <button type="button" onClick={() => setShowNewPass(!showNewPass)}
-                                                            className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground transition-colors">
-                                                            {showNewPass ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
-                                                        </button>
-                                                    </div>
-                                                    {/* Strength Meter */}
-                                                    {newPasswordValue && (
-                                                        <div className="space-y-1 px-1">
-                                                            <div className="w-full bg-slate-200 dark:bg-zinc-700 rounded-full h-1.5 overflow-hidden">
-                                                                <div
-                                                                    className={cn("h-full rounded-full transition-all duration-500", passwordStrength.color)}
-                                                                    style={{ width: passwordStrength.width }}
-                                                                />
-                                                            </div>
-                                                            <p className={cn("text-[10px] font-bold", passwordStrength.color.replace('bg-', 'text-'))}>
-                                                                {passwordStrength.label}
-                                                            </p>
-                                                        </div>
-                                                    )}
-                                                    {passwordForm.formState.errors.new_password && (
-                                                        <p className="text-xs text-red-500 ml-1">{passwordForm.formState.errors.new_password.message}</p>
-                                                    )}
-                                                </div>
-
-                                                {/* Confirm New Password */}
-                                                <div className="space-y-1.5">
-                                                    <Label className="text-xs font-bold text-foreground/70 ml-1">Confirm New Password</Label>
-                                                    <div className="relative">
-                                                        <Input
-                                                            {...passwordForm.register('confirm_password')}
-                                                            type={showConfirmPass ? 'text' : 'password'}
-                                                            placeholder="Repeat your new password"
-                                                            className="h-11 pr-11 rounded-xl border-slate-200 dark:border-zinc-800 bg-white dark:bg-zinc-900"
-                                                        />
-                                                        <button type="button" onClick={() => setShowConfirmPass(!showConfirmPass)}
-                                                            className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground transition-colors">
-                                                            {showConfirmPass ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
-                                                        </button>
-                                                    </div>
-                                                    {passwordForm.formState.errors.confirm_password && (
-                                                        <p className="text-xs text-red-500 ml-1">{passwordForm.formState.errors.confirm_password.message}</p>
-                                                    )}
-                                                </div>
-
-                                                <Button
-                                                    type="submit"
-                                                    form="password-form"
-                                                    disabled={changePasswordMutation.isPending}
-                                                    className="w-full h-11 rounded-xl font-bold bg-primary hover:brightness-110 shadow-md shadow-primary/20"
-                                                >
-                                                    {changePasswordMutation.isPending ? (
-                                                        <><Skeleton className="w-4 h-4 mr-2 rounded-full bg-white/30" /> Updating...</>
-                                                    ) : (
-                                                        <><Shield className="w-4 h-4 mr-2" /> Update Password</>
-                                                    )}
-                                                </Button>
-                                            </form>
-                                        )}
-                                    </div>
                                 </form>
+
+                                {/* Password Change Section — OUTSIDE profile form to prevent nested form submission bug */}
+                                <div className="border border-slate-200 dark:border-zinc-800 rounded-2xl overflow-hidden">
+                                    <button
+                                        type="button"
+                                        onClick={() => setIsPasswordSectionOpen(!isPasswordSectionOpen)}
+                                        className="w-full flex items-center justify-between p-4 sm:p-5 text-left hover:bg-slate-50 dark:hover:bg-zinc-900/50 transition-colors"
+                                    >
+                                        <div className="flex items-center gap-3">
+                                            <div className="w-8 h-8 rounded-xl bg-primary/10 flex items-center justify-center">
+                                                <Lock className="w-4 h-4 text-primary" />
+                                            </div>
+                                            <div>
+                                                <p className="text-sm font-bold text-foreground">Change Password</p>
+                                                <p className="text-xs text-muted-foreground">Keep your account secure</p>
+                                            </div>
+                                        </div>
+                                        {isPasswordSectionOpen
+                                            ? <ChevronUp className="w-4 h-4 text-muted-foreground" />
+                                            : <ChevronDown className="w-4 h-4 text-muted-foreground" />}
+                                    </button>
+
+                                    {isPasswordSectionOpen && (
+                                        <form
+                                            onSubmit={passwordForm.handleSubmit(onPasswordSubmit)}
+                                            className="p-4 sm:p-6 border-t border-slate-100 dark:border-zinc-800 space-y-4 bg-slate-50/50 dark:bg-zinc-900/30"
+                                        >
+                                            {/* Current Password */}
+                                            <div className="space-y-1.5">
+                                                <Label className="text-xs font-bold text-foreground/70 ml-1">Current Password</Label>
+                                                <div className="relative">
+                                                    <Input
+                                                        {...passwordForm.register('old_password')}
+                                                        type={showOldPass ? 'text' : 'password'}
+                                                        placeholder="Enter your current password"
+                                                        className="h-11 pr-11 rounded-xl border-slate-200 dark:border-zinc-800 bg-white dark:bg-zinc-900"
+                                                    />
+                                                    <button type="button" onClick={() => setShowOldPass(!showOldPass)}
+                                                        className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground transition-colors">
+                                                        {showOldPass ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
+                                                    </button>
+                                                </div>
+                                                {passwordForm.formState.errors.old_password && (
+                                                    <p className="text-xs text-red-500 ml-1 flex items-center gap-1">
+                                                        <X className="w-3 h-3" /> {passwordForm.formState.errors.old_password.message}
+                                                    </p>
+                                                )}
+                                            </div>
+
+                                            {/* New Password */}
+                                            <div className="space-y-1.5">
+                                                <Label className="text-xs font-bold text-foreground/70 ml-1">New Password</Label>
+                                                <div className="relative">
+                                                    <Input
+                                                        {...passwordForm.register('new_password')}
+                                                        type={showNewPass ? 'text' : 'password'}
+                                                        placeholder="Create a strong new password"
+                                                        className="h-11 pr-11 rounded-xl border-slate-200 dark:border-zinc-800 bg-white dark:bg-zinc-900"
+                                                    />
+                                                    <button type="button" onClick={() => setShowNewPass(!showNewPass)}
+                                                        className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground transition-colors">
+                                                        {showNewPass ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
+                                                    </button>
+                                                </div>
+                                                {/* Strength Meter */}
+                                                {newPasswordValue && (
+                                                    <div className="space-y-1 px-1">
+                                                        <div className="w-full bg-slate-200 dark:bg-zinc-700 rounded-full h-1.5 overflow-hidden">
+                                                            <div
+                                                                className={cn("h-full rounded-full transition-all duration-500", passwordStrength.color)}
+                                                                style={{ width: passwordStrength.width }}
+                                                            />
+                                                        </div>
+                                                        <p className={cn("text-[10px] font-bold", passwordStrength.color.replace('bg-', 'text-'))}>
+                                                            {passwordStrength.label}
+                                                        </p>
+                                                    </div>
+                                                )}
+                                                {passwordForm.formState.errors.new_password && (
+                                                    <p className="text-xs text-red-500 ml-1 flex items-center gap-1">
+                                                        <X className="w-3 h-3" /> {passwordForm.formState.errors.new_password.message}
+                                                    </p>
+                                                )}
+                                            </div>
+
+                                            {/* Confirm New Password */}
+                                            <div className="space-y-1.5">
+                                                <Label className="text-xs font-bold text-foreground/70 ml-1">Confirm New Password</Label>
+                                                <div className="relative">
+                                                    <Input
+                                                        {...passwordForm.register('confirm_password')}
+                                                        type={showConfirmPass ? 'text' : 'password'}
+                                                        placeholder="Repeat your new password"
+                                                        className="h-11 pr-11 rounded-xl border-slate-200 dark:border-zinc-800 bg-white dark:bg-zinc-900"
+                                                    />
+                                                    <button type="button" onClick={() => setShowConfirmPass(!showConfirmPass)}
+                                                        className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground transition-colors">
+                                                        {showConfirmPass ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
+                                                    </button>
+                                                </div>
+                                                {passwordForm.formState.errors.confirm_password && (
+                                                    <p className="text-xs text-red-500 ml-1 flex items-center gap-1">
+                                                        <X className="w-3 h-3" /> {passwordForm.formState.errors.confirm_password.message}
+                                                    </p>
+                                                )}
+                                            </div>
+
+                                            <Button
+                                                type="submit"
+                                                disabled={changePasswordMutation.isPending}
+                                                className="w-full h-11 rounded-xl font-bold bg-primary hover:brightness-110 shadow-md shadow-primary/20"
+                                            >
+                                                {changePasswordMutation.isPending ? (
+                                                    <><Skeleton className="w-4 h-4 mr-2 rounded-full bg-white/30" /> Updating...</>
+                                                ) : (
+                                                    <><Shield className="w-4 h-4 mr-2" /> Update Password</>
+                                                )}
+                                            </Button>
+                                        </form>
+                                    )}
+                                </div>
                             </div>
 
                             {/* Sticky Footer Actions - Fixed at bottom on both cases for better UX */}
