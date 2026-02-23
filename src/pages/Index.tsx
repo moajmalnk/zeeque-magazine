@@ -10,7 +10,7 @@ import { FAQSection } from '@/components/FAQSection';
 import { usePosts } from '@/hooks/usePosts';
 import { Category, Post } from '@/types/post';
 import { Button } from '@/components/ui/button';
-import { ArrowRight, Grid3x3, X, Heart, MessageCircle, Share2, FileText, BadgeCheck, Play, Flame, Sparkles, Users, UserPlus, GraduationCap, Plus, Smile, School, Search } from 'lucide-react';
+import { ArrowRight, Grid3x3, X, Heart, MessageCircle, Share2, FileText, BadgeCheck, Play, Flame, Sparkles, Users, UserPlus, GraduationCap, Plus, Smile, School, Search, Volume2, VolumeX } from 'lucide-react';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Dialog, DialogContent, DialogTitle, DialogDescription, DialogHeader, DialogFooter } from '@/components/ui/dialog';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
@@ -29,7 +29,7 @@ function getVideoEmbedUrl(url: string): string | null {
     const urlObj = new URL(url);
     if (urlObj.hostname.includes('youtube.com') || urlObj.hostname.includes('youtu.be')) {
       const videoId = urlObj.searchParams.get('v') || urlObj.pathname.split('/').pop()?.split('?')[0];
-      if (videoId) return `https://www.youtube.com/embed/${videoId}?autoplay=1&mute=1&controls=0&loop=1&modestbranding=1&rel=0&showinfo=0&iv_load_policy=3&playlist=${videoId}`;
+      if (videoId) return `https://www.youtube.com/embed/${videoId}?autoplay=1&mute=1&controls=0&loop=1&modestbranding=1&rel=0&showinfo=0&iv_load_policy=3&enablejsapi=1&playlist=${videoId}`;
     }
     if (urlObj.hostname.includes('vimeo.com')) {
       const videoId = urlObj.pathname.split('/').pop();
@@ -315,7 +315,9 @@ const SharedPostDetail = ({ post, isOpen, onClose }: { post: Post | null, isOpen
   const { isAuthenticated: isLoggedIn, user } = useAuth();
   const queryClient = useQueryClient();
   const dialogVideoRef = useRef<HTMLVideoElement>(null);
+  const youtubeIframeRef = useRef<HTMLIFrameElement>(null);
   const [isDialogPlaying, setIsDialogPlaying] = useState(true);
+  const [isYoutubeMuted, setIsYoutubeMuted] = useState(true);
   const [showAuthModal, setShowAuthModal] = useState(false);
 
   // Interactions state
@@ -332,6 +334,7 @@ const SharedPostDetail = ({ post, isOpen, onClose }: { post: Post | null, isOpen
       setLikeCount(post.likes_count || 0);
       setIsShared(post.is_shared_by_me || false);
       setShareCount(post.share_count || 0);
+      setIsYoutubeMuted(true); // Reset mute state when new post opens
     }
   }, [post]);
 
@@ -344,6 +347,17 @@ const SharedPostDetail = ({ post, isOpen, onClose }: { post: Post | null, isOpen
       }
       setIsDialogPlaying(!isDialogPlaying);
     }
+  };
+
+  const toggleYoutubeMute = (e: React.MouseEvent) => {
+    e.stopPropagation();
+    if (!youtubeIframeRef.current?.contentWindow) return;
+    const command = isYoutubeMuted ? 'unMute' : 'mute';
+    youtubeIframeRef.current.contentWindow.postMessage(
+      JSON.stringify({ event: 'command', func: command, args: [] }),
+      '*'
+    );
+    setIsYoutubeMuted(!isYoutubeMuted);
   };
 
   const handleAuthAction = (action: () => void) => {
@@ -512,12 +526,34 @@ const SharedPostDetail = ({ post, isOpen, onClose }: { post: Post | null, isOpen
                   </div>
                 ) : post.video_url ? (
                   getVideoEmbedUrl(post.video_url) ? (
-                    <iframe
-                      src={getVideoEmbedUrl(post.video_url)!}
-                      title={post.title}
-                      className="w-full h-full"
-                      allowFullScreen
-                    />
+                    <div className="relative w-full h-full">
+                      <iframe
+                        ref={youtubeIframeRef}
+                        src={getVideoEmbedUrl(post.video_url)!}
+                        title={post.title}
+                        className="w-full h-full"
+                        allowFullScreen
+                        allow="autoplay; encrypted-media"
+                      />
+                      {/* Floating Mute / Unmute Button */}
+                      <button
+                        onClick={toggleYoutubeMute}
+                        title={isYoutubeMuted ? 'Unmute' : 'Mute'}
+                        className="absolute bottom-4 right-4 z-20 flex items-center gap-2 px-3.5 py-2 rounded-full bg-black/60 hover:bg-black/80 backdrop-blur-md text-white text-xs font-semibold shadow-xl border border-white/10 transition-all hover:scale-105 active:scale-95 select-none"
+                      >
+                        {isYoutubeMuted ? (
+                          <>
+                            <VolumeX className="w-4 h-4" />
+                            <span>Unmute</span>
+                          </>
+                        ) : (
+                          <>
+                            <Volume2 className="w-4 h-4" />
+                            <span>Mute</span>
+                          </>
+                        )}
+                      </button>
+                    </div>
                   ) : (
                     <div className="text-white font-bold underline">Video Link</div>
                   )

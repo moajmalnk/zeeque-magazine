@@ -6,7 +6,7 @@ import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardFooter, CardHeader } from '@/components/ui/card';
 import { DialogDescription } from '@/components/ui/dialog';
 import { Badge } from '@/components/ui/badge';
-import { Check, X, RotateCcw, Trash2, Edit, Play, Pause, Volume2, VolumeX, Grid3x3, Sparkles, User, School, FileText } from 'lucide-react';
+import { Check, X, RotateCcw, Trash2, Edit, Play, Pause, Volume2, VolumeX, Grid3x3, Sparkles, User, School, FileText, EyeOff } from 'lucide-react';
 import { toast } from 'sonner';
 import { cn } from '@/lib/utils';
 import { format } from 'date-fns';
@@ -35,6 +35,7 @@ interface ReviewCardProps {
   onApprove?: (id: string, featured: boolean) => { undo: () => void; postTitle: string; authorName: string } | void;
   onReject?: (id: string) => { undo: () => void; postTitle: string; authorName: string } | void;
   onRestore?: (id: string) => void;
+  onUnpublish?: (id: string) => void;
   onDelete?: (id: string) => void;
   onEdit?: (postId: string, updates: Partial<Post>) => void;
   onToggleFeature?: (id: string, currentFeatured: boolean) => void;
@@ -67,7 +68,7 @@ const getVideoEmbedUrl = (url: string): string | null => {
     if (urlObj.hostname.includes('youtube.com') || urlObj.hostname.includes('youtu.be')) {
       const videoId = urlObj.searchParams.get('v') || urlObj.pathname.split('/').pop()?.split('?')[0];
       // Updated params: controls=0 (hide bottom), disablekb=1 (no keyboard), ivory_load_policy=3 (no annotations), modestbranding=1 (minimal logo), rel=0 (related from same channel)
-      if (videoId) return `https://www.youtube.com/embed/${videoId}?autoplay=1&mute=1&controls=0&disablekb=1&iv_load_policy=3&modestbranding=1&rel=0&showinfo=0&loop=1&playlist=${videoId}`;
+      if (videoId) return `https://www.youtube.com/embed/${videoId}?autoplay=1&mute=1&controls=0&disablekb=1&iv_load_policy=3&modestbranding=1&rel=0&showinfo=0&loop=1&enablejsapi=1&playlist=${videoId}`;
     }
     if (urlObj.hostname.includes('vimeo.com')) {
       const videoId = urlObj.pathname.split('/').pop();
@@ -82,26 +83,57 @@ const getVideoEmbedUrl = (url: string): string | null => {
 interface VideoPlayerProps {
   src?: string;
   url?: string;
+  alwaysShowControls?: boolean;
 }
 
-const VideoPlayer = ({ src, url }: VideoPlayerProps) => {
+const VideoPlayer = ({ src, url, alwaysShowControls = false }: VideoPlayerProps) => {
   const videoRef = useRef<HTMLVideoElement>(null);
+  const youtubeIframeRef = useRef<HTMLIFrameElement>(null);
   const [isPlaying, setIsPlaying] = useState(false);
   const [isMuted, setIsMuted] = useState(false);
+  const [isYoutubeMuted, setIsYoutubeMuted] = useState(true); // YouTube always starts muted (autoplay policy)
 
   // Determine if it's an embeddable URL
   const embedUrl = url ? getVideoEmbedUrl(url) : null;
 
-  // Render iframe for embeds
+  const toggleYoutubeMute = (e: React.MouseEvent) => {
+    e.stopPropagation();
+    if (!youtubeIframeRef.current?.contentWindow) return;
+    const command = isYoutubeMuted ? 'unMute' : 'mute';
+    youtubeIframeRef.current.contentWindow.postMessage(
+      JSON.stringify({ event: 'command', func: command, args: [] }),
+      '*'
+    );
+    setIsYoutubeMuted(!isYoutubeMuted);
+  };
+
+  // Render iframe for embeds (YouTube etc.)
   if (embedUrl) {
     return (
-      <div className="relative w-full aspect-video rounded-xl overflow-hidden bg-black/5 pointer-events-none group shadow-lg">
+      <div className="relative w-full aspect-video rounded-xl overflow-hidden bg-black/5 group shadow-lg">
+        {/* iframe is pointer-events-none so clicks pass through to our overlay button */}
         <iframe
+          ref={youtubeIframeRef}
           src={embedUrl}
           title="Video Preview"
-          className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[130%] h-[130%] object-cover opacity-90 group-hover:opacity-100 transition-opacity"
+          className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[130%] h-[130%] object-cover opacity-90 group-hover:opacity-100 transition-opacity pointer-events-none"
           allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
         />
+        {/* Floating Mute / Unmute button — visible on hover (or always in full dialog) */}
+        <button
+          onClick={toggleYoutubeMute}
+          title={isYoutubeMuted ? 'Unmute' : 'Mute'}
+          className={cn(
+            "absolute bottom-3 right-3 z-20 flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-black/60 hover:bg-black/80 backdrop-blur-md text-white text-xs font-semibold shadow-lg border border-white/10 transition-all hover:scale-105 active:scale-95 select-none",
+            alwaysShowControls ? "opacity-100" : "opacity-0 group-hover:opacity-100"
+          )}
+        >
+          {isYoutubeMuted ? (
+            <><VolumeX className="w-3.5 h-3.5" /><span>Unmute</span></>
+          ) : (
+            <><Volume2 className="w-3.5 h-3.5" /><span>Mute</span></>
+          )}
+        </button>
       </div>
     );
   }
@@ -176,13 +208,14 @@ const VideoPlayer = ({ src, url }: VideoPlayerProps) => {
   );
 };
 
-export function ReviewCard({ post, onApprove, onReject, onRestore, onDelete, onEdit, onToggleFeature }: ReviewCardProps) {
+export function ReviewCard({ post, onApprove, onReject, onRestore, onUnpublish, onDelete, onEdit, onToggleFeature }: ReviewCardProps) {
   const navigate = useNavigate();
   const { isAuthenticated: isLoggedIn } = useAuth();
   const submittedDate = format(new Date(post.created_at), 'MMM d, yyyy');
   const [showApproveDialog, setShowApproveDialog] = useState(false);
   const [showRejectDialog, setShowRejectDialog] = useState(false);
   const [showRestoreDialog, setShowRestoreDialog] = useState(false);
+  const [showUnpublishDialog, setShowUnpublishDialog] = useState(false);
   const [showDeleteDialog, setShowDeleteDialog] = useState(false);
   const [showPreviewDialog, setShowPreviewDialog] = useState(false);
   const [showEditDialog, setShowEditDialog] = useState(false);
@@ -283,6 +316,17 @@ export function ReviewCard({ post, onApprove, onReject, onRestore, onDelete, onE
     setShowPreviewDialog(false);
     toast.success('Post moved back to pending', {
       description: `"${post.title}" has been restored to pending review`,
+      duration: 3000,
+    });
+  };
+
+  const handleUnpublish = () => {
+    if (!onUnpublish) return;
+    onUnpublish(post.id);
+    setShowUnpublishDialog(false);
+    setShowPreviewDialog(false);
+    toast.success('Post unpublished', {
+      description: `"${post.title}" has been moved back to pending review`,
       duration: 3000,
     });
   };
@@ -458,9 +502,15 @@ export function ReviewCard({ post, onApprove, onReject, onRestore, onDelete, onE
 
               {post.status === 'published' && (
                 <div className="flex gap-2 w-full">
-                  <Button variant="secondary" className="flex-1 rounded-xl bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300 font-medium cursor-default">
-                    Published <Check className="w-3 h-3 ml-2" />
-                  </Button>
+                  {onUnpublish && (
+                    <Button
+                      variant="outline"
+                      className="flex-1 rounded-xl border border-orange-200 dark:border-orange-900/50 text-orange-600 dark:text-orange-400 bg-orange-50/50 dark:bg-orange-950/20 hover:bg-orange-100 dark:hover:bg-orange-900/30 font-semibold transition-all text-sm"
+                      onClick={(e) => { e.stopPropagation(); setShowUnpublishDialog(true); }}
+                    >
+                      <EyeOff className="w-3.5 h-3.5 mr-1.5" /> Unpublish
+                    </Button>
+                  )}
 
                   {onToggleFeature && (
                     <Button
@@ -535,7 +585,7 @@ export function ReviewCard({ post, onApprove, onReject, onRestore, onDelete, onE
               <div className="absolute inset-0 flex items-center justify-center p-4 md:p-8">
                 <div className="relative w-full h-full rounded-2xl overflow-hidden shadow-2xl border border-white/10 bg-black/5 group-hover/media:scale-[1.02] transition-transform duration-700">
                   {post.video_url || post.video_file ? (
-                    <VideoPlayer src={post.video_file} url={post.video_url} />
+                    <VideoPlayer src={post.video_file} url={post.video_url} alwaysShowControls />
                   ) : post.image_url ? (
                     <img
                       src={post.image_url}
@@ -642,10 +692,11 @@ export function ReviewCard({ post, onApprove, onReject, onRestore, onDelete, onE
                   ) : (
                     <Button
                       variant="outline"
-                      className="w-full h-12 rounded-2xl border-slate-200 dark:border-zinc-800 text-slate-500 font-bold bg-slate-50/50 dark:bg-zinc-900/50"
-                      disabled
+                      className="w-full h-12 rounded-2xl border-orange-200 dark:border-orange-900/50 text-orange-600 dark:text-orange-400 bg-orange-50/50 dark:bg-orange-950/20 hover:bg-orange-100 dark:hover:bg-orange-900/30 font-bold transition-all"
+                      onClick={() => setShowUnpublishDialog(true)}
+                      disabled={!onUnpublish}
                     >
-                      <Check className="w-5 h-5 mr-2" /> Already Published
+                      <EyeOff className="w-5 h-5 mr-2" /> Unpublish Post
                     </Button>
                   )}
 
@@ -671,6 +722,16 @@ export function ReviewCard({ post, onApprove, onReject, onRestore, onDelete, onE
                         onClick={() => setShowRejectDialog(true)}
                       >
                         <X className="w-4 h-4 mr-1.5 sm:mr-2 stroke-[3px]" /> Reject
+                      </Button>
+                    )}
+
+                    {post.status === 'published' && onUnpublish && (
+                      <Button
+                        variant="ghost"
+                        className="h-11 px-2 sm:px-4 rounded-xl bg-orange-50/50 dark:bg-orange-500/10 text-orange-600 dark:text-orange-400 hover:bg-orange-100 dark:hover:bg-orange-500/20 font-bold transition-all border border-orange-100/50 dark:border-orange-500/20 text-xs sm:text-sm"
+                        onClick={() => setShowUnpublishDialog(true)}
+                      >
+                        <EyeOff className="w-4 h-4 mr-1.5 sm:mr-2" /> Unpublish
                       </Button>
                     )}
 
@@ -717,6 +778,38 @@ export function ReviewCard({ post, onApprove, onReject, onRestore, onDelete, onE
               >
                 <RotateCcw className="w-4 h-4 mr-2" />
                 Yes, Restore
+              </AlertDialogAction>
+            </AlertDialogFooter>
+          </AlertDialogContent>
+        </AlertDialog>
+      )}
+
+      {/* Unpublish Confirmation Dialog */}
+      {onUnpublish && (
+        <AlertDialog open={showUnpublishDialog} onOpenChange={setShowUnpublishDialog}>
+          <AlertDialogContent className="z-[200]">
+            <AlertDialogHeader>
+              <AlertDialogTitle className="flex items-center gap-2 text-orange-600 dark:text-orange-400">
+                <EyeOff className="w-5 h-5" />
+                Unpublish this post?
+              </AlertDialogTitle>
+              <AlertDialogDescription className="space-y-3 pt-2">
+                <span className="block text-base font-medium text-foreground">
+                  You are about to unpublish "{post.title}".
+                </span>
+                <div className="p-3 rounded-lg bg-orange-50 dark:bg-orange-950/20 border border-orange-100 dark:border-orange-900/50 text-sm text-orange-700 dark:text-orange-400">
+                  ⚠️ This post will be removed from the public magazine and moved back to <strong>Pending</strong> for re-review. Readers will no longer see it until it is re-approved.
+                </div>
+              </AlertDialogDescription>
+            </AlertDialogHeader>
+            <AlertDialogFooter className="gap-2 sm:gap-0">
+              <AlertDialogCancel className="rounded-xl h-11">Cancel</AlertDialogCancel>
+              <AlertDialogAction
+                onClick={handleUnpublish}
+                className="bg-orange-600 hover:bg-orange-700 text-white rounded-xl h-11 px-6 shadow-md shadow-orange-500/20 transition-all hover:scale-[1.02]"
+              >
+                <EyeOff className="w-4 h-4 mr-2" />
+                Yes, Unpublish
               </AlertDialogAction>
             </AlertDialogFooter>
           </AlertDialogContent>

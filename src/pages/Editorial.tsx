@@ -51,6 +51,10 @@ const Editorial = () => {
     toast.success('Post moved back to pending');
   };
 
+  const handleUnpublish = (id: string) => {
+    restorePost(id); // Sets status back to 'pending'
+  };
+
   const handleEdit = (id: string, updates: Partial<Post>) => {
     updatePost(id, updates);
   };
@@ -221,6 +225,7 @@ const Editorial = () => {
                       post={post}
                       onApprove={handleApprove}
                       onReject={handleReject}
+                      onUnpublish={handleUnpublish}
                       onRestore={handleRestore}
                       onDelete={handleDelete}
                       onEdit={handleEdit}

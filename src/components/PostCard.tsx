@@ -30,7 +30,7 @@ function getVideoEmbedUrl(url: string): string | null {
     if (urlObj.hostname.includes('youtube.com') || urlObj.hostname.includes('youtu.be')) {
       const videoId = urlObj.searchParams.get('v') || urlObj.pathname.split('/').pop()?.split('?')[0];
       if (videoId) {
-        return `https://www.youtube.com/embed/${videoId}?autoplay=1&mute=1&controls=0&loop=1&modestbranding=1&rel=0&showinfo=0&iv_load_policy=3&playlist=${videoId}`;
+        return `https://www.youtube.com/embed/${videoId}?autoplay=1&mute=1&controls=0&loop=1&modestbranding=1&rel=0&showinfo=0&iv_load_policy=3&enablejsapi=1&playlist=${videoId}`;
       }
     }
 
@@ -159,8 +159,10 @@ export function PostCard({ post, index = 0 }: PostCardProps) {
 
   const [isMuted, setIsMuted] = useState(true);
   const [isDialogPlaying, setIsDialogPlaying] = useState(true);
+  const [isYoutubeMuted, setIsYoutubeMuted] = useState(true); // YouTube starts muted due to autoplay policy
   const videoRef = useRef<HTMLVideoElement>(null);
   const dialogVideoRef = useRef<HTMLVideoElement>(null);
+  const youtubeIframeRef = useRef<HTMLIFrameElement>(null);
 
   const handleAuthAction = (action: () => void) => {
     if (isLoggedIn) {
@@ -246,6 +248,18 @@ export function PostCard({ post, index = 0 }: PostCardProps) {
       videoRef.current.muted = !isMuted;
       setIsMuted(!isMuted);
     }
+  };
+
+  // Toggle mute/unmute on an embedded YouTube iframe via the postMessage API
+  const toggleYoutubeMute = (e: React.MouseEvent) => {
+    e.stopPropagation();
+    if (!youtubeIframeRef.current?.contentWindow) return;
+    const command = isYoutubeMuted ? 'unMute' : 'mute';
+    youtubeIframeRef.current.contentWindow.postMessage(
+      JSON.stringify({ event: 'command', func: command, args: [] }),
+      '*'
+    );
+    setIsYoutubeMuted(!isYoutubeMuted);
   };
 
   const toggleDialogPlay = () => {
@@ -551,12 +565,34 @@ export function PostCard({ post, index = 0 }: PostCardProps) {
                 ) : post.video_url ? (() => {
                   const embedUrl = getVideoEmbedUrl(post.video_url);
                   return embedUrl ? (
-                    <iframe
-                      src={embedUrl}
-                      title={post.title}
-                      className="w-full h-full"
-                      allowFullScreen
-                    />
+                    <div className="relative w-full h-full">
+                      <iframe
+                        ref={youtubeIframeRef}
+                        src={embedUrl}
+                        title={post.title}
+                        className="w-full h-full"
+                        allowFullScreen
+                        allow="autoplay; encrypted-media"
+                      />
+                      {/* Floating Mute / Unmute Button */}
+                      <button
+                        onClick={toggleYoutubeMute}
+                        title={isYoutubeMuted ? 'Unmute' : 'Mute'}
+                        className="absolute bottom-4 right-4 z-20 flex items-center gap-2 px-3.5 py-2 rounded-full bg-black/60 hover:bg-black/80 backdrop-blur-md text-white text-xs font-semibold shadow-xl border border-white/10 transition-all hover:scale-105 active:scale-95 select-none"
+                      >
+                        {isYoutubeMuted ? (
+                          <>
+                            <VolumeX className="w-4 h-4" />
+                            <span>Unmute</span>
+                          </>
+                        ) : (
+                          <>
+                            <Volume2 className="w-4 h-4" />
+                            <span>Mute</span>
+                          </>
+                        )}
+                      </button>
+                    </div>
                   ) : (
                     <div className="text-white font-bold underline">Video Link</div>
                   )
