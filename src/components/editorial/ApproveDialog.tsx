@@ -96,7 +96,7 @@ export function ApproveDialog({ open, onOpenChange, post, onApprove }: ApproveDi
           </AlertDialogCancel>
           <AlertDialogAction
             onClick={handleApprove}
-            className="bg-green-600 hover:bg-green-700 focus:ring-green-600"
+            className="bg-gradient-drawings hover:brightness-110 text-white border-0 shadow-md shadow-drawings/20 transition-all focus:ring-drawings hover:scale-[1.02]"
           >
             <Check className="w-4 h-4 mr-2" />
             {isFeatured ? 'Approve & Feature' : 'Approve & Publish'}

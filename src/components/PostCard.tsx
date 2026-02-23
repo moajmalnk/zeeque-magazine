@@ -8,9 +8,18 @@ import { Dialog, DialogContent, DialogTitle, DialogDescription, DialogHeader, Di
 import { cn } from '@/lib/utils';
 import {
   X, Calendar, User, GraduationCap, School,
-  Heart, MessageCircle, Share2, MoreHorizontal, Send, Volume2, VolumeX, Smile, Play, Pause
+  Heart, MessageCircle, Share2, Send, Volume2, VolumeX, Smile, Play, Pause, BadgeCheck, FileText
 } from 'lucide-react';
+import { Link } from 'react-router-dom';
+import { getRoleColor, isVerifiedRole } from '@/lib/roleUtils'; // Imported
+import { getCategoryStyle } from '@/lib/categoryUtils';
+import { usePosts } from '@/hooks/usePosts';
 import { Button } from '@/components/ui/button';
+import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
+import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
+import api from '@/lib/api';
+import { toast } from 'sonner';
+import { Skeleton } from "@/components/ui/skeleton";
 
 // Helper function to convert video URLs to embed format
 function getVideoEmbedUrl(url: string): string | null {
@@ -54,19 +63,100 @@ const categoryStyles = {
   other: 'bg-gradient-to-br from-slate-500 via-gray-500 to-zinc-500',
 };
 
+const getImageUrl = (url: string | null | undefined) => {
+  if (!url) return '';
+  if (url.startsWith('http')) {
+    try {
+      const urlObj = new URL(url);
+      if (urlObj.port === '8000' || urlObj.hostname === '127.0.0.1' || urlObj.hostname === 'localhost') {
+        return urlObj.pathname;
+      }
+    } catch (e) {
+      return url;
+    }
+  }
+  return url;
+};
+
 // Avatar Initials Helper
 const getInitials = (name: string) => name.split(' ').map(n => n[0]).join('').substring(0, 2).toUpperCase();
-const avatarColors = ['bg-pink-100 text-pink-600', 'bg-violet-100 text-violet-600', 'bg-cyan-100 text-cyan-600', 'bg-amber-100 text-amber-600', 'bg-emerald-100 text-emerald-600'];
 
 export function PostCard({ post, index = 0 }: PostCardProps) {
   const navigate = useNavigate();
+  const { toggleShare } = usePosts();
   const [isOpen, setIsOpen] = useState(false);
   const [showAuthModal, setShowAuthModal] = useState(false);
-  const { isAuthenticated: isLoggedIn } = useAuth();
-  // Mock interactions state
-  const [isLiked, setIsLiked] = useState(false);
-  const [isBookmarked, setIsBookmarked] = useState(false);
-  const [likeCount, setLikeCount] = useState(Math.floor(Math.random() * 50) + 5);
+  const { isAuthenticated: isLoggedIn, user } = useAuth();
+  const queryClient = useQueryClient();
+
+  // Interactions state
+  const [isLiked, setIsLiked] = useState(post.is_liked_by_me || false);
+  const [likeCount, setLikeCount] = useState(post.likes_count || 0);
+
+  // Sync state with props
+  useEffect(() => {
+    setIsLiked(post.is_liked_by_me || false);
+    setLikeCount(post.likes_count || 0);
+    setShareCount(post.share_count || 0);
+    setIsShared(post.is_shared_by_me || false);
+  }, [post.is_liked_by_me, post.likes_count, post.share_count, post.is_shared_by_me]);
+
+  // Comments Logic
+  const [commentText, setCommentText] = useState("");
+  const { data: comments = [], isLoading: isCommentsLoading } = useQuery({
+    queryKey: ['comments', post.id],
+    enabled: isOpen && !!post.id,
+    queryFn: async () => {
+      const response = await api.get(`/posts/${post.id}/comments/`);
+      return response.data.results || response.data;
+    }
+  });
+
+  const commentMutation = useMutation({
+    mutationFn: async (text: string) => {
+      await api.post(`/posts/${post.id}/comments/`, { content: text });
+    },
+    onMutate: async (text) => {
+      await queryClient.cancelQueries({ queryKey: ['comments', post.id] });
+      const previousComments = queryClient.getQueryData(['comments', post.id]);
+      const newComment = {
+        id: `temp-${Date.now()}`,
+        content: text,
+        user: {
+          id: user?.id,
+          username: user?.username || 'You',
+          profile_image: user?.profile_image
+        },
+        created_at: new Date().toISOString(),
+        replies_count: 0
+      };
+      queryClient.setQueryData(['comments', post.id], (old: any) => {
+        const list = old && old.results ? old.results : (old || []);
+        return [newComment, ...list];
+      });
+      setCommentText("");
+      return { previousComments };
+    },
+    onError: (err, newTodo, context: any) => {
+      queryClient.setQueryData(['comments', post.id], context.previousComments);
+      toast.error("Failed to post comment");
+    },
+    onSettled: () => {
+      queryClient.invalidateQueries({ queryKey: ['comments', post.id] });
+    }
+  });
+
+  const handlePostComment = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!commentText.trim()) return;
+    commentMutation.mutate(commentText);
+  };
+
+  // Share state
+  const [shareCount, setShareCount] = useState(post.share_count || 0);
+  const [isShared, setIsShared] = useState(post.is_shared_by_me || false);
+  const [isSharing, setIsSharing] = useState(false);
+
   const [isMuted, setIsMuted] = useState(true);
   const [isDialogPlaying, setIsDialogPlaying] = useState(true);
   const videoRef = useRef<HTMLVideoElement>(null);
@@ -80,12 +170,60 @@ export function PostCard({ post, index = 0 }: PostCardProps) {
     }
   };
 
+  const likeMutation = useMutation({
+    mutationFn: async () => {
+      const { data } = await api.post(`/posts/${post.id}/like/`);
+      return data;
+    },
+    onSuccess: (data) => {
+      // Ensure sync with server response
+      setLikeCount(data.likes_count);
+      setIsLiked(data.status === 'liked');
+    },
+    onError: () => {
+      // Revert optimistic update
+      setLikeCount(prev => isLiked ? prev + 1 : prev - 1); // If we thought we liked it (isLiked=true), revert by removing like (-1). Wait, isLiked is the OLD state or NEW state?
+      // Actually simpler: just revert to previous.
+      setIsLiked(prev => !prev);
+      toast.error("Failed to update like");
+    }
+  });
+
   const toggleLike = (e: React.MouseEvent) => {
     e.stopPropagation();
     handleAuthAction(() => {
-      if (isLiked) setLikeCount(c => c - 1);
-      else setLikeCount(c => c + 1);
-      setIsLiked(!isLiked);
+      // Optimistic update
+      const newIsLiked = !isLiked;
+      setIsLiked(newIsLiked);
+      setLikeCount(prev => newIsLiked ? prev + 1 : Math.max(0, prev - 1));
+
+      likeMutation.mutate();
+    });
+  };
+
+  const handleShare = async (e?: React.MouseEvent) => {
+    e?.stopPropagation();
+    handleAuthAction(async () => {
+      if (isSharing) return;
+      setIsSharing(true);
+      try {
+        const response = await toggleShare(post.id);
+
+        // Optimistic update
+        if (response.status === 'shared') {
+          setIsShared(true);
+          setShareCount(c => c + 1);
+          toast.success("Shared to Community Spotlight!");
+        } else {
+          setIsShared(false);
+          setShareCount(c => Math.max(0, c - 1));
+          toast.info("Removed from your shares");
+        }
+      } catch (error) {
+        toast.error("Failed to share post");
+      } finally {
+        setIsSharing(false);
+      }
     });
   };
 
@@ -146,7 +284,7 @@ export function PostCard({ post, index = 0 }: PostCardProps) {
     }).format(new Date(post.published_at))
     : '';
 
-  const avatarColor = avatarColors[post.author_name.length % avatarColors.length];
+  const roleTheme = getRoleColor(post.author_role);
   const categoryLabel = categoryLabels[post.category];
   const categoryIcon = categoryIcons[post.category];
   const gradientClass = categoryStyles[post.category] || categoryStyles.other;
@@ -162,18 +300,34 @@ export function PostCard({ post, index = 0 }: PostCardProps) {
         {/* --- Card Header: User Info --- */}
         <div className="p-4 px-5 flex items-center justify-between">
           <div className="flex items-center gap-3">
-            <div className={`w-11 h-11 rounded-full ${avatarColor} flex items-center justify-center text-sm font-black shadow-sm ring-2 ring-white dark:ring-slate-800 shrink-0`}>
-              {getInitials(post.author_name)}
+            {/* Role-colored avatar fallback + verified tick */}
+            <div className="relative shrink-0">
+              <div className={cn(
+                "w-10 h-10 rounded-full flex items-center justify-center font-bold text-sm border-2 transition-all overflow-hidden",
+                post.author_image ? "" : getRoleColor(post.author_role).avatar,
+                getRoleColor(post.author_role).border
+              )}>
+                {post.author_image ? (
+                  <img src={getImageUrl(post.author_image)} alt={post.author_name} className="w-full h-full object-cover rounded-full" />
+                ) : (
+                  getInitials(post.author_name)
+                )}
+              </div>
+              {isVerifiedRole(post.author_role) && (
+                <div className="absolute -bottom-0.5 -right-0.5 bg-white dark:bg-slate-900 rounded-full p-[1px] shadow">
+                  <BadgeCheck className="w-4 h-4 text-blue-500 fill-blue-500" />
+                </div>
+              )}
             </div>
             <div className="flex flex-col min-w-0">
               <div className="flex items-center gap-2">
                 <span className="text-sm font-bold text-slate-900 dark:text-slate-100 leading-none truncate">
                   {post.author_name}
                 </span>
-                {post.teacher_name && (
-                  <Badge variant="secondary" className="text-[10px] px-1.5 py-0 h-4 bg-slate-100 dark:bg-slate-800 text-slate-500 font-medium hover:bg-slate-200">
-                    Student
-                  </Badge>
+                {post.author_role && (
+                  <span className={cn("text-[10px] px-1.5 py-0.5 rounded-full font-semibold", roleTheme.badge)}>
+                    {post.author_role.charAt(0) + post.author_role.slice(1).toLowerCase()}
+                  </span>
                 )}
               </div>
               <span className="text-xs text-slate-500 font-medium mt-0.5 truncate max-w-[180px]">
@@ -181,9 +335,7 @@ export function PostCard({ post, index = 0 }: PostCardProps) {
               </span>
             </div>
           </div>
-          <Button variant="ghost" size="icon" className="h-8 w-8 text-slate-400 hover:text-slate-600 -mr-2">
-            <MoreHorizontal className="w-5 h-5" />
-          </Button>
+
         </div>
 
         {/* --- Card Media: Main Content --- */}
@@ -193,9 +345,14 @@ export function PostCard({ post, index = 0 }: PostCardProps) {
         >
           {/* Floating Category Badge */}
           <div className="absolute top-3 left-3 z-20">
-            <div className={cn("glass-panel px-3 py-1.5 rounded-full flex items-center gap-1.5 shadow-lg backdrop-blur-md bg-white/20 dark:bg-black/40 border border-white/20 text-white text-xs font-bold")}>
+            <div className={cn(
+              "glass-panel px-3 py-1.5 rounded-full flex items-center gap-1.5 shadow-lg backdrop-blur-md border transition-all",
+              getCategoryStyle(post.category).bg,
+              getCategoryStyle(post.category).text,
+              getCategoryStyle(post.category).border
+            )}>
               <span className="text-sm shadow-sm">{categoryIcon}</span>
-              <span className="drop-shadow-sm">{categoryLabel}</span>
+              <span className="drop-shadow-sm font-bold text-[10px] uppercase tracking-wider">{categoryLabel}</span>
             </div>
           </div>
 
@@ -203,7 +360,7 @@ export function PostCard({ post, index = 0 }: PostCardProps) {
             <div className="w-full h-full relative group/video">
               <video
                 ref={videoRef}
-                src={post.video_file}
+                src={getImageUrl(post.video_file)}
                 className="w-full h-full object-cover"
                 muted={isMuted}
                 loop
@@ -233,7 +390,7 @@ export function PostCard({ post, index = 0 }: PostCardProps) {
             </div>
           ) : post.image_url ? (
             <img
-              src={post.image_url}
+              src={getImageUrl(post.image_url)}
               alt={post.title}
               className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-105"
             />
@@ -252,30 +409,42 @@ export function PostCard({ post, index = 0 }: PostCardProps) {
 
         {/* --- Action Bar --- */}
         <div className="px-4 pt-3 pb-2 flex items-center justify-between">
-          <div className="flex items-center gap-1">
+          <div className="flex items-center gap-2">
             <Button
-              variant="ghost" size="icon"
-              onClick={(e) => { e.stopPropagation(); handleAuthAction(() => setIsLiked(!isLiked)); }}
-              className={`h-10 w-10 rounded-full hover:bg-pink-50 dark:hover:bg-pink-900/20 ${isLiked ? 'fill-red-500 text-red-500 scale-110' : 'text-slate-600 dark:text-slate-400'}`}
+              variant="ghost"
+              onClick={toggleLike}
+              className={`h-10 px-3 rounded-full hover:bg-pink-50 dark:hover:bg-pink-900/20 transition-all ${isLiked ? 'fill-red-500 text-red-500 hover:text-red-500 dark:hover:text-red-500 scale-105' : 'text-slate-600 dark:text-slate-400 hover:text-red-500 dark:hover:text-red-400'}`}
               title={!isLoggedIn ? "Log in to like" : "Like"}
             >
-              <Heart className={`w-6 h-6 ${isLiked ? 'fill-current' : ''}`} />
+              <div className="flex items-center gap-1.5">
+                <Heart className={`w-6 h-6 ${isLiked ? 'fill-current' : ''}`} />
+                {likeCount > 0 && <span className="text-sm font-bold">{likeCount}</span>}
+              </div>
             </Button>
+
             <Button
-              variant="ghost" size="icon"
-              className="h-10 w-10 rounded-full text-slate-600 dark:text-slate-400 hover:bg-blue-50 dark:hover:bg-blue-900/20 hover:text-blue-500"
-              onClick={(e) => { e.stopPropagation(); handleAuthAction(() => { }); }}
+              variant="ghost"
+              className="h-10 px-3 rounded-full text-slate-600 dark:text-slate-400 hover:bg-blue-50 dark:hover:bg-blue-900/20 hover:text-blue-500 transition-all"
+              onClick={(e) => { e.stopPropagation(); setIsOpen(true); }}
               title={!isLoggedIn ? "Log in to comment" : "Comment"}
             >
-              <MessageCircle className="w-6 h-6" />
+              <div className="flex items-center gap-1.5">
+                <MessageCircle className="w-6 h-6" />
+                {post.comments_count > 0 && <span className="text-sm font-bold">{post.comments_count}</span>}
+              </div>
             </Button>
+
             <Button
-              variant="ghost" size="icon"
-              className="h-10 w-10 rounded-full text-slate-600 dark:text-slate-400 hover:bg-green-50 dark:hover:bg-green-900/20 hover:text-green-500"
-              onClick={(e) => { e.stopPropagation(); handleAuthAction(() => { }); }}
-              title={!isLoggedIn ? "Log in to share" : "Share"}
+              variant="ghost"
+              className={`h-10 px-3 rounded-full transition-all hover:bg-green-50 dark:hover:bg-green-900/20 ${isShared ? 'text-green-500 hover:text-green-600' : 'text-slate-600 dark:text-slate-400 hover:text-green-500'}`}
+              onClick={handleShare}
+              title={!isLoggedIn ? "Log in to share" : isShared ? "Shared!" : "Share to Spotlight"}
+              disabled={isSharing}
             >
-              <Share2 className="w-6 h-6" />
+              <div className="flex items-center gap-1.5">
+                <Share2 className={`w-6 h-6 ${isShared ? 'fill-current' : ''}`} strokeWidth={1.5} />
+                {shareCount > 0 && <span className="text-sm font-bold">{shareCount}</span>}
+              </div>
             </Button>
           </div>
 
@@ -284,10 +453,7 @@ export function PostCard({ post, index = 0 }: PostCardProps) {
 
         {/* --- Content Snippet --- */}
         <div className="px-5 pb-5 flex flex-col gap-2 flex-grow">
-          {/* Likes count (Mock) */}
-          <div className="text-sm font-bold text-slate-800 dark:text-slate-200 mb-1">
-            {isLiked ? 'You and 24 others liked this' : '24 likes'}
-          </div>
+
 
           <div className="space-y-1">
             <div className="flex items-baseline gap-2">
@@ -314,14 +480,15 @@ export function PostCard({ post, index = 0 }: PostCardProps) {
       <Dialog open={isOpen} onOpenChange={setIsOpen}>
         <DialogContent
           hideCloseButton
-          className="max-w-[1100px] w-[95vw] h-[85vh] md:h-[80vh] p-0 border-0 rounded-xl bg-white dark:bg-black shadow-2xl overflow-hidden flex flex-col z-[100]"
+          noContentWrapper
+          className="max-w-[1100px] w-[95vw] h-[92vh] md:h-[80vh] p-0 border dark:border-white/10 !rounded-[2rem] bg-white dark:bg-zinc-950 shadow-2xl overflow-y-auto md:overflow-hidden flex flex-col z-[100] outline-none scrollbar-hide"
         >
           <DialogTitle className="sr-only">{post.title}</DialogTitle>
           <DialogDescription className="sr-only">Read {post.title} by {post.author_name}</DialogDescription>
 
-          <div className="flex flex-col md:flex-row h-full">
-            {/* Left: Media Section */}
-            <div className={`relative w-full md:w-[40%] h-[30vh] md:h-full bg-black flex items-center justify-center overflow-hidden border-r border-slate-100 dark:border-zinc-800`}>
+          <div className="flex flex-col md:flex-row h-auto md:h-full overflow-visible md:overflow-hidden">
+            {/* Left: Media Section - Responsive height */}
+            <div className={`relative w-full md:w-[40%] h-[40vh] md:h-full bg-black flex items-center justify-center overflow-hidden border-b md:border-b-0 md:border-r border-slate-100 dark:border-zinc-800 shrink-0`}>
 
               {/* Mobile Close Button */}
               <button
@@ -348,7 +515,7 @@ export function PostCard({ post, index = 0 }: PostCardProps) {
                   <div className="relative w-full h-full group/video-player cursor-pointer" onClick={toggleDialogPlay}>
                     <video
                       ref={dialogVideoRef}
-                      src={post.video_file}
+                      src={getImageUrl(post.video_file)}
                       autoPlay
                       loop
                       className="w-full h-full object-contain"
@@ -363,7 +530,6 @@ export function PostCard({ post, index = 0 }: PostCardProps) {
                         </div>
                       </div>
                     )}
-                    {/* Show pause icon briefly on hover/interaction if playing ?? No, user asked to remove elements. Just the click to pause/play. */}
                   </div>
                 ) : post.video_url ? (() => {
                   const embedUrl = getVideoEmbedUrl(post.video_url);
@@ -378,7 +544,7 @@ export function PostCard({ post, index = 0 }: PostCardProps) {
                     <div className="text-white font-bold underline">Video Link</div>
                   )
                 })() : post.image_url ? (
-                  <img src={post.image_url} alt={post.title} className="max-w-full max-h-full object-contain shadow-lg" />
+                  <img src={getImageUrl(post.image_url)} alt={post.title} className="max-w-full max-h-full object-contain shadow-lg" />
                 ) : (
                   <div className={`w-full h-full flex flex-col items-center justify-center p-10 text-center ${categoryStyles[post.category]} bg-opacity-80`}>
                     <span className="text-8xl mb-4">{categoryIcon}</span>
@@ -389,12 +555,28 @@ export function PostCard({ post, index = 0 }: PostCardProps) {
             </div>
 
             {/* Right: Social Sidebar (Instagram Style) */}
-            <div className="flex-1 flex flex-col h-full bg-white dark:bg-black overflow-x-hidden">
-              {/* 1. Header */}
-              <div className="p-3 pr-4 border-b border-slate-100 dark:border-zinc-800 flex items-center justify-between shrink-0 h-16">
+            <div className="flex-none md:flex-1 flex flex-col bg-white dark:bg-black overflow-visible md:overflow-hidden">
+              {/* 1. Header - Sticky on Desktop */}
+              <div className="p-3 pr-4 border-b border-slate-100 dark:border-zinc-800 flex items-center justify-between shrink-0 h-16 bg-white dark:bg-black z-20">
                 <div className="flex items-center gap-3">
-                  <div className={`w-8 h-8 rounded-full ${avatarColor} flex items-center justify-center font-bold text-xs ring-1 ring-slate-100 dark:ring-zinc-800`}>
-                    {getInitials(post.author_name)}
+                  {/* Avatar + tick */}
+                  <div className="relative">
+                    <div className={cn(
+                      "w-10 h-10 rounded-full flex items-center justify-center font-bold text-sm border-2 transition-all overflow-hidden",
+                      post.author_image ? "" : getRoleColor(post.author_role).avatar,
+                      getRoleColor(post.author_role).border
+                    )}>
+                      {post.author_image ? (
+                        <img src={getImageUrl(post.author_image)} alt={post.author_name} className="w-full h-full object-cover" />
+                      ) : (
+                        getInitials(post.author_name)
+                      )}
+                    </div>
+                    {isVerifiedRole(post.author_role) && (
+                      <div className="absolute -bottom-0.5 -right-0.5 bg-white dark:bg-zinc-900 rounded-full p-[1px] shadow">
+                        <BadgeCheck className="w-3 h-3 text-blue-500 fill-blue-500" />
+                      </div>
+                    )}
                   </div>
                   <div className="flex flex-col justify-center">
                     <h3 className="font-bold text-sm text-slate-900 dark:text-zinc-100 leading-none hover:opacity-70 cursor-pointer truncate max-w-[150px]">
@@ -406,17 +588,14 @@ export function PostCard({ post, index = 0 }: PostCardProps) {
                   </div>
                 </div>
                 <div className="flex items-center">
-                  <button onClick={() => setIsOpen(false)} className="p-2 hover:bg-slate-50 dark:hover:bg-zinc-900 rounded-full transition-colors hidden md:block">
-                    <MoreHorizontal className="w-5 h-5 text-slate-900 dark:text-zinc-100" />
-                  </button>
                   <button onClick={() => setIsOpen(false)} className="p-2 hover:bg-slate-50 dark:hover:bg-zinc-900 rounded-full transition-colors hidden md:block text-slate-500">
                     <X className="w-6 h-6" />
                   </button>
                 </div>
               </div>
 
-              {/* 2. Scrollable Comments Feed */}
-              <div className="flex-1 overflow-y-auto p-4 scrollbar-elegant space-y-4 overflow-x-hidden">
+              {/* 2. Scrollable Comments Feed - Unified on mobile */}
+              <div className="flex-none md:flex-1 overflow-visible md:overflow-y-auto p-4 scrollbar-elegant space-y-4">
                 {/* Main Caption (Author's Post) */}
                 {/* Main Caption (Author's Post) */}
                 {/* Main Caption (Reader View Style) */}
@@ -428,36 +607,62 @@ export function PostCard({ post, index = 0 }: PostCardProps) {
                   <div className="text-slate-700 dark:text-zinc-300 text-sm leading-7 whitespace-pre-wrap break-words first-letter:text-5xl first-letter:font-black first-letter:text-slate-900 dark:first-letter:text-white first-letter:mr-3 first-letter:float-left first-letter:leading-[0.8]">
                     {post.content}
                   </div>
-
                   <div className="mt-6 text-[10px] text-slate-400 font-medium uppercase tracking-widest border-t border-slate-100 dark:border-zinc-800 pt-3">
                     Posted on {formattedDate}
                   </div>
                 </div>
 
-                {/* Mock Comments */}
+                {/* Comments List */}
                 <div className="border-t border-slate-50 dark:border-zinc-900 my-2 pt-2" />
 
-                {[1, 2, 3, 4, 5].map((i) => (
-                  <div key={i} className="flex gap-3 group">
-                    <div className="w-7 h-7 rounded-full bg-slate-100 dark:bg-zinc-800 flex items-center justify-center text-[10px] font-bold text-slate-500 shrink-0 mt-1">
-                      U{i}
-                    </div>
-                    <div className="text-sm flex-1">
-                      <span className="font-bold text-slate-900 dark:text-zinc-100 text-sm mr-2 cursor-pointer hover:opacity-70">user_{i}</span>
-                      <span className="text-slate-700 dark:text-zinc-300">
-                        {i % 2 === 0 ? "This is such a great post! 🔥" : "Amazing work, keep it up! 👏"}
-                      </span>
-                      <div className="flex gap-3 mt-1 text-xs text-slate-400 font-medium">
-                        <span>{i}h</span>
-                        <button className="font-bold text-slate-500 hover:text-slate-800 dark:hover:text-zinc-300">Reply</button>
-                        <button className="opacity-0 group-hover:opacity-100 hover:text-slate-800 dark:hover:text-zinc-300 transition-opacity">
-                          <MoreHorizontal className="w-3 h-3" />
-                        </button>
+                {isCommentsLoading ? (
+                  <div className="space-y-4 py-2">
+                    {[1, 2, 3].map((i) => (
+                      <div key={i} className="flex gap-3">
+                        <Skeleton className="w-7 h-7 rounded-full shrink-0" />
+                        <div className="flex-1 space-y-2 py-1">
+                          <Skeleton className="h-4 w-24 rounded" />
+                          <Skeleton className="h-3 w-full rounded" />
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                ) : comments.length === 0 ? (
+                  <div className="text-center py-8 text-muted-foreground italic text-sm">No comments yet.</div>
+                ) : (
+                  comments.map((comment: any) => (
+                    <div key={comment.id} className="flex gap-3 group">
+                      <div className={cn(
+                        "w-7 h-7 rounded-full shrink-0 mt-1 overflow-hidden border-2",
+                        getRoleColor(comment.user?.role).border
+                      )}>
+                        {comment.user?.profile_image ? (
+                          <img src={getImageUrl(comment.user.profile_image)} alt={comment.user.username} className="w-full h-full object-cover" />
+                        ) : (
+                          <div className="w-full h-full flex items-center justify-center font-bold text-[10px] text-slate-500">{comment.user?.username?.[0]}</div>
+                        )}
+                      </div>
+                      <div className="text-sm flex-1">
+                        <span className="font-bold text-slate-900 dark:text-zinc-100 text-sm mr-2 cursor-pointer hover:opacity-70" onClick={() => {
+                          if (!isLoggedIn) {
+                            toast.error("Please log in to view profiles.");
+                            return;
+                          }
+                          navigate(`/profile/${comment.user.id}`)
+                        }}>
+                          {comment.user?.username || 'User'}
+                        </span>
+                        <span className="text-slate-700 dark:text-zinc-300 whitespace-pre-wrap break-words">
+                          {comment.content}
+                        </span>
+                        <div className="flex gap-3 mt-1 text-xs text-slate-400 font-medium">
+                          <span>{new Date(comment.created_at).toLocaleDateString()}</span>
+                          {/* <button className="font-bold text-slate-500 hover:text-slate-800 dark:hover:text-zinc-300">Reply</button> */}
+                        </div>
                       </div>
                     </div>
-
-                  </div>
-                ))}
+                  ))
+                )}
               </div>
 
               {/* 3. Footer Actions (Sticky) */}
@@ -467,7 +672,7 @@ export function PostCard({ post, index = 0 }: PostCardProps) {
                   <div className="flex gap-4">
                     <div className="flex gap-4">
                       <button
-                        onClick={() => handleAuthAction(() => setIsLiked(!isLiked))}
+                        onClick={toggleLike}
                         className="hover:opacity-60 transition-opacity"
                       >
                         <Heart className={`w-6 h-6 ${isLiked ? 'fill-red-500 text-red-500' : 'text-slate-900 dark:text-white'}`} strokeWidth={1.5} />
@@ -479,10 +684,11 @@ export function PostCard({ post, index = 0 }: PostCardProps) {
                         <MessageCircle className="w-6 h-6 text-slate-900 dark:text-white" strokeWidth={1.5} />
                       </button>
                       <button
-                        className="hover:opacity-60 transition-opacity"
-                        onClick={() => handleAuthAction(() => { })}
+                        className={`hover:opacity-60 transition-opacity ${isShared ? 'text-green-500' : 'text-slate-900 dark:text-white'}`}
+                        onClick={(e) => handleShare(e)}
+                        title={isShared ? "Unshare" : "Share"}
                       >
-                        <Share2 className="w-6 h-6 text-slate-900 dark:text-white" strokeWidth={1.5} />
+                        <Share2 className={`w-6 h-6 ${isShared ? 'fill-green-500 text-green-500' : ''}`} strokeWidth={1.5} />
                       </button>
                     </div>
                   </div>
@@ -495,34 +701,45 @@ export function PostCard({ post, index = 0 }: PostCardProps) {
                 </div>
 
                 {/* Add Comment Input or Login Prompt */}
-                <div className="relative border-t border-slate-100 dark:border-zinc-800 pt-3 flex items-center gap-2">
+                {/* Comment Input */}
+                <form onSubmit={handlePostComment} className="flex items-center gap-3 pt-4 border-t border-slate-100 dark:border-zinc-800/80">
                   {isLoggedIn ? (
                     <>
-                      <button className="text-slate-900 dark:text-white hover:opacity-70 transition-opacity">
-                        <Smile className="w-5 h-5" strokeWidth={1.5} />
-                      </button>
+                      <Avatar className="w-8 h-8 rounded-full shrink-0 border border-border">
+                        <AvatarImage src={getImageUrl(user?.profile_image)} className="object-cover" />
+                        <AvatarFallback className="bg-primary/5 text-primary text-[10px] font-bold">{user?.username?.[0]}</AvatarFallback>
+                      </Avatar>
                       <input
                         type="text"
                         placeholder="Add a comment..."
-                        className="flex-1 bg-transparent border-none text-sm focus:ring-0 p-0 placeholder:text-slate-500 dark:placeholder:text-zinc-500 text-slate-900 dark:text-zinc-100 h-8"
+                        className="flex-1 min-w-0 bg-slate-50 dark:bg-zinc-900 border-0 text-xs sm:text-sm focus:ring-1 focus:ring-primary/20 rounded-full px-3 sm:px-4 py-2 placeholder:text-muted-foreground/60 text-foreground h-10 font-medium"
+                        value={commentText}
+                        onChange={(e) => setCommentText(e.target.value)}
+                        disabled={commentMutation.isPending}
                       />
-                      <button className="text-blue-500 font-semibold text-sm hover:text-blue-700 disabled:opacity-50 transition-colors">Post</button>
+                      <Button
+                        type="submit"
+                        disabled={!commentText.trim() || commentMutation.isPending}
+                        className="rounded-full font-bold px-4 sm:px-6 bg-primary hover:bg-primary/90 text-white shadow-lg shadow-primary/20 h-10 shrink-0"
+                      >
+                        {commentMutation.isPending ? <Skeleton className="w-8 h-4 bg-white/30 rounded" /> : 'Post'}
+                      </Button>
                     </>
                   ) : (
                     <div className="w-full h-8 flex items-center justify-between px-3 bg-slate-50 dark:bg-zinc-900 border border-slate-100 dark:border-zinc-800 rounded-md">
                       <span className="text-slate-500 dark:text-zinc-500 text-xs font-medium italic">Log in to join the conversation</span>
-                      <button className="text-primary hover:text-primary/80 font-bold text-xs transition-colors">Log In</button>
+                      <button type="button" onClick={() => setShowAuthModal(true)} className="text-primary hover:text-primary/80 font-bold text-xs transition-colors">Log In</button>
                     </div>
                   )}
-                </div>
+                </form>
               </div>
             </div>
           </div>
         </DialogContent>
-      </Dialog>
+      </Dialog >
 
       {/* Authentication Required Modal */}
-      <Dialog open={showAuthModal} onOpenChange={setShowAuthModal}>
+      < Dialog open={showAuthModal} onOpenChange={setShowAuthModal} >
         <DialogContent className="sm:max-w-md border-0 rounded-2xl bg-white dark:bg-zinc-900 shadow-2xl p-6 z-[200]">
           <DialogHeader className="mb-4">
             <DialogTitle className="text-center text-2xl font-bold font-display text-slate-900 dark:text-white">
@@ -551,7 +768,7 @@ export function PostCard({ post, index = 0 }: PostCardProps) {
             </button>
           </DialogFooter>
         </DialogContent>
-      </Dialog>
+      </Dialog >
     </>
   );
 }

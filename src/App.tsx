@@ -17,7 +17,9 @@ import Users from "./pages/Users";
 import Profile from "./pages/Profile";
 import PublicProfile from "./pages/PublicProfile";
 import NotFound from "./pages/NotFound";
+import Community from "./pages/Community";
 import { ProtectedRoute } from "./components/ProtectedRoute";
+import PWAManager from "./components/PWAManager";
 
 const queryClient = new QueryClient();
 
@@ -25,6 +27,7 @@ const App = () => (
   <QueryClientProvider client={queryClient}>
     <ThemeProvider attribute="class" defaultTheme="light" enableSystem={false}>
       <TooltipProvider>
+        <PWAManager />
         <Toaster />
         <Sonner
           position="bottom-right"
@@ -51,6 +54,7 @@ const App = () => (
               }
             />
             <Route path="/profile/:userId" element={<PublicProfile />} />
+            <Route path="/community" element={<Community />} />
             <Route
               path="/editorial"
               element={

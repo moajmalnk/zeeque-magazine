@@ -14,15 +14,30 @@ import { Link } from "react-router-dom";
 import { FileText, LogOut, User } from "lucide-react";
 
 export function UserNav() {
-    const { email, logout } = useAuth();
-    const initials = email?.substring(0, 2).toUpperCase() || "U";
+    const { email, username, profile_image, logout } = useAuth();
+    const initials = (username || email || "U").substring(0, 2).toUpperCase();
+
+    const getImageUrl = (url: string | null) => {
+        if (!url) return '';
+        if (url.startsWith('http')) {
+            try {
+                const urlObj = new URL(url);
+                if (urlObj.port === '8000' || urlObj.hostname === '127.0.0.1' || urlObj.hostname === 'localhost') {
+                    return urlObj.pathname;
+                }
+            } catch (e) {
+                return url;
+            }
+        }
+        return url;
+    };
 
     return (
         <DropdownMenu>
             <DropdownMenuTrigger asChild>
                 <Button variant="ghost" className="relative h-9 w-9 rounded-full ring-offset-background transition-all hover:bg-muted focus:ring-2 focus:ring-ring focus:ring-offset-2">
                     <Avatar className="h-9 w-9 border border-border/50">
-                        <AvatarImage src={`https://api.dicebear.com/7.x/avataaars/svg?seed=${email}`} alt={email || "User"} />
+                        <AvatarImage src={getImageUrl(profile_image)} alt={username || email || "User"} className="object-cover" />
                         <AvatarFallback>{initials}</AvatarFallback>
                     </Avatar>
                 </Button>

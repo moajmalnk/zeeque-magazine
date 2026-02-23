@@ -1,7 +1,7 @@
 import { Link, useLocation, useNavigate } from 'react-router-dom';
 import { useTheme } from 'next-themes';
 import { Button } from '@/components/ui/button';
-import { PenLine, BookOpen, FileText, Moon, Sun, HelpCircle, LogIn, Users, LogOut, Menu, Sparkles, ShieldQuestion, Layers, GraduationCap, User, ChevronDown, UserCircle, Settings, Plus } from 'lucide-react';
+import { PenLine, BookOpen, FileText, Moon, Sun, HelpCircle, LogIn, Users, LogOut, Menu, Sparkles, ShieldQuestion, Layers, GraduationCap, User, ChevronDown, UserCircle, Settings, Plus, Search } from 'lucide-react';
 import { motion } from 'framer-motion';
 import { useAuth } from '@/hooks/useAuth';
 import { useEffect, useState } from 'react';
@@ -24,13 +24,16 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import { isVerifiedRole, getRoleColor } from "@/lib/roleUtils";
+import { BadgeCheck } from 'lucide-react';
+import { cn } from '@/lib/utils';
 
 // Floating Create Button Component (Portal)
 const FloatingCreateButton = () => {
   return createPortal(
     <Link
       to="/submit"
-      className="fixed bottom-6 right-6 z-50 group flex flex-col items-center justify-center p-4"
+      className="fixed bottom-[calc(24px+env(safe-area-inset-bottom))] right-6 z-50 group flex flex-col items-center justify-center p-4"
       title="Create New Post"
     >
       {/* Tooltip Label (Desktop) */}
@@ -123,6 +126,23 @@ const FloatingCreateButton = () => {
   );
 };
 
+const getImageUrl = (url: string | null) => {
+  if (!url) return '';
+  if (url.startsWith('http')) {
+    try {
+      const urlObj = new URL(url);
+      // If the backend returns an absolute URL (typical for DRF), 
+      // we point it to our local proxy to avoid CORS/port issues.
+      if (urlObj.port === '8000' || urlObj.hostname === '127.0.0.1' || urlObj.hostname === 'localhost') {
+        return urlObj.pathname;
+      }
+    } catch (e) {
+      return url;
+    }
+  }
+  return url;
+};
+
 // Text-Only "Morph" Tab Component
 const NavTab = ({
   to,
@@ -198,7 +218,8 @@ const NavItems = ({
   isAuthenticated,
   role,
   username,
-  email
+  email,
+  profileImage
 }: {
   mobile?: boolean;
   onItemClick?: () => void;
@@ -207,6 +228,7 @@ const NavItems = ({
   role: string | null;
   username: string | null;
   email: string | null;
+  profileImage: string | null;
 }) => {
   const location = useLocation();
   const { pathname } = location;
@@ -222,6 +244,19 @@ const NavItems = ({
         activeColor="text-white"
         activeShadow="shadow-[0_8px_16px_-6px_rgba(14,165,233,0.5)]"
         hoverColor="hover:text-sky-500"
+        onClick={onItemClick}
+        mobile={mobile}
+      />
+
+      <NavTab
+        to="/community"
+        label="Explore"
+        icon={Search}
+        isActive={pathname === '/community'}
+        activeBg="bg-gradient-to-r from-emerald-400 to-teal-500"
+        activeColor="text-white"
+        activeShadow="shadow-[0_8px_16px_-6px_rgba(16,185,129,0.5)]"
+        hoverColor="hover:text-emerald-500"
         onClick={onItemClick}
         mobile={mobile}
       />
@@ -291,12 +326,22 @@ const NavItems = ({
               onClick={onItemClick}
               className="flex items-center gap-4 p-3 rounded-xl bg-muted/50 hover:bg-muted transition-colors mb-3 group"
             >
-              <Avatar className="h-12 w-12 border-2 border-background shadow-sm group-hover:scale-105 transition-transform">
-                <AvatarImage src="" />
-                <AvatarFallback className="bg-primary/10 text-primary font-bold">
-                  {username?.[0]?.toUpperCase() || 'U'}
-                </AvatarFallback>
-              </Avatar>
+              <div className="relative shrink-0">
+                <Avatar className={cn(
+                  "h-12 w-12 border-2 shadow-sm group-hover:scale-105 transition-transform",
+                  getRoleColor(role).border
+                )}>
+                  <AvatarImage src={getImageUrl(profileImage)} alt={username || 'User'} className="object-cover" />
+                  <AvatarFallback className="bg-primary/10 text-primary font-bold">
+                    {username?.[0]?.toUpperCase() || 'U'}
+                  </AvatarFallback>
+                </Avatar>
+                {isVerifiedRole(role) && (
+                  <div className="absolute -bottom-0.5 -right-0.5 bg-white dark:bg-zinc-900 rounded-full p-[1px] shadow-sm">
+                    <BadgeCheck className="w-4 h-4 text-blue-500 fill-blue-500" />
+                  </div>
+                )}
+              </div>
               <div className="flex flex-col min-w-0">
                 <span className="font-bold text-foreground truncate">{username || 'User'}</span>
                 <span className="text-xs text-muted-foreground truncate">{email}</span>
@@ -324,12 +369,22 @@ const NavItems = ({
             <DropdownMenu>
               <DropdownMenuTrigger asChild>
                 <div className="flex items-center gap-2 pl-1 pr-3 py-1 bg-background/50 hover:bg-muted/50 border border-border/40 rounded-full cursor-pointer transition-all duration-200 hover:shadow-sm group select-none">
-                  <Avatar className="h-8 w-8 border border-border/50 transition-transform group-hover:scale-105">
-                    <AvatarImage src="" alt={username || 'User'} /> {/* Add user avatar url if available */}
-                    <AvatarFallback className="bg-gradient-to-br from-primary/20 to-primary/10 text-primary text-xs font-bold">
-                      {username?.[0]?.toUpperCase() || 'U'}
-                    </AvatarFallback>
-                  </Avatar>
+                  <div className="relative">
+                    <Avatar className={cn(
+                      "h-8 w-8 border-2 transition-transform group-hover:scale-105",
+                      getRoleColor(role).border
+                    )}>
+                      <AvatarImage src={getImageUrl(profileImage)} alt={username || 'User'} className="object-cover" />
+                      <AvatarFallback className="bg-gradient-to-br from-primary/20 to-primary/10 text-primary text-xs font-bold">
+                        {username?.[0]?.toUpperCase() || 'U'}
+                      </AvatarFallback>
+                    </Avatar>
+                    {isVerifiedRole(role) && (
+                      <div className="absolute -bottom-0.5 -right-0.5 bg-white dark:bg-zinc-900 rounded-full p-[1px] shadow-sm">
+                        <BadgeCheck className="w-3.5 h-3.5 text-blue-500 fill-blue-500" />
+                      </div>
+                    )}
+                  </div>
                   <span className="text-sm font-semibold max-w-[100px] truncate group-hover:text-foreground/80 transition-colors">
                     {username || 'User'}
                   </span>
@@ -404,7 +459,7 @@ const NavItems = ({
 export function Header() {
   const navigate = useNavigate();
   const { theme, setTheme } = useTheme();
-  const { logout, isAuthenticated, role, username, email } = useAuth();
+  const { logout, isAuthenticated, role, username, email, profile_image } = useAuth();
   const [mounted, setMounted] = useState(false);
   const [logoError, setLogoError] = useState(false);
   const [mobileOpen, setMobileOpen] = useState(false);
@@ -428,10 +483,9 @@ export function Header() {
           <Link to="/" className="flex items-center gap-3 group transition-opacity hover:opacity-80 duration-300">
 
             <img
-              src={theme === 'dark' ? '/favicon-dark.png' : '/favicon-light.png'}
+              src={mounted ? (theme === 'dark' ? '/favicon-dark.png' : '/favicon-light.png') : '/favicon-light.png'}
               alt="ZeeQue Logo"
-              className="h-20 md:h-24 w-auto object-contain transition-all duration-300 filter drop-shadow-sm hover:scale-105"
-              onError={() => setLogoError(true)}
+              className="h-16 md:h-20 w-auto object-contain transition-all duration-300 filter drop-shadow-sm hover:scale-105"
             />
 
 
@@ -445,6 +499,7 @@ export function Header() {
               role={role}
               username={username}
               email={email}
+              profileImage={profile_image}
             />
 
             <Button
@@ -520,6 +575,7 @@ export function Header() {
                       role={role}
                       username={username}
                       email={email}
+                      profileImage={profile_image}
                     />
                   </div>
                 </SheetContent>

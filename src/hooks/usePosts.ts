@@ -1,19 +1,49 @@
-import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { useMemo } from 'react';
+import { useQuery, useMutation, useQueryClient, useInfiniteQuery } from '@tanstack/react-query';
+import { useMemo, useState } from 'react';
 import { Post, PostStatus } from '@/types/post';
 import api from '@/lib/api';
 
 export function usePosts() {
   const queryClient = useQueryClient();
+  const [spotlightSort, setSpotlightSort] = useState<'trending' | 'latest' | 'following'>('trending');
 
   // Fetch all posts
-  const { data: posts = [] } = useQuery<Post[]>({
+  const { data: postsData } = useQuery({
     queryKey: ['posts'],
     queryFn: async () => {
       const response = await api.get('/posts/');
       return response.data;
     },
   });
+
+  const posts = useMemo(() => {
+    if (!postsData) return [];
+    return Array.isArray(postsData) ? postsData : (postsData.results || []);
+  }, [postsData]);
+
+  // Fetch spotlight posts (trending) - Infinite Query for pagination
+  const {
+    data: spotlightData,
+    isLoading: isSpotlightLoading,
+    fetchNextPage: fetchNextSpotlightPage,
+    hasNextPage: hasNextSpotlightPage,
+    isFetchingNextPage: isSpotlightFetchingNextPage
+  } = useInfiniteQuery({
+    queryKey: ['posts', 'spotlight', spotlightSort],
+    queryFn: async ({ pageParam = 1 }) => {
+      const response = await api.get(`/posts/spotlight/?sort=${spotlightSort}&page=${pageParam}`);
+      return response.data;
+    },
+    getNextPageParam: (lastPage: any, allPages: any[]) => {
+      // Spotlight currently returns a direct array of 10 items
+      return lastPage.length === 10 ? allPages.length + 1 : undefined;
+    },
+    initialPageParam: 1,
+  });
+
+  const spotlightPosts = useMemo(() => {
+    return spotlightData?.pages.flatMap((page: any) => Array.isArray(page) ? page : (page.results || [])) || [];
+  }, [spotlightData]);
 
   // Mutations
   const updateMutation = useMutation({
@@ -27,8 +57,11 @@ export function usePosts() {
         const formData = new FormData();
         Object.keys(data).forEach(key => {
           const value = data[key];
-          if (value !== undefined && value !== null) {
-            if ((key === 'image_url' || key === 'video_file') && value instanceof Blob) {
+          if (value !== undefined) {
+            if (value === null) {
+              // Send empty string to clear the field (common convention for clearing files in multipart/form-data)
+              formData.append(key, '');
+            } else if ((key === 'image_url' || key === 'video_file') && value instanceof Blob) {
               const ext = value.type.split('/')[1] || 'bin';
               formData.append(key, value, `upload.${ext}`);
             } else {
@@ -55,8 +88,6 @@ export function usePosts() {
   const createMutation = useMutation({
     mutationFn: async (newPost: any) => {
       // Check if we need to send FormData (for file uploads)
-      // Relaxed check: if these keys exist, we assume they are files and must use FormData.
-      // This avoids issues where 'instanceof Blob' fails for some reason.
       const hasFiles = !!newPost.image_url || !!newPost.video_file;
 
       if (hasFiles) {
@@ -99,6 +130,17 @@ export function usePosts() {
     },
   });
 
+  const shareMutation = useMutation({
+    mutationFn: async (id: string) => {
+      const response = await api.post(`/posts/${id}/share/`);
+      return response.data;
+    },
+    onSuccess: () => {
+      // Invalidate both main posts list and spotlight to update counts/status
+      queryClient.invalidateQueries({ queryKey: ['posts'] });
+    },
+  });
+
   const updatePost = (postId: string, updates: any) => {
     updateMutation.mutate({ id: postId, data: updates });
   };
@@ -115,9 +157,6 @@ export function usePosts() {
       },
     });
 
-    // Valid refetch is triggered automatically, but for undo support we'd need optimistic updates.
-    // For now, returning a simplified undo that just reverts status (assuming we could).
-    // In a real app with backend, undo implies another mutation.
     return {
       undo: () => {
         updateMutation.mutate({
@@ -172,6 +211,10 @@ export function usePosts() {
     return createMutation.mutateAsync(post);
   };
 
+  const toggleShare = (postId: string) => {
+    return shareMutation.mutateAsync(postId);
+  };
+
   const pendingPosts = useMemo(
     () => posts.filter(post => post.status === 'pending'),
     [posts]
@@ -189,6 +232,11 @@ export function usePosts() {
 
   return {
     posts,
+    spotlightPosts,
+    isSpotlightLoading,
+    fetchNextSpotlightPage,
+    hasNextSpotlightPage,
+    isSpotlightFetchingNextPage,
     pendingPosts,
     publishedPosts,
     rejectedPosts,
@@ -198,5 +246,8 @@ export function usePosts() {
     restorePost,
     addPost,
     updatePost,
+    toggleShare,
+    spotlightSort,
+    setSpotlightSort,
   };
 }

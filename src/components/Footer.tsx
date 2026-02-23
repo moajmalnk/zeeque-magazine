@@ -3,9 +3,11 @@ import { Heart, Mail, Phone, MapPin, Facebook, Twitter, Instagram, Youtube, Arro
 import { useTheme } from 'next-themes';
 import { useEffect, useState } from 'react';
 import { Button } from '@/components/ui/button';
+import { useAuth } from '@/hooks/useAuth';
 
 export function Footer() {
   const { theme } = useTheme();
+  const { role, isAuthenticated } = useAuth();
   const [mounted, setMounted] = useState(false);
   const [logoError, setLogoError] = useState(false);
 
@@ -19,26 +21,32 @@ export function Footer() {
 
   const footerLinks = {
     explore: [
-      { label: 'Latest Creations', href: '/#latest' },
+      { label: 'Latest Creations', href: '/?category=all' },
       { label: 'Submit Your Work', href: '/submit' },
-      { label: 'FAQ', href: '/#faq' },
+      { label: 'FAQ', href: '/guidelines' },
     ],
     categories: [
-      { label: 'Stories', href: '/#latest' },
-      { label: 'Poems', href: '/#latest' },
-      { label: 'Drawings', href: '/#latest' },
-      { label: 'Classroom News', href: '/#latest' },
-      { label: 'Videos', href: '/#latest' },
+      { label: 'Stories', href: '/?category=stories' },
+      { label: 'Poems', href: '/?category=poems' },
+      { label: 'Drawings', href: '/?category=drawings' },
+      { label: 'Classroom News', href: '/?category=news' },
+      { label: 'Videos', href: '/?category=video' },
     ],
     resources: [
-      { label: 'Editorial Dashboard', href: '/editorial' },
-      { label: 'Submission Guidelines', href: '/#faq' },
-      { label: 'About Us', href: '/#faq' },
+      { label: 'Editorial Dashboard', href: '/editorial', restricted: true },
+      { label: 'Submission Rules', href: '/guidelines' },
+      { label: 'About ZeeQue', href: '/guidelines' },
     ],
   };
 
+  // Filter restricted links
+  const filteredResources = footerLinks.resources.filter(link => {
+    if (!link.restricted) return true;
+    return isAuthenticated && ['ADMIN', 'EDITORIAL'].includes(role || '');
+  });
+
   return (
-    <footer className="mt-auto border-t border-border/60 bg-white dark:bg-slate-950/50 dark:border-slate-800">
+    <footer className="mt-auto border-t border-border/60 bg-white dark:bg-slate-950/50 dark:border-slate-800 pb-[env(safe-area-inset-bottom)]">
       {/* Main Footer Content */}
       <div className="container py-12 md:py-16">
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8 lg:gap-12 mb-12">
@@ -107,7 +115,7 @@ export function Footer() {
           <div className="space-y-4">
             <h3 className="font-display font-bold text-lg text-foreground">Resources</h3>
             <ul className="space-y-3 mb-6">
-              {footerLinks.resources.map((link, index) => (
+              {filteredResources.map((link, index) => (
                 <li key={index}>
                   <Link
                     to={link.href}
@@ -145,11 +153,11 @@ export function Footer() {
             <div className="flex flex-col md:flex-row items-center gap-2 md:gap-4 text-sm text-muted-foreground">
               <p>© {new Date().getFullYear()} ZeeQue Preschool. All rights reserved.</p>
               <div className="hidden md:block">•</div>
-              <Link to="/#faq" className="hover:text-primary transition-colors duration-200">
+              <Link to="/guidelines" className="hover:text-primary transition-colors duration-200">
                 Privacy Policy
               </Link>
               <div className="hidden md:block">•</div>
-              <Link to="/#faq" className="hover:text-primary transition-colors duration-200">
+              <Link to="/guidelines" className="hover:text-primary transition-colors duration-200">
                 Terms of Service
               </Link>
             </div>

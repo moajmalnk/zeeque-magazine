@@ -28,7 +28,9 @@ import {
   PopoverContent,
   PopoverTrigger,
 } from "@/components/ui/popover";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import schoolsData from '@/data/schools.json';
+import { Skeleton } from '@/components/ui/skeleton';
 
 const SchoolSelector = ({
   value,
@@ -74,7 +76,7 @@ const SchoolSelector = ({
       <PopoverContent className="w-[--radix-popover-trigger-width] p-0 shadow-xl border-slate-200 dark:border-slate-800 rounded-xl overflow-hidden" align="start">
         <Command className="bg-white dark:bg-slate-950">
           <div className="flex items-center p-2 border-b border-slate-100 dark:border-slate-800">
-            <Search className="mr-2 h-4 w-4 shrink-0 opacity-50 absolute left-4 z-10" />
+            <Search className="mr-2 h-4 w-4 shrink-0 text-slate-400 dark:text-slate-500 absolute left-4 z-10" />
             <CommandPrimitive.Input
               placeholder="Search school name or code..."
               className="flex h-10 w-full rounded-xl bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-800 py-3 pl-9 pr-3 text-sm outline-none placeholder:text-muted-foreground disabled:cursor-not-allowed disabled:opacity-50 focus:ring-2 focus:ring-primary/20 transition-all"
@@ -131,7 +133,7 @@ const submitSchema = z.object({
   phoneNumber: z.string().optional(),
   title: z.string().min(1, "Give it a title!").max(100),
   category: z.enum(['stories', 'poems', 'drawings', 'news', 'video', 'other']),
-  content: z.string().min(10, "Write a little bit more!").max(2000),
+  content: z.string().min(20, "Write a little bit more! Your story is worth it!").max(2000),
   videoUrl: z.string().url("Needs to be a valid link").optional().or(z.literal('')),
 });
 
@@ -172,7 +174,7 @@ const ProgressStars = ({ step, total }: { step: number, total: number }) => (
 
 export function SubmitForm() {
   const { addPost } = usePosts();
-  const { role, username, school_name } = useAuth();
+  const { role, username, school_name, teacher_name, phone_number, email, isAuthenticated, isLoading: isAuthLoading } = useAuth();
   const [selectedImage, setSelectedImage] = useState<File | null>(null);
   const [imagePreview, setImagePreview] = useState<string | null>(null);
   const [selectedVideo, setSelectedVideo] = useState<File | null>(null);
@@ -188,7 +190,7 @@ export function SubmitForm() {
   const [userType, setUserType] = useState<'student' | 'teacher' | 'parent' | null>(null);
   const [isZeeQue, setIsZeeQue] = useState<boolean | null>(null);
 
-  const isTeacher = role === 'TEACHER' || role === 'ADMIN';
+  const isTeacher = ['TEACHER', 'ADMIN', 'EDITORIAL', 'SCHOOL'].includes(role || '');
 
   const form = useForm<SubmitFormData>({
     resolver: zodResolver(submitSchema),
@@ -205,13 +207,34 @@ export function SubmitForm() {
     },
   });
 
-  // Pre-fill for teachers
+  // Pre-fill and Auto-Skip Logic for Authenticated Users
   useEffect(() => {
-    if (isTeacher) {
-      if (username) form.setValue('teacherName', username);
-      if (school_name) form.setValue('schoolName', school_name);
+    if (isAuthenticated && !isAuthLoading) {
+      // 1. Force Role/Identity status
+      setIsZeeQue(true);
+      if (role === 'STUDENT') setUserType('student');
+      else if (['TEACHER', 'ADMIN', 'EDITORIAL', 'SCHOOL'].includes(role || '')) setUserType('teacher');
+      else if (role === 'PARENT') setUserType('parent');
+
+      // 2. Pre-fill form values
+      if (username) form.setValue('authorName', username || '');
+      if (school_name) form.setValue('schoolName', school_name || '');
+
+      if (['TEACHER', 'ADMIN'].includes(role || '')) {
+        form.setValue('teacherName', username || '');
+      } else if (teacher_name) {
+        form.setValue('teacherName', teacher_name);
+      }
+
+      if (email) form.setValue('email', email || '');
+      if (phone_number) form.setValue('phoneNumber', phone_number || '');
+
+      // 3. SECURE JUMP: Always ensure authenticated users are at least on Step 3
+      if (currentStep < 3) {
+        setCurrentStep(3);
+      }
     }
-  }, [isTeacher, username, school_name, form]);
+  }, [isAuthenticated, isAuthLoading, role, username, school_name, teacher_name, phone_number, email, form, currentStep]);
 
   // --- PERSISTENCE LOGIC ---
   const STORAGE_KEY = 'zeeque_submit_form_state';
@@ -223,11 +246,17 @@ export function SubmitForm() {
       try {
         const parsed = JSON.parse(savedData);
         // Only restore if valid
-        if (parsed.step) setCurrentStep(parsed.step);
+        if (parsed.step) {
+          // If authenticated, we MUST be at least on step 3. 
+          if (isAuthenticated && parsed.step < 3) {
+            setCurrentStep(3);
+          } else {
+            setCurrentStep(parsed.step);
+          }
+        }
         if (parsed.userType) setUserType(parsed.userType);
         if (parsed.isZeeQue !== undefined) setIsZeeQue(parsed.isZeeQue);
         if (parsed.formData) {
-          // Merge saved data with current form values (to keep defaults if missing)
           const currentValues = form.getValues();
           form.reset({ ...currentValues, ...parsed.formData });
         }
@@ -236,7 +265,8 @@ export function SubmitForm() {
         console.error("Error restoring form state:", error);
       }
     }
-  }, []);
+  }, [isAuthenticated]); // Sync with auth state 
+
 
   // 2. Save data on change
   useEffect(() => {
@@ -348,6 +378,13 @@ export function SubmitForm() {
   };
 
   const handleBack = () => {
+    // If authenticated, don't let them go back to role/identity steps
+    if (isAuthenticated) {
+      if (currentStep <= 3) return;
+      setCurrentStep((prev) => Math.max(prev - 1, 3));
+      return;
+    }
+
     if (currentStep === 1) {
       if (userType) {
         setUserType(null); // Go back to role selection
@@ -455,6 +492,15 @@ export function SubmitForm() {
     }
   };
 
+  if (isAuthLoading) {
+    return (
+      <div className="flex flex-col items-center justify-center py-20">
+        <Skeleton className="w-16 h-16 rounded-full mb-4" />
+        <Skeleton className="h-4 w-32" />
+      </div>
+    );
+  }
+
   if (isSuccess) {
     return (
       <div className="flex flex-col items-center justify-center py-12 text-center animate-in zoom-in-50 duration-500 px-4">
@@ -478,7 +524,10 @@ export function SubmitForm() {
 
   return (
     <div className="w-full max-w-md md:max-w-2xl mx-auto px-4 md:px-0">
-      <ProgressStars step={currentStep} total={TOTAL_STEPS} />
+      <ProgressStars
+        step={(isAuthenticated && !isAuthLoading) ? currentStep - 2 : currentStep}
+        total={(isAuthenticated && !isAuthLoading) ? TOTAL_STEPS - 2 : TOTAL_STEPS}
+      />
 
       <GuideMascot
         mood={currentStep === TOTAL_STEPS ? 'excited' : 'happy'}
@@ -728,16 +777,16 @@ export function SubmitForm() {
                         {form.formState.errors.content ? (
                           <p className="text-red-500 font-bold">⚠️ {form.formState.errors.content.message}</p>
                         ) : (
-                          (form.watch('content')?.length || 0) < 10 && (
+                          (form.watch('content')?.length || 0) < 20 && (
                             <p className="text-amber-500 font-medium text-xs animate-pulse">
-                              Just {10 - (form.watch('content')?.length || 0)} more letters to go... ✍️
+                              Just {20 - (form.watch('content')?.length || 0)} more letters to go... ✍️
                             </p>
                           )
                         )}
                       </div>
                       <div className={cn(
                         "text-xs font-mono font-medium px-2 py-1 rounded-full border",
-                        (form.watch('content')?.length || 0) >= 10
+                        (form.watch('content')?.length || 0) >= 20
                           ? "text-slate-500 bg-slate-100 border-slate-200 dark:bg-slate-800 dark:text-slate-400 dark:border-slate-700"
                           : "text-amber-600 bg-amber-50 border-amber-200 dark:bg-amber-900/20 dark:text-amber-400 dark:border-amber-900/50"
                       )}>
@@ -753,24 +802,67 @@ export function SubmitForm() {
             {currentStep === 5 && (
               <div className="space-y-5 animate-in slide-in-from-right duration-500">
                 {form.watch('category') === 'video' ? (
-                  <div className="space-y-4">
-                    <div className="bg-slate-50 dark:bg-slate-900 p-4 rounded-2xl border border-slate-100 dark:border-slate-800">
-                      <Label className="text-base font-bold mb-2 block dark:text-slate-200">Video Link 🔗</Label>
-                      <Input
-                        {...form.register('videoUrl')}
-                        placeholder="https://youtube.com/..."
-                        className="h-11 text-base rounded-xl bg-background dark:bg-slate-800 dark:border-slate-700 dark:text-white"
-                      />
-                    </div>
-                    <div className="relative border-2 border-dashed border-slate-200 dark:border-slate-700 rounded-2xl p-6 hover:bg-slate-50 dark:hover:bg-slate-800 transition-colors text-center cursor-pointer">
-                      <input type="file" onChange={handleVideoChange} accept="video/*" className="absolute inset-0 opacity-0 cursor-pointer" />
-                      <Video className="w-10 h-10 mx-auto text-slate-300 dark:text-slate-600 mb-2" />
-                      <p className="text-base font-bold text-slate-600 dark:text-slate-300">
-                        {selectedVideo ? "Video Selected! 🎥" : "Or Click to Upload Video"}
-                      </p>
-                      {selectedVideo && <p className="text-primary font-bold mt-1 text-sm">{selectedVideo.name}</p>}
-                    </div>
-                  </div>
+                  <Tabs defaultValue="link" onValueChange={(val) => {
+                    if (val === 'link') {
+                      setSelectedVideo(null);
+                      setVideoPreview(null);
+                    } else {
+                      form.setValue('videoUrl', '');
+                    }
+                  }} className="w-full animate-in slide-in-from-right duration-500">
+                    <TabsList className="grid w-full grid-cols-2 mb-6 h-12 p-1 bg-slate-100 dark:bg-slate-800 rounded-xl">
+                      <TabsTrigger value="link" className="rounded-lg text-base h-full data-[state=active]:bg-white data-[state=active]:text-primary data-[state=active]:shadow-sm transition-all">
+                        Share a Link 🔗
+                      </TabsTrigger>
+                      <TabsTrigger value="upload" className="rounded-lg text-base h-full data-[state=active]:bg-white data-[state=active]:text-primary data-[state=active]:shadow-sm transition-all">
+                        Upload File 🎥
+                      </TabsTrigger>
+                    </TabsList>
+
+                    <TabsContent value="link" className="mt-0 space-y-4">
+                      <div className="bg-slate-50 dark:bg-slate-900 p-6 rounded-2xl border border-slate-100 dark:border-slate-800">
+                        <Label className="text-base font-bold mb-3 block dark:text-slate-200">Paste your video link here:</Label>
+                        <Input
+                          {...form.register('videoUrl')}
+                          placeholder="https://youtube.com/..."
+                          className="h-12 text-base rounded-xl bg-background dark:bg-slate-800 dark:border-slate-700 dark:text-white border-2 focus:border-primary/50"
+                        />
+                        <p className="text-sm text-slate-500 mt-2 ml-1">Supports YouTube, Vimeo, etc.</p>
+                      </div>
+                    </TabsContent>
+
+                    <TabsContent value="upload" className="mt-0 space-y-4">
+                      <div className="relative border-2 border-dashed border-slate-200 dark:border-slate-700 rounded-2xl p-8 hover:bg-slate-50 dark:hover:bg-slate-800 transition-colors text-center cursor-pointer group">
+                        <input type="file" onChange={handleVideoChange} accept="video/*" className="absolute inset-0 opacity-0 cursor-pointer z-10" />
+                        <div className="w-16 h-16 bg-primary/10 rounded-full flex items-center justify-center mx-auto mb-4 group-hover:scale-110 transition-transform">
+                          <Video className="w-8 h-8 text-primary" />
+                        </div>
+                        <p className="text-lg font-bold text-slate-700 dark:text-slate-200 mb-1">
+                          {selectedVideo ? "Video Selected! 🎥" : "Click to Upload Video"}
+                        </p>
+                        <p className="text-sm text-slate-500 mb-4">Max size 100MB</p>
+
+                        {selectedVideo && (
+                          <div className="bg-primary/5 border border-primary/20 rounded-lg p-3 inline-flex items-center gap-2 max-w-full">
+                            <Check className="w-4 h-4 text-primary shrink-0" />
+                            <span className="text-primary font-medium truncate text-sm">{selectedVideo.name}</span>
+                            <button
+                              type="button"
+                              onClick={(e) => {
+                                e.stopPropagation(); // prevent triggering file input
+                                setSelectedVideo(null);
+                                setVideoPreview(null);
+                                // Reset the file input value if needed via ref but state clear is enough for logic
+                              }}
+                              className="ml-2 hover:bg-red-100 p-1 rounded-full text-red-500 transition-colors z-20"
+                            >
+                              <X className="w-4 h-4" />
+                            </button>
+                          </div>
+                        )}
+                      </div>
+                    </TabsContent>
+                  </Tabs>
                 ) : (
                   <div className="relative border-2 border-dashed border-slate-200 dark:border-slate-700 rounded-2xl p-8 hover:bg-slate-50 dark:hover:bg-slate-800 transition-colors text-center cursor-pointer group">
                     <input type="file" onChange={handleImageChange} accept="image/*" className="absolute inset-0 opacity-0 cursor-pointer" />
@@ -860,7 +952,9 @@ export function SubmitForm() {
       </Card>
 
       <div className="text-center mt-6 opacity-60">
-        <p className="font-bold text-slate-400 uppercase tracking-widest text-[10px]">Step {currentStep} of {TOTAL_STEPS}</p>
+        <p className="font-bold text-slate-400 uppercase tracking-widest text-[10px]">
+          Step {(isAuthenticated && !isAuthLoading) ? currentStep - 2 : currentStep} of {(isAuthenticated && !isAuthLoading) ? TOTAL_STEPS - 2 : TOTAL_STEPS}
+        </p>
       </div>
     </div>
   );

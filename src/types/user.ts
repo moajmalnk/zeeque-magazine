@@ -11,4 +11,10 @@ export interface User {
     date_joined: string;
     is_onboarded: boolean;
     is_active: boolean;
+    teacher_name?: string;
+    profile_image?: string;
+    bio?: string;
+    website?: string;
+    followers_count?: number;
+    following_count?: number;
 }
