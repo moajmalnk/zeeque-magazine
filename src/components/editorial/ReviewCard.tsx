@@ -691,6 +691,38 @@ export function ReviewCard({ post, onApprove, onReject, onRestore, onDelete, onE
         </DialogContent>
       </Dialog>
 
+      {/* Restore Confirmation Dialog */}
+      {onRestore && (
+        <AlertDialog open={showRestoreDialog} onOpenChange={setShowRestoreDialog}>
+          <AlertDialogContent className="z-[200]">
+            <AlertDialogHeader>
+              <AlertDialogTitle className="flex items-center gap-2 text-slate-700 dark:text-slate-200">
+                <RotateCcw className="w-5 h-5 text-slate-500" />
+                Restore this submission?
+              </AlertDialogTitle>
+              <AlertDialogDescription className="space-y-3 pt-2">
+                <span className="block text-base font-medium text-foreground">
+                  You are about to restore "{post.title}".
+                </span>
+                <div className="p-3 rounded-lg bg-blue-50 dark:bg-blue-950/20 border border-blue-100 dark:border-blue-900/50 text-sm text-blue-700 dark:text-blue-400">
+                  ℹ️ The post will be moved back to <strong>Pending</strong> and will require review before it can be published.
+                </div>
+              </AlertDialogDescription>
+            </AlertDialogHeader>
+            <AlertDialogFooter className="gap-2 sm:gap-0">
+              <AlertDialogCancel className="rounded-xl h-11">Cancel</AlertDialogCancel>
+              <AlertDialogAction
+                onClick={handleRestore}
+                className="bg-slate-700 hover:bg-slate-800 text-white rounded-xl h-11 px-6 shadow-md transition-all hover:scale-[1.02]"
+              >
+                <RotateCcw className="w-4 h-4 mr-2" />
+                Yes, Restore
+              </AlertDialogAction>
+            </AlertDialogFooter>
+          </AlertDialogContent>
+        </AlertDialog>
+      )}
+
       {/* Global Delete Confirmation Dialog - Works for all states */}
       <AlertDialog open={showDeleteDialog} onOpenChange={setShowDeleteDialog}>
         <AlertDialogContent className="z-[200]">
