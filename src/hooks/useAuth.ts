@@ -151,6 +151,20 @@ export function useAuth() {
     is_onboarded: authState.is_onboarded
   } : null;
 
+  const syncUser = useCallback((updatedUser: Partial<AuthState>) => {
+    const userData = localStorage.getItem(USER_KEY);
+    if (userData) {
+      const currentData = JSON.parse(userData);
+      const newData = { ...currentData, ...updatedUser };
+      localStorage.setItem(USER_KEY, JSON.stringify(newData));
+
+      setAuthState(prev => ({
+        ...prev,
+        ...updatedUser
+      }));
+    }
+  }, []);
+
   return {
     isAuthenticated: authState.isAuthenticated,
     user,
@@ -166,5 +180,6 @@ export function useAuth() {
     isLoading: authState.isLoading,
     login,
     logout,
+    syncUser,
   };
 }

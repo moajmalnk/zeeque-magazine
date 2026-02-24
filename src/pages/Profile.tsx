@@ -24,7 +24,7 @@ import {
 import { toast } from 'sonner';
 import api from '@/lib/api';
 import { useAuth } from '@/hooks/useAuth';
-import { cn } from '@/lib/utils';
+import { cn, getMediaUrl } from '@/lib/utils';
 import { Link, useNavigate } from 'react-router-dom';
 import { getRoleColor, isVerifiedRole } from '@/lib/roleUtils';
 import { getCategoryStyle } from '@/lib/categoryUtils';
@@ -138,7 +138,7 @@ function FollowButton({ userId, username, isFollowing: initialIsFollowing, onTog
 }
 
 export default function Profile() {
-    const { logout, isAuthenticated: isLoggedIn, isLoading } = useAuth();
+    const { logout, syncUser, isAuthenticated: isLoggedIn, isLoading } = useAuth();
     const navigate = useNavigate();
     const queryClient = useQueryClient();
     const { toggleShare } = usePosts();
@@ -234,11 +234,6 @@ export default function Profile() {
         }
     };
 
-    const getImageUrl = (url: string | null | undefined) => {
-        if (!url) return '';
-        if (typeof url !== 'string') return '';
-        return url;
-    };
 
     const getInitials = (name: string) => name.split(' ').map(n => n[0]).join('').substring(0, 2).toUpperCase();
 
@@ -359,8 +354,9 @@ export default function Profile() {
             });
             return response.data;
         },
-        onSuccess: () => {
+        onSuccess: (data) => {
             queryClient.invalidateQueries({ queryKey: ['me'] });
+            syncUser(data); // Immediately update local auth state
             setIsEditOpen(false);
             setProfileImage(null);
             setImagePreview(null);
@@ -544,7 +540,7 @@ export default function Profile() {
                                     <div className="w-32 h-32 rounded-2xl rotate-3 bg-background p-2 shadow-lg group-hover:rotate-0 transition-transform duration-300">
                                         <div className="w-full h-full rounded-xl overflow-hidden bg-muted">
                                             <Avatar className="w-full h-full rounded-none">
-                                                <AvatarImage src={user.profile_image} className="object-cover" />
+                                                <AvatarImage src={getMediaUrl(user.profile_image)} className="object-cover" />
                                                 <AvatarFallback className="text-4xl font-display font-bold bg-primary/10 text-primary">{user.username?.[0]?.toUpperCase()}</AvatarFallback>
                                             </Avatar>
                                         </div>
@@ -713,7 +709,7 @@ export default function Profile() {
                                                                 </div>
                                                             ) : (post.image_url || post.image) ? (
                                                                 <img
-                                                                    src={post.image_url || post.image}
+                                                                    src={getMediaUrl(post.image_url || post.image)}
                                                                     alt={post.title}
                                                                     className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-110"
                                                                 />

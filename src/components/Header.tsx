@@ -26,7 +26,7 @@ import {
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { isVerifiedRole, getRoleColor } from "@/lib/roleUtils";
 import { BadgeCheck } from 'lucide-react';
-import { cn } from '@/lib/utils';
+import { cn, getMediaUrl } from '@/lib/utils';
 
 // Floating Create Button Component (Portal)
 const FloatingCreateButton = () => {
@@ -126,22 +126,6 @@ const FloatingCreateButton = () => {
   );
 };
 
-const getImageUrl = (url: string | null) => {
-  if (!url) return '';
-  if (url.startsWith('http')) {
-    try {
-      const urlObj = new URL(url);
-      // If the backend returns an absolute URL (typical for DRF), 
-      // we point it to our local proxy to avoid CORS/port issues.
-      if (urlObj.port === '8000' || urlObj.hostname === '127.0.0.1' || urlObj.hostname === 'localhost') {
-        return urlObj.pathname;
-      }
-    } catch (e) {
-      return url;
-    }
-  }
-  return url;
-};
 
 // Text-Only "Morph" Tab Component
 const NavTab = ({
@@ -333,7 +317,7 @@ const NavItems = ({
                   "h-12 w-12 border-2 shadow-sm group-hover:scale-105 transition-transform",
                   getRoleColor(role).border
                 )}>
-                  <AvatarImage src={getImageUrl(profileImage)} alt={username || 'User'} className="object-cover" />
+                  <AvatarImage src={getMediaUrl(profileImage)} alt={username || 'User'} className="object-cover" />
                   <AvatarFallback className="bg-primary/10 text-primary font-bold">
                     {username?.[0]?.toUpperCase() || 'U'}
                   </AvatarFallback>
@@ -376,7 +360,7 @@ const NavItems = ({
                       "h-8 w-8 border-2 transition-transform group-hover:scale-105",
                       getRoleColor(role).border
                     )}>
-                      <AvatarImage src={getImageUrl(profileImage)} alt={username || 'User'} className="object-cover" />
+                      <AvatarImage src={getMediaUrl(profileImage)} alt={username || 'User'} className="object-cover" />
                       <AvatarFallback className="bg-gradient-to-br from-primary/20 to-primary/10 text-primary text-xs font-bold">
                         {username?.[0]?.toUpperCase() || 'U'}
                       </AvatarFallback>
