@@ -489,6 +489,34 @@ export function SubmitForm() {
     }
   };
 
+  const mascotMessage = useMemo(() => {
+    const name = form.watch('authorName') || username || '';
+    const firstName = name.split(' ')[0];
+    const cat = form.watch('category');
+
+    switch (currentStep) {
+      case 1:
+        if (isAuthenticated) return `Hi ${firstName}! Ready to share something amazing today?`;
+        return userType ? "Are you part of the ZeeQue family?" : "Hi! Let's get started. Who are you?";
+      case 2:
+        return `Nice to meet you, ${firstName}! Let's make sure we have your details correctly.`;
+      case 3:
+        if (isAuthenticated) return `Great to see you, ${firstName}! What kind of project are we working on today?`;
+        return "Excellent! Now, what kind of masterpiece are we sharing?";
+      case 4:
+        if (cat === 'stories') return "We're so excited to read your story! Share your wonderful imagination with us.";
+        if (cat === 'poems') return "A poem? How wonderful! Let's see those beautiful words.";
+        if (cat === 'drawings') return "A drawing! I bet it looks amazing. Tell me about it!";
+        if (cat === 'news') return "Extra! Extra! Tell us what's happening!";
+        if (cat === 'video') return "Lights, camera, action! Tell us about your video.";
+        return "Tell me all about your masterpiece!";
+      case 5:
+        return isTeacher ? "Almost there! Upload your class files here." : "Do you have a picture or video to show us?";
+      default:
+        return "Almost done! Ready to send it to the world?";
+    }
+  }, [currentStep, userType, username, isAuthenticated, isTeacher, form.watch('authorName'), form.watch('category')]);
+
   if (isAuthLoading) {
     return (
       <div className="flex flex-col items-center justify-center py-20">
@@ -528,14 +556,7 @@ export function SubmitForm() {
 
       <GuideMascot
         mood={currentStep === TOTAL_STEPS ? 'excited' : 'happy'}
-        message={
-          currentStep === 1 ? (userType ? "Are you part of the ZeeQue family?" : "Hi! Let's get started. Who are you?") :
-            currentStep === 2 ? "Nice to meet you! What's your name?" :
-              currentStep === 3 ? "Ooh, fun! What kind of art is this?" :
-                currentStep === 4 ? "Tell me all about your masterpiece!" :
-                  currentStep === 5 ? isTeacher ? "Upload the files here." : "Do you have a picture or video to show?" :
-                    "Almost done! Ready to send?"
-        }
+        message={mascotMessage}
       />
 
       <Card className="border-0 shadow-sm bg-white backdrop-blur-xl rounded-2xl overflow-visible dark:bg-slate-900/80 dark:border dark:border-slate-800">
