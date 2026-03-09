@@ -117,7 +117,7 @@ const VideoPlayer = ({ src, url, alwaysShowControls = false }: VideoPlayerProps)
           src={embedUrl}
           title="Video Preview"
           className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[130%] h-[130%] object-cover opacity-90 group-hover:opacity-100 transition-opacity pointer-events-none"
-          allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+          allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share; compute-pressure"
         />
         {/* Floating Mute / Unmute button — visible on hover (or always in full dialog) */}
         <button
@@ -410,7 +410,7 @@ export function ReviewCard({ post, onApprove, onReject, onRestore, onUnpublish, 
                             src={embedUrl}
                             title={post.title}
                             className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[130%] h-[130%] object-cover opacity-90 group-hover:opacity-100 transition-opacity"
-                            allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+                            allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share; compute-pressure"
                           />
                         </div>
                       ) : (

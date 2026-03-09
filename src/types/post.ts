@@ -10,6 +10,8 @@ export interface Post {
   author_role?: string; // Add this
   teacher_name: string;
   school_name: string;
+  school_code?: string;
+  phone_number?: string;
   title: string;
   category: Category;
   content: string;

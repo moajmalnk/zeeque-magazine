@@ -412,7 +412,7 @@ export function PostCard({ post, index = 0 }: PostCardProps) {
                 src={getVideoEmbedUrl(post.video_url) || ''}
                 className="w-full h-full pointer-events-none scale-150" // Scale up to hide controls slightly
                 title={post.title}
-                allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
+                allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share; compute-pressure"
                 allowFullScreen
               />
               {/* Overlay to catch clicks */}

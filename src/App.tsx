@@ -18,6 +18,8 @@ import Profile from "./pages/Profile";
 import PublicProfile from "./pages/PublicProfile";
 import NotFound from "./pages/NotFound";
 import Community from "./pages/Community";
+import PrivacyPolicy from "./pages/PrivacyPolicy";
+import TermsOfService from "./pages/TermsOfService";
 import { ProtectedRoute } from "./components/ProtectedRoute";
 import PWAManager from "./components/PWAManager";
 
@@ -41,6 +43,8 @@ const App = () => (
             <Route path="/" element={<Index />} />
             <Route path="/submit" element={<Submit />} />
             <Route path="/guidelines" element={<Guidelines />} />
+            <Route path="/privacy-policy" element={<PrivacyPolicy />} />
+            <Route path="/terms-of-service" element={<TermsOfService />} />
             <Route path="/all-creatives" element={<AllCreatives />} />
             <Route path="/login" element={<Login />} />
             <Route path="/signup" element={<Signup />} />

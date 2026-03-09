@@ -23,18 +23,31 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { isVerifiedRole, getRoleColor } from "@/lib/roleUtils";
 import { BadgeCheck } from 'lucide-react';
 import { cn, getMediaUrl } from '@/lib/utils';
 
 // Floating Create Button Component (Portal)
-const FloatingCreateButton = () => {
+const FloatingCreateButton = ({ isAuthenticated, onAuthRequired }: { isAuthenticated: boolean, onAuthRequired: () => void }) => {
   return createPortal(
     <Link
-      to="/submit"
+      to={isAuthenticated ? "/submit" : "#"}
       className="fixed bottom-[calc(24px+env(safe-area-inset-bottom))] right-6 z-50 group flex flex-col items-center justify-center p-4"
       title="Create New Post"
+      onClick={(e) => {
+        if (!isAuthenticated) {
+          e.preventDefault();
+          onAuthRequired();
+        }
+      }}
     >
       {/* Tooltip Label (Desktop) */}
       <span className="absolute right-full mr-2 top-1/2 -translate-y-1/2 px-4 py-2 bg-white/95 dark:bg-slate-900/95 text-foreground text-sm font-bold rounded-2xl shadow-xl border border-border/50 opacity-0 group-hover:opacity-100 transition-all duration-300 translate-x-4 group-hover:translate-x-0 whitespace-nowrap hidden md:block backdrop-blur-md pointer-events-none z-20">
@@ -203,7 +216,10 @@ const NavItems = ({
   role,
   username,
   email,
-  profileImage
+  profileImage,
+  theme,
+  setTheme,
+  mounted
 }: {
   mobile?: boolean;
   onItemClick?: () => void;
@@ -213,6 +229,9 @@ const NavItems = ({
   username: string | null;
   email: string | null;
   profileImage: string | null;
+  theme?: string;
+  setTheme?: (theme: string) => void;
+  mounted?: boolean;
 }) => {
   const location = useLocation();
   const { pathname } = location;
@@ -449,6 +468,7 @@ export function Header() {
   const [mounted, setMounted] = useState(false);
   const [logoError, setLogoError] = useState(false);
   const [mobileOpen, setMobileOpen] = useState(false);
+  const [authPromptOpen, setAuthPromptOpen] = useState(false);
 
   useEffect(() => {
     setMounted(true);
@@ -511,27 +531,25 @@ export function Header() {
           {/* Mobile Navigation */}
           <div className="flex md:hidden items-center gap-3">
             {/* Modern Glass Capsule */}
-            <div className="flex items-center gap-1 bg-background/40 backdrop-blur-md border border-border/50 rounded-full p-1 pl-2 shadow-sm">
-              <Button
-                variant="ghost"
-                size="icon"
-                className="h-9 w-9 rounded-full hover:bg-accent/50 transition-colors"
-                onClick={() => setTheme(theme === 'dark' ? 'light' : 'dark')}
-              >
-                <motion.div
-                  initial={false}
-                  animate={{ rotate: theme === 'dark' ? 90 : 0 }}
-                  transition={{ type: "spring", stiffness: 200, damping: 15 }}
-                >
-                  {mounted ? (
-                    theme === 'dark' ? (
-                      <Sun className="h-5 w-5 text-yellow-400 fill-yellow-400/20" />
-                    ) : (
-                      <Moon className="h-5 w-5 text-indigo-500 fill-indigo-500/20" />
-                    )
-                  ) : null}
-                </motion.div>
-              </Button>
+            <div className="flex items-center gap-1 bg-background/40 backdrop-blur-md border border-border/50 rounded-full p-1 pl-1.5 shadow-sm">
+
+              {isAuthenticated ? (
+                <Link to="/profile" className="rounded-full overflow-hidden hover:opacity-80 transition-opacity">
+                  <Avatar className={cn(
+                    "h-8 w-8 border transition-transform",
+                    getRoleColor(role).border
+                  )}>
+                    <AvatarImage src={getMediaUrl(profile_image)} alt={username || 'User'} className="object-cover" />
+                    <AvatarFallback className="bg-primary/10 text-primary text-[10px] font-bold">
+                      {username?.[0]?.toUpperCase() || 'U'}
+                    </AvatarFallback>
+                  </Avatar>
+                </Link>
+              ) : (
+                <Link to="/login" className="rounded-full p-1 bg-primary/10 text-primary hover:bg-primary/20 transition-colors">
+                  <UserCircle className="w-6 h-6" />
+                </Link>
+              )}
 
               <div className="w-px h-4 bg-border/50 mx-1" />
 
@@ -546,8 +564,31 @@ export function Header() {
                     <span className="sr-only">Toggle menu</span>
                   </Button>
                 </SheetTrigger>
-                <SheetContent side="right" className="w-[300px] sm:w-[400px] flex flex-col gap-6 pt-10">
-                  <SheetHeader className="text-left px-2">
+                <SheetContent side="right" className="w-[300px] sm:w-[400px] flex flex-col gap-6">
+                  {/* Theme Toggle in Mobile Sidebar (Same line as Menu & Close) */}
+                  <Button
+                    variant="ghost"
+                    size="icon"
+                    className="absolute right-14 top-6 h-9 w-9 rounded-full hover:bg-accent/50 transition-colors z-50"
+                    onClick={() => setTheme(theme === 'dark' ? 'light' : 'dark')}
+                    title={theme === 'dark' ? 'Switch to light mode' : 'Switch to dark mode'}
+                  >
+                    <motion.div
+                      initial={false}
+                      animate={{ rotate: theme === 'dark' ? 90 : 0 }}
+                      transition={{ type: "spring", stiffness: 200, damping: 15 }}
+                    >
+                      {mounted ? (
+                        theme === 'dark' ? (
+                          <Sun className="h-5 w-5 text-yellow-400 fill-yellow-400/20" />
+                        ) : (
+                          <Moon className="h-5 w-5 text-indigo-500 fill-indigo-500/20" />
+                        )
+                      ) : null}
+                    </motion.div>
+                  </Button>
+
+                  <SheetHeader className="text-left mt-1.5 h-6 flex justify-center">
                     <SheetTitle className="flex items-center gap-2">
                       <span className="font-display text-xl font-bold">Menu</span>
                     </SheetTitle>
@@ -562,6 +603,9 @@ export function Header() {
                       username={username}
                       email={email}
                       profileImage={profile_image}
+                      theme={theme}
+                      setTheme={setTheme}
+                      mounted={mounted}
                     />
                   </div>
                 </SheetContent>
@@ -572,7 +616,69 @@ export function Header() {
       </header>
 
       {/* Global Floating Create Button */}
-      <FloatingCreateButton />
+      <FloatingCreateButton
+        isAuthenticated={isAuthenticated}
+        onAuthRequired={() => setAuthPromptOpen(true)}
+      />
+
+      {/* Auth Prompt Dialog */}
+      <Dialog open={authPromptOpen} onOpenChange={setAuthPromptOpen}>
+        <DialogContent className="max-w-md w-full p-0 overflow-hidden bg-white dark:bg-black border-0 rounded-[2rem] shadow-2xl z-[200]">
+          <div className="relative h-48 w-full bg-gradient-to-br from-primary/20 to-primary/5 flex items-center justify-center overflow-hidden">
+            <div className="absolute inset-0 bg-[url('/grid.svg')] opacity-10" />
+
+            {/* Morphing Background shapes */}
+            <motion.div
+              animate={{ rotate: 360 }}
+              transition={{ duration: 20, repeat: Infinity, ease: "linear" }}
+              className="absolute -top-20 -right-20 w-40 h-40 bg-primary/30 blur-3xl rounded-full pointer-events-none"
+            />
+            <motion.div
+              animate={{ rotate: -360 }}
+              transition={{ duration: 15, repeat: Infinity, ease: "linear" }}
+              className="absolute -bottom-20 -left-20 w-40 h-40 bg-teal-400/20 blur-3xl rounded-full pointer-events-none"
+            />
+
+            {/* Mascot Image */}
+            <img
+              src="/images/mascot1.png"
+              alt="Join Community Mascot"
+              className="relative z-10 h-40 object-contain drop-shadow-2xl hover:scale-105 transition-transform duration-500"
+            />
+          </div>
+
+          <div className="p-8 space-y-6 text-center bg-white dark:bg-black">
+            <DialogHeader>
+              <DialogTitle className="text-2xl font-display font-black text-foreground">
+                Join to Create
+              </DialogTitle>
+              <DialogDescription className="text-sm text-foreground/70 leading-relaxed pt-2">
+                We'd love to see your ideas! Sign in or create an account to start publishing your posts, interacting with the community, and building your creative portfolio.
+              </DialogDescription>
+            </DialogHeader>
+
+            <div className="flex flex-col gap-3 pt-4">
+              <Button
+                onClick={() => { setAuthPromptOpen(false); navigate('/login'); }}
+                className="w-full h-12 rounded-xl font-bold bg-primary hover:bg-primary/90 text-white shadow-lg shadow-primary/20 transition-all hover:-translate-y-1"
+              >
+                Let's Log In <LogIn className="w-4 h-4 ml-2" />
+              </Button>
+              <Button
+                variant="outline"
+                onClick={() => { setAuthPromptOpen(false); navigate('/signup'); }}
+                className="w-full h-12 rounded-xl font-bold border-2 hover:bg-slate-50 dark:hover:bg-zinc-900 transition-all"
+              >
+                Create new account
+              </Button>
+            </div>
+
+            <p className="text-[10px] text-muted-foreground pt-4">
+              By joining, you agree to our Terms of Service & Privacy Policy.
+            </p>
+          </div>
+        </DialogContent>
+      </Dialog>
     </>
   );
 }

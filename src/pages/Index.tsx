@@ -156,7 +156,7 @@ const SharedPostCard = ({ post, onClick, isLatestSort = false, isFollowingSort =
               <iframe
                 src={getVideoEmbedUrl(post.video_url)}
                 className="min-w-[177.77vh] min-h-[100vh] w-auto h-auto absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 pointer-events-none scale-[0.6] md:scale-[0.8]" // Scale down slightly to fit card context better while maintaining cover
-                allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+                allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share; compute-pressure"
                 title={post.title}
                 tabIndex={-1}
               />

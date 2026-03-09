@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useMemo } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { Header } from '@/components/Header';
 import { Footer } from '@/components/Footer';
@@ -48,7 +48,11 @@ import {
 } from "@/components/ui/select";
 import { User } from '@/types/user';
 import api from '@/lib/api';
-import { UserPlus, Search, School, Phone, Mail, User as UserIcon, Trash2, Edit, Calendar, BadgeCheck, Eye, EyeOff, Hash, BookOpen, GraduationCap, Users as UsersIcon, Baby, Filter, Download, ChevronLeft, ChevronRight, ChevronsLeft, ChevronsRight, X, Globe, Zap, ShieldOff, ShieldCheck, SortAsc, ArrowUpDown, ListFilter, RotateCcw } from 'lucide-react';
+import { UserPlus, Search, School, Phone, Mail, User as UserIcon, Trash2, Edit, Calendar, BadgeCheck, Eye, EyeOff, Hash, BookOpen, GraduationCap, Users as UsersIcon, Baby, Filter, Download, ChevronLeft, ChevronRight, ChevronsLeft, ChevronsRight, X, Globe, Zap, ShieldOff, ShieldCheck, SortAsc, ArrowUpDown, ListFilter, RotateCcw, Check, ChevronsUpDown, PenLine } from 'lucide-react';
+import schoolsData from '@/data/schools.json';
+import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
+import { Command, CommandEmpty, CommandGroup, CommandInput, CommandItem, CommandList } from "@/components/ui/command";
+import { Command as CommandPrimitive } from "cmdk";
 import { toast } from 'sonner';
 import { getRoleColor, isVerifiedRole } from '@/lib/roleUtils';
 import { format } from 'date-fns';
@@ -107,6 +111,32 @@ export default function Users() {
     };
 
     const [formData, setFormData] = useState(initialFormState);
+    const [isManualSchoolMode, setIsManualSchoolMode] = useState(false);
+
+    // Sync manual mode when editing a school
+    useEffect(() => {
+        if (editingUser && activeTab === 'SCHOOL') {
+            const isKnown = schoolsData.some(s => s.code === editingUser.school_code);
+            setIsManualSchoolMode(!isKnown && !!editingUser.school_code);
+        } else if (editingUser) {
+            const isKnown = schoolsData.some(s => s.original_name === editingUser.school_name || s.code === editingUser.school_code);
+            setIsManualSchoolMode(!isKnown && !!editingUser.school_name);
+        } else {
+            setIsManualSchoolMode(false);
+        }
+    }, [editingUser, activeTab]);
+
+    const handleSchoolSelect = (schoolValue: string) => {
+        const school = schoolsData.find(s => s.value === schoolValue);
+        if (school) {
+            setFormData(prev => ({
+                ...prev,
+                ...(activeTab === 'SCHOOL' ? { username: school.original_name } : {}),
+                school_code: school.code,
+                school_name: school.original_name
+            }));
+        }
+    };
 
     const { data: usersData, isLoading, isFetching } = useQuery({
         queryKey: ['users', activeTab, statusFilter, sortBy, debouncedSearch, currentPage, pageSize],
@@ -785,8 +815,10 @@ export default function Users() {
             <Dialog open={isSheetOpen} onOpenChange={(open) => !open && closeSheet()}>
                 <DialogContent
                     noContentWrapper
+                    aria-describedby={undefined}
                     className="max-w-[1100px] w-[95vw] md:w-[95vw] h-[92vh] md:h-[80vh] p-0 border dark:border-white/10 rounded-[2.5rem] bg-white dark:bg-zinc-950 shadow-2xl overflow-y-auto md:overflow-hidden flex flex-col md:flex-row transition-all duration-500 z-[100] outline-none scrollbar-hide"
                 >
+                    <DialogTitle className="sr-only">Account Management</DialogTitle>
                     {/* Left Sidebar: Context Branding - Responsive Stacking */}
                     <div className="w-full md:w-[320px] bg-slate-50 dark:bg-zinc-900/50 p-8 flex flex-col items-center justify-center relative overflow-hidden shrink-0 border-b md:border-b-0 md:border-r border-border/40 min-h-[220px] md:min-h-0">
                         <div className="absolute inset-0 z-0">
@@ -825,21 +857,154 @@ export default function Users() {
                         <div className="flex-none md:flex-1 overflow-visible md:overflow-y-auto px-6 md:px-8 py-4 space-y-6 scrollbar-hide">
                             <form id="user-form" onSubmit={handleSubmit} className="space-y-6">
                                 <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                                    <div className="space-y-2">
-                                        <Label htmlFor="username" className="text-xs font-black uppercase tracking-widest ml-1 text-muted-foreground">Account Name</Label>
-                                        <div className="relative">
-                                            <UserIcon className="absolute left-4 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-                                            <Input
-                                                id="username"
-                                                name="username"
-                                                placeholder="Enter full name"
-                                                className="pl-11 h-12 rounded-2xl border-slate-200 dark:border-zinc-800 bg-slate-50/50 dark:bg-zinc-900/50 focus:ring-primary/20"
-                                                value={formData.username}
-                                                onChange={handleInputChange}
-                                                required
-                                            />
+                                    {activeTab === 'SCHOOL' && (
+                                        <div className="md:col-span-2 space-y-6 bg-slate-50/50 dark:bg-zinc-900/30 p-6 rounded-[2rem] border border-border/40 mb-2">
+                                            <div className="flex items-center justify-between px-1">
+                                                <div className="flex items-center gap-2">
+                                                    <School className="w-4 h-4 text-primary" />
+                                                    <Label className="text-[10px] font-black uppercase tracking-widest text-muted-foreground">Institutional Identity</Label>
+                                                </div>
+                                                {activeTab === 'SCHOOL' ? (
+                                                    <span className="text-[10px] bg-green-500/10 text-green-600 px-2 py-0.5 rounded-full border border-green-500/20 font-bold">Partner Only</span>
+                                                ) : (
+                                                    <button
+                                                        type="button"
+                                                        onClick={() => setIsManualSchoolMode(!isManualSchoolMode)}
+                                                        className="text-[10px] font-black uppercase tracking-tighter text-primary/60 hover:text-primary transition-colors flex items-center gap-1"
+                                                    >
+                                                        {isManualSchoolMode ? (
+                                                            <><GraduationCap className="w-3 h-3" /> Partner Network</>
+                                                        ) : (
+                                                            <><PenLine className="w-3 h-3" /> Type Manually</>
+                                                        )}
+                                                    </button>
+                                                )}
+                                            </div>
+
+                                            {isManualSchoolMode && activeTab !== 'SCHOOL' ? (
+                                                <div className="grid grid-cols-1 md:grid-cols-2 gap-6 animate-in fade-in slide-in-from-top-2 duration-300">
+                                                    <div className="space-y-2">
+                                                        <Label htmlFor="school_name_manual" className="text-xs font-black uppercase tracking-widest ml-1 text-muted-foreground">School Name</Label>
+                                                        <div className="relative">
+                                                            <School className="absolute left-4 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+                                                            <Input
+                                                                id="school_name_manual"
+                                                                name="school_name"
+                                                                placeholder="Enter school name"
+                                                                className="pl-11 h-12 rounded-2xl border-slate-200 dark:border-zinc-800 bg-white dark:bg-zinc-950 focus:ring-primary/20"
+                                                                value={formData.school_name}
+                                                                onChange={handleInputChange}
+                                                                required
+                                                            />
+                                                        </div>
+                                                    </div>
+                                                    <div className="space-y-2">
+                                                        <Label htmlFor="school_code_manual" className="text-xs font-black uppercase tracking-widest ml-1 text-muted-foreground">Institution Code (Optional)</Label>
+                                                        <div className="relative">
+                                                            <Hash className="absolute left-4 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+                                                            <Input
+                                                                id="school_code_manual"
+                                                                name="school_code"
+                                                                placeholder="e.g. SCH-001"
+                                                                className="pl-11 h-12 rounded-2xl border-slate-200 dark:border-zinc-800 bg-white dark:bg-zinc-950"
+                                                                value={formData.school_code}
+                                                                onChange={handleInputChange}
+                                                            />
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                            ) : (
+                                                <div className="space-y-4 animate-in fade-in slide-in-from-top-2 duration-300">
+                                                    <Label className="text-xs font-black uppercase tracking-widest ml-1 text-muted-foreground">Select School from Network</Label>
+                                                    <Popover>
+                                                        <PopoverTrigger asChild>
+                                                            <Button
+                                                                variant="outline"
+                                                                role="combobox"
+                                                                className="w-full justify-between h-14 rounded-2xl border-slate-200 dark:border-zinc-800 bg-white dark:bg-zinc-950 hover:bg-slate-50 dark:hover:bg-zinc-900 transition-all px-4"
+                                                            >
+                                                                <div className="flex items-center gap-3 overflow-hidden">
+                                                                    <div className="bg-primary/10 p-2 rounded-xl">
+                                                                        <School className="h-4 w-4 text-primary" />
+                                                                    </div>
+                                                                    <div className="flex flex-col items-start overflow-hidden">
+                                                                        <span className="font-bold text-sm truncate max-w-[200px] md:max-w-md">
+                                                                            {formData.school_name || "Select school institution..."}
+                                                                        </span>
+                                                                        {formData.school_code && (
+                                                                            <span className="text-[10px] font-mono text-muted-foreground uppercase">
+                                                                                Code: {formData.school_code}
+                                                                            </span>
+                                                                        )}
+                                                                    </div>
+                                                                </div>
+                                                                <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
+                                                            </Button>
+                                                        </PopoverTrigger>
+                                                        <PopoverContent className="w-[--radix-popover-trigger-width] p-0 shadow-2xl border-border rounded-3xl overflow-hidden z-[110]" align="start">
+                                                            <Command className="bg-white dark:bg-zinc-950">
+                                                                <div className="flex items-center p-3 border-b border-border/40">
+                                                                    <Search className="mr-2 h-4 w-4 shrink-0 opacity-50 absolute left-6 z-10" />
+                                                                    <CommandInput
+                                                                        placeholder="Search school name or code..."
+                                                                        className="flex h-11 w-full rounded-xl bg-slate-50 dark:bg-zinc-900 border-0 py-3 pl-10 pr-3 text-sm outline-none focus:ring-2 focus:ring-primary/20 transition-all"
+                                                                    />
+                                                                </div>
+                                                                <CommandList className="max-h-[300px] overflow-y-auto p-2">
+                                                                    <CommandEmpty className="py-6 text-center text-sm text-muted-foreground">
+                                                                        No school found.
+                                                                    </CommandEmpty>
+                                                                    <CommandGroup heading="Verified ZeeQue Institutions" className="px-1 text-slate-500 font-bold text-[10px] uppercase tracking-widest">
+                                                                        {schoolsData.map((school) => (
+                                                                            <CommandItem
+                                                                                key={school.value}
+                                                                                value={school.label}
+                                                                                onSelect={() => handleSchoolSelect(school.value)}
+                                                                                className="rounded-xl aria-selected:bg-slate-100 dark:aria-selected:bg-zinc-900 my-1 py-3 px-4 cursor-pointer transition-colors"
+                                                                            >
+                                                                                <Check
+                                                                                    className={cn(
+                                                                                        "mr-3 h-4 w-4 text-primary transition-opacity",
+                                                                                        formData.school_code === school.code ? "opacity-100" : "opacity-0"
+                                                                                    )}
+                                                                                />
+                                                                                <div className="flex flex-col">
+                                                                                    <span className="font-bold text-slate-700 dark:text-zinc-200 text-sm">
+                                                                                        {school.original_name}
+                                                                                    </span>
+                                                                                    <span className="text-[10px] text-muted-foreground font-mono mt-0.5 uppercase">
+                                                                                        Code: {school.code}
+                                                                                    </span>
+                                                                                </div>
+                                                                            </CommandItem>
+                                                                        ))}
+                                                                    </CommandGroup>
+                                                                </CommandList>
+                                                            </Command>
+                                                        </PopoverContent>
+                                                    </Popover>
+                                                </div>
+                                            )}
                                         </div>
-                                    </div>
+                                    )}
+
+                                    {activeTab !== 'SCHOOL' && (
+                                        <div className="space-y-2">
+                                            <Label htmlFor="username" className="text-xs font-black uppercase tracking-widest ml-1 text-muted-foreground">Account Name</Label>
+                                            <div className="relative">
+                                                <UserIcon className="absolute left-4 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+                                                <Input
+                                                    id="username"
+                                                    name="username"
+                                                    placeholder="Enter full name"
+                                                    className="pl-11 h-12 rounded-2xl border-slate-200 dark:border-zinc-800 bg-slate-50/50 dark:bg-zinc-900/50 focus:ring-primary/20"
+                                                    value={formData.username}
+                                                    onChange={handleInputChange}
+                                                    required
+                                                />
+                                            </div>
+                                        </div>
+                                    )}
 
                                     <div className="space-y-2">
                                         <Label htmlFor="email" className="text-xs font-black uppercase tracking-widest ml-1 text-muted-foreground">Email Address</Label>
@@ -857,24 +1022,6 @@ export default function Users() {
                                             />
                                         </div>
                                     </div>
-
-                                    {activeTab === 'SCHOOL' && (
-                                        <div className="space-y-2">
-                                            <Label htmlFor="school_code" className="text-xs font-black uppercase tracking-widest ml-1 text-muted-foreground">Institution Code</Label>
-                                            <div className="relative">
-                                                <Hash className="absolute left-4 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-                                                <Input
-                                                    id="school_code"
-                                                    name="school_code"
-                                                    placeholder="e.g. SCH-001"
-                                                    className="pl-11 h-12 rounded-2xl border-slate-200 dark:border-zinc-800 bg-slate-50/50 dark:bg-zinc-900/50"
-                                                    value={formData.school_code}
-                                                    onChange={handleInputChange}
-                                                    required
-                                                />
-                                            </div>
-                                        </div>
-                                    )}
 
                                     {['EDITORIAL', 'PARENT'].includes(activeTab) && (
                                         <div className="space-y-2">
@@ -896,14 +1043,14 @@ export default function Users() {
 
                                     <div className="space-y-2">
                                         <Label htmlFor="password" className="text-xs font-black uppercase tracking-widest ml-1 text-muted-foreground">
-                                            {editingUser ? 'Access Token (Optional)' : 'Access Token'}
+                                            {editingUser ? 'Change Password (Optional)' : 'Account Password'}
                                         </Label>
                                         <div className="relative">
                                             <Input
                                                 id="password"
                                                 name="password"
                                                 type={showPassword ? "text" : "password"}
-                                                placeholder={editingUser ? "Unchanged" : "••••••••"}
+                                                placeholder={editingUser ? "Leave empty to keep current" : "••••••••"}
                                                 className="h-12 rounded-2xl pr-12 border-slate-200 dark:border-zinc-800 bg-slate-50/50 dark:bg-zinc-900/50"
                                                 value={formData.password}
                                                 onChange={handleInputChange}
@@ -962,7 +1109,7 @@ export default function Users() {
                                 {(createUserMutation.isPending || updateUserMutation.isPending) && (
                                     <Skeleton className="mr-2 h-4 w-4 rounded-full bg-white/30" />
                                 )}
-                                {editingUser ? 'Save Changes' : 'Initialize Account'}
+                                {editingUser ? 'Save Changes' : 'Create Account'}
                             </Button>
                         </div>
                     </div>
@@ -1030,8 +1177,10 @@ export default function Users() {
             <Dialog open={!!viewingUser} onOpenChange={(open) => !open && setViewingUser(null)}>
                 <DialogContent
                     noContentWrapper
+                    aria-describedby={undefined}
                     className="max-w-[1100px] w-[95vw] md:w-[95vw] h-[92vh] md:h-[80vh] p-0 border dark:border-white/10 rounded-[2.5rem] bg-white dark:bg-zinc-950 shadow-2xl overflow-y-auto md:overflow-hidden flex flex-col md:flex-row transition-all duration-500 z-[250] outline-none scrollbar-hide"
                 >
+                    <DialogTitle className="sr-only">User Profile Details</DialogTitle>
                     {/* Left Sidebar: Identity & Branding - Responsive height */}
                     <div className="w-full md:w-[320px] bg-slate-50 dark:bg-zinc-900/50 p-8 flex flex-col items-center justify-center relative overflow-hidden shrink-0 border-b md:border-b-0 md:border-r border-border/40 min-h-[280px] md:min-h-0">
                         {/* Decorative Background Patterns */}
@@ -1130,7 +1279,7 @@ export default function Users() {
                                     {viewingUser?.role === 'SCHOOL' ? (
                                         <DetailItem label="Unique Institutional Code" value={viewingUser?.school_code} icon={Hash} />
                                     ) : (
-                                        <DetailItem label="Organization" value={viewingUser?.school_name || 'ZeeQue Editorial'} icon={School} />
+                                        <DetailItem label="Organization" value={viewingUser?.school_name || 'Pending Onboarding'} icon={School} />
                                     )}
 
                                     {viewingUser?.role === 'STUDENT' && (
@@ -1224,11 +1373,11 @@ export default function Users() {
                             >
                                 {viewingUser?.is_active ? (
                                     <>
-                                        <ShieldOff className="w-4 h-4 mr-2" /> Block Access
+                                        <ShieldOff className="w-4 h-4 mr-2" /> Suspend Account
                                     </>
                                 ) : (
                                     <>
-                                        <ShieldCheck className="w-4 h-4 mr-2" /> Restore Access
+                                        <ShieldCheck className="w-4 h-4 mr-2" /> Restore Account
                                     </>
                                 )}
                             </Button>
@@ -1241,7 +1390,7 @@ export default function Users() {
                                     }
                                 }}
                             >
-                                <Edit className="h-4 w-4 mr-2" /> Modify Access
+                                <Edit className="h-4 w-4 mr-2" /> Edit Account
                             </Button>
                         </div>
                     </div>

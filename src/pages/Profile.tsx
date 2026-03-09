@@ -703,7 +703,7 @@ export default function Profile() {
                                                                     <iframe
                                                                         src={getVideoEmbedUrl(post.video_url, true) || ''}
                                                                         className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[140%] h-[140%] object-cover opacity-90 group-hover:opacity-100 transition-opacity"
-                                                                        allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+                                                                        allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share; compute-pressure"
                                                                         title={post.title}
                                                                     />
                                                                 </div>
@@ -818,7 +818,7 @@ export default function Profile() {
                 }
             }
             }>
-                <DialogContent className="max-w-[90vw] md:max-w-md w-full p-0 overflow-hidden bg-white dark:bg-black border-0 rounded-[2rem] shadow-2xl z-[150]">
+                <DialogContent aria-describedby={undefined} className="max-w-[90vw] md:max-w-md w-full p-0 overflow-hidden bg-white dark:bg-black border-0 rounded-[2rem] shadow-2xl z-[150]">
                     <DialogHeader className="p-6 border-b border-slate-100 dark:border-zinc-800 bg-white/80 dark:bg-black/80 backdrop-blur-md">
                         <DialogTitle className="text-center font-display font-bold text-xl">Perfect Your Look</DialogTitle>
                     </DialogHeader>
@@ -878,10 +878,12 @@ export default function Profile() {
             {/* Edit Profile Dialog */}
             < Dialog open={isEditOpen} onOpenChange={setIsEditOpen} >
                 <DialogContent
+                    aria-describedby={undefined}
                     noContentWrapper
                     hideCloseButton
                     className="max-w-[1100px] w-[95vw] h-[90vh] md:h-[80vh] p-0 border-0 !rounded-[2rem] bg-white dark:bg-black shadow-2xl overflow-hidden z-[100] outline-none"
                 >
+                    <DialogTitle className="sr-only">Edit Profile</DialogTitle>
                     {/* Main Container: Single scroll on mobile, split columns on desktop */}
                     <div className="flex flex-col md:flex-row h-full overflow-y-auto md:overflow-hidden scrollbar-elegant">
                         {/* Left: Branding & Visual - Part of flow on mobile, fixed on desktop */}
@@ -1413,7 +1415,7 @@ export default function Profile() {
 
             {/* Followers / Following List Dialog */}
             <Dialog open={!!viewingList} onOpenChange={(open) => !open && setViewingList(null)}>
-                <DialogContent className="max-w-md w-full p-0 gap-0 overflow-hidden outline-none border-border bg-card rounded-2xl z-[200]">
+                <DialogContent aria-describedby={undefined} className="max-w-md w-full p-0 gap-0 overflow-hidden outline-none border-border bg-card rounded-2xl z-[200]">
                     <DialogTitle className="sr-only">List of {viewingList}</DialogTitle>
                     {/* Header */}
                     <div className="flex items-center justify-between p-4 border-b border-border bg-muted/5">

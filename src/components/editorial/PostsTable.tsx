@@ -418,7 +418,7 @@ export function PostsTable({
                           src={embedUrl}
                           title={post.title}
                           className="w-full h-full"
-                          allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+                          allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share; compute-pressure"
                           allowFullScreen
                         />
                       </div>

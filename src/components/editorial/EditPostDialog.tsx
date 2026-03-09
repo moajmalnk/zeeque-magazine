@@ -17,7 +17,7 @@ import {
 } from '@/components/ui/dialog';
 import { toast } from 'sonner';
 import { cn } from '@/lib/utils';
-import { Upload, X, ImageIcon, Video, Check, ChevronsUpDown, Search, Sparkles, User, School, GraduationCap, PenLine, FileText, Link as LinkIcon, Grid3x3 } from 'lucide-react';
+import { Upload, X, ImageIcon, Video, Check, ChevronsUpDown, Search, Sparkles, User, School, GraduationCap, PenLine, FileText, Link as LinkIcon, Grid3x3, Hash, Phone } from 'lucide-react';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import {
   Command,
@@ -129,10 +129,12 @@ const SchoolSelector = ({
 const editPostSchema = z.object({
   authorName: z.string().min(1, "Please enter a name!").max(50, "Name is too long"),
   teacherName: z.string().optional().or(z.literal('')),
-  schoolName: z.string().min(1, "Please enter school name!").max(100, "School name is too long"),
+  schoolName: z.string().optional().or(z.literal('')),
+  phoneNumber: z.string().optional().or(z.literal('')),
   title: z.string().min(1, "Please enter a title!").max(100, "Title is too long"),
   category: z.enum(['stories', 'poems', 'drawings', 'news', 'video', 'other']),
   content: z.string().min(10, "Content must be at least 10 characters").max(2000, "Content is too long"),
+  schoolCode: z.string().optional().or(z.literal('')),
   videoUrl: z.union([
     z.string().url("Please enter a valid video URL"),
     z.literal(''),
@@ -151,12 +153,16 @@ interface EditPostDialogProps {
 }
 
 export function EditPostDialog({ post, open, onOpenChange, onSave }: EditPostDialogProps) {
+  const [isManualSchoolMode, setIsManualSchoolMode] = useState(false);
+
   const form = useForm<EditPostFormData>({
     resolver: zodResolver(editPostSchema),
     defaultValues: {
       authorName: post.author_name,
       teacherName: post.teacher_name || '',
       schoolName: post.school_name || '',
+      schoolCode: post.school_code || '',
+      phoneNumber: post.phone_number || '',
       title: post.title,
       category: post.category,
       content: post.content,
@@ -177,6 +183,8 @@ export function EditPostDialog({ post, open, onOpenChange, onSave }: EditPostDia
         authorName: post.author_name,
         teacherName: post.teacher_name || '',
         schoolName: post.school_name || '',
+        schoolCode: post.school_code || '',
+        phoneNumber: post.phone_number || '',
         title: post.title,
         category: post.category,
         content: post.content,
@@ -186,35 +194,61 @@ export function EditPostDialog({ post, open, onOpenChange, onSave }: EditPostDia
       setVideoPreview(null);
       setPreviewUrl(post.image_url || post.image || null);
       setMediaTab(post.video_file ? 'upload' : 'link');
+
+      // Initialize manual mode
+      const role = post.author_role?.toUpperCase();
+      if (role !== 'SCHOOL') {
+        const isKnown = schoolsData.some(s => s.original_name === post.school_name || s.code === post.school_code);
+        setIsManualSchoolMode(!isKnown && !!post.school_name);
+      } else {
+        setIsManualSchoolMode(false);
+      }
     }
   }, [open, post, form]);
 
   const selectedCategory = form.watch('category');
 
-  // --- Dynamic Labels Logic ---
-  const [isManualSchoolMode, setIsManualSchoolMode] = useState(() => {
-    // Default to manual mode if the school name doesn't match a known ZeeQue ID
-    return !schoolsData.some(s => s.value === post.school_name);
-  });
-
-  const labels = useMemo(() => {
+  const displayConfig = useMemo(() => {
+    const role = post.author_role?.toUpperCase();
+    const isSchool = role === 'SCHOOL';
+    const isTeacher = role === 'TEACHER' || role === 'ADMIN';
+    const isEditorial = role === 'EDITORIAL';
+    const isParent = role === 'PARENT';
     const isNews = selectedCategory === 'news';
-    const isTeacher = post.author_role?.toUpperCase() === 'TEACHER' || post.author_role?.toUpperCase() === 'ADMIN';
 
     return {
-      author: isNews ? "Reporter / Teacher Name 👋" : isTeacher ? "Teacher Name 👨‍🏫" : "Student Name 👋",
-      teacher: isTeacher ? "Assigned Classroom / Subject 🏫" : "Teacher Name 👨‍🏫",
-      school: "School Name 🏫",
-      title: isNews ? "Headline 📣" : selectedCategory === 'poems' ? "Poem Title ✨" : selectedCategory === 'drawings' ? "Artwork Title 🎨" : "Post Title ✏️",
-      content: isNews ? "News Story 📝" : selectedCategory === 'poems' ? "Your poem 📖" : selectedCategory === 'drawings' ? "About your artwork 🖌️" : "Post Content 📝",
+      showTeacher: !isSchool && !isEditorial && !isParent,
+      showAuthor: !isSchool,
+      showSchool: !isParent && !isEditorial,
+      showPhone: isParent,
+      isSchool,
+      isParent,
+      labels: {
+        author: isParent ? "Parent Name 👪" : isNews ? "Reporter Name 👋" : isTeacher ? "Teacher Name 👨‍🏫" : "Student Name 👋",
+        teacher: isTeacher ? "Assigned Classroom / Subject 🏫" : "Teacher Name 👨‍🏫",
+        school: isSchool ? "Identifying Institution 🏫" : "School Name 🏫",
+        title: isNews ? "Headline 📣" : selectedCategory === 'poems' ? "Poem Title ✨" : selectedCategory === 'drawings' ? "Artwork Title 🎨" : "Post Title ✏️",
+        content: isNews ? "News Story 📝" : selectedCategory === 'poems' ? "Your poem 📖" : selectedCategory === 'drawings' ? "About your artwork 🖌️" : "Post Content 📝",
+      },
+      icons: {
+        section: (isSchool || isParent) ? <School className="w-4 h-4 text-primary opacity-50" /> : <User className="w-4 h-4 text-primary opacity-50" />
+      }
     };
   }, [selectedCategory, post.author_role]);
 
   const onSubmit = (data: EditPostFormData) => {
+    // If it's a school account, the author name is the school name
+    let finalAuthorName = data.authorName;
+    if (displayConfig.isSchool) {
+      finalAuthorName = data.schoolName;
+    }
+
     const updates: any = {
-      author_name: data.authorName,
+      author_name: finalAuthorName,
       teacher_name: data.teacherName,
       school_name: data.schoolName,
+      school_code: data.schoolCode,
+      phone_number: data.phoneNumber,
       title: data.title,
       category: data.category,
       content: data.content,
@@ -263,11 +297,10 @@ export function EditPostDialog({ post, open, onOpenChange, onSave }: EditPostDia
       <DialogContent
         noContentWrapper
         hideCloseButton
+        aria-describedby={undefined}
         className="max-w-[1100px] w-[95vw] h-[85vh] md:h-[80vh] p-0 border-0 !rounded-[2rem] bg-white dark:bg-black shadow-2xl overflow-hidden flex flex-col z-[100] outline-none"
       >
-        <DialogTitle className="sr-only">Edit Post: {post.title}</DialogTitle>
-        <DialogDescription className="sr-only">Make changes to the selected creation.</DialogDescription>
-
+        <DialogTitle className="sr-only">Edit Creation</DialogTitle>
         <div className="flex flex-col md:flex-row h-full overflow-hidden">
           {/* Left: Branding & Preview (Mobile: Hidden or small) */}
           <div className={cn(
@@ -314,7 +347,9 @@ export function EditPostDialog({ post, open, onOpenChange, onSave }: EditPostDia
                   <PenLine className="w-5 h-5 text-primary" />
                   Edit Creation
                 </h3>
-                <p className="text-[10px] text-muted-foreground uppercase tracking-wider font-bold mt-0.5">Refining the Masterpiece</p>
+                <p className="text-[10px] text-muted-foreground uppercase tracking-wider font-bold mt-0.5">
+                  Refining the Masterpiece
+                </p>
               </div>
               <button
                 onClick={() => onOpenChange(false)}
@@ -327,83 +362,158 @@ export function EditPostDialog({ post, open, onOpenChange, onSave }: EditPostDia
             {/* Scrollable Form Body */}
             <div className="flex-1 overflow-y-auto p-6 md:p-8 space-y-8 scrollbar-elegant">
               <form id="edit-post-form" onSubmit={form.handleSubmit(onSubmit)} className="space-y-8 pb-4">
-                {/* Section 1: Identity */}
+                {/* Section 1: Identity & Origin */}
                 <div className="space-y-6">
-                  <div className="flex items-center gap-2 mb-2">
-                    <User className="w-4 h-4 text-primary opacity-50" />
-                    <span className="text-[10px] font-black uppercase tracking-widest text-muted-foreground">Identity & Origin</span>
-                  </div>
-
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                    <div className="space-y-2">
-                      <Label htmlFor="edit-authorName" className="text-sm font-bold text-slate-700 dark:text-slate-300 ml-1">
-                        {labels.author}
-                      </Label>
-                      <Input
-                        id="edit-authorName"
-                        {...form.register('authorName')}
-                        className="h-11 rounded-xl border-slate-200 dark:border-zinc-800 bg-slate-50/50 dark:bg-zinc-900/50 shadow-sm focus:ring-primary/20"
-                      />
-                      {form.formState.errors.authorName && (
-                        <p className="text-[10px] text-destructive font-bold ml-1">⚠️ {form.formState.errors.authorName.message}</p>
-                      )}
+                  <div className="flex items-center justify-between mb-2">
+                    <div className="flex items-center gap-2">
+                      {displayConfig.icons.section}
+                      <span className="text-[10px] font-black uppercase tracking-widest text-muted-foreground">Identity & Origin</span>
                     </div>
-
-                    <div className="space-y-2">
-                      <Label htmlFor="edit-teacherName" className="text-sm font-bold text-slate-700 dark:text-slate-300 ml-1">
-                        {labels.teacher}
-                      </Label>
-                      <Input
-                        id="edit-teacherName"
-                        placeholder="Name of teacher or classroom"
-                        {...form.register('teacherName')}
-                        className="h-11 rounded-xl border-slate-200 dark:border-zinc-800 bg-slate-50/50 dark:bg-zinc-900/50 shadow-sm focus:ring-primary/20"
-                      />
-                    </div>
-                  </div>
-
-                  <div className="space-y-4">
-                    <div className="flex items-center justify-between px-1">
-                      <Label className="text-sm font-bold text-slate-700 dark:text-slate-300">
-                        {labels.school}
-                      </Label>
+                    {displayConfig.isSchool ? (
+                      <span className="text-[10px] bg-green-500/10 text-green-600 px-2 py-0.5 rounded-full border border-green-500/20 font-bold">ZeeQue Partner Only</span>
+                    ) : (
                       <button
                         type="button"
                         onClick={() => setIsManualSchoolMode(!isManualSchoolMode)}
                         className="text-[10px] font-black uppercase tracking-tighter text-primary/60 hover:text-primary transition-colors flex items-center gap-1"
                       >
                         {isManualSchoolMode ? (
-                          <>
-                            <GraduationCap className="w-3 h-3" /> Select Partner School
-                          </>
+                          <><GraduationCap className="w-3 h-3" /> Partner Network</>
                         ) : (
-                          <>
-                            <PenLine className="w-3 h-3" /> Type Manually
-                          </>
+                          <><PenLine className="w-3 h-3" /> Type Manually</>
                         )}
                       </button>
+                    )}
+                  </div>
+
+                  <div className="flex flex-col gap-6">
+                    {/* Dynamic Layout: Adapts to show either 1 or 2 columns based on visibility */}
+                    <div className={cn(
+                      "grid gap-6",
+                      ((displayConfig.showTeacher && displayConfig.showAuthor) || (displayConfig.showAuthor && displayConfig.showPhone)) ? "grid-cols-1 md:grid-cols-2" : "grid-cols-1"
+                    )}>
+
+                      {/* School Field */}
+                      {displayConfig.showSchool && (
+                        <div className={cn(
+                          "space-y-4",
+                          displayConfig.isSchool ? "order-1 md:col-span-1" : "order-3 md:col-span-1"
+                        )}>
+                          <div className="relative px-1">
+                            <Label className="text-sm font-bold text-slate-700 dark:text-slate-300">
+                              {displayConfig.labels.school}
+                            </Label>
+                          </div>
+
+                          {isManualSchoolMode && !displayConfig.isSchool ? (
+                            <div className="grid grid-cols-1 md:grid-cols-2 gap-4 animate-in fade-in slide-in-from-top-2 duration-300">
+                              <div className="space-y-2">
+                                <Label className="text-[10px] uppercase font-bold text-muted-foreground ml-1">Manual School Name</Label>
+                                <div className="relative">
+                                  <School className="absolute left-4 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+                                  <Input
+                                    {...form.register('schoolName')}
+                                    placeholder="Enter school name"
+                                    className="pl-11 h-11 rounded-xl border-slate-200 dark:border-zinc-800 bg-white"
+                                  />
+                                </div>
+                              </div>
+                              <div className="space-y-2">
+                                <Label className="text-[10px] uppercase font-bold text-muted-foreground ml-1">Institution Code (Optional)</Label>
+                                <div className="relative">
+                                  <Hash className="absolute left-4 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+                                  <Input
+                                    {...form.register('schoolCode')}
+                                    placeholder="e.g. SCH-001"
+                                    className="pl-11 h-11 rounded-xl border-slate-200 dark:border-zinc-800 bg-white"
+                                  />
+                                </div>
+                              </div>
+                            </div>
+                          ) : (
+                            <div className="space-y-4 animate-in fade-in zoom-in-95 duration-300">
+                              <div className="flex items-center justify-between px-1">
+                                <span className="text-[10px] font-bold text-muted-foreground uppercase opacity-60">Verified Partner Selection</span>
+                                <Check className="w-3 h-3 text-green-500" />
+                              </div>
+                              <SchoolSelector
+                                value={schoolsData.find(s => s.original_name === form.watch('schoolName'))?.value || form.watch('schoolName')}
+                                onChange={(val) => {
+                                  const school = schoolsData.find(s => s.value === val);
+                                  if (school) {
+                                    form.setValue('schoolName', school.original_name);
+                                    form.setValue('schoolCode', school.code);
+                                  }
+                                }}
+                              />
+                              {displayConfig.isSchool && (
+                                <div className="flex items-center gap-2 px-3 py-2 bg-slate-50 dark:bg-zinc-900 border border-dashed border-slate-200 dark:border-zinc-800 rounded-xl">
+                                  <Hash className="w-3.5 h-3.5 text-primary" />
+                                  <span className="text-[10px] font-mono font-bold text-muted-foreground">INSTITUTION CODE: {form.watch('schoolCode') || 'PENDING SELECTION'}</span>
+                                </div>
+                              )}
+                            </div>
+                          )}
+
+                          {form.formState.errors.schoolName && (
+                            <p className="text-[10px] text-destructive font-bold ml-1 mt-1">⚠️ {form.formState.errors.schoolName.message}</p>
+                          )}
+                        </div>
+                      )}
                     </div>
 
-                    <div className="relative group">
-                      {isManualSchoolMode ? (
+                    {/* Author Name - Shown conditionally */}
+                    {displayConfig.showAuthor && (
+                      <div className={cn(
+                        "space-y-2",
+                        displayConfig.isSchool ? "order-2" : "order-1"
+                      )}>
+                        <Label htmlFor="edit-authorName" className="text-sm font-bold text-slate-700 dark:text-slate-300 ml-1">
+                          {displayConfig.labels.author}
+                        </Label>
+                        <Input
+                          id="edit-authorName"
+                          {...form.register('authorName')}
+                          className="h-11 rounded-xl border-slate-200 dark:border-zinc-800 bg-slate-50/50 dark:bg-zinc-900/50 shadow-sm focus:ring-primary/20 font-medium"
+                        />
+                        {form.formState.errors.authorName && (
+                          <p className="text-[10px] text-destructive font-bold ml-1">⚠️ {form.formState.errors.authorName.message}</p>
+                        )}
+                      </div>
+                    )}
+
+                    {/* Teacher/Classroom Field - Shown conditionally */}
+                    {displayConfig.showTeacher && (
+                      <div className="space-y-2 order-2">
+                        <Label htmlFor="edit-teacherName" className="text-sm font-bold text-slate-700 dark:text-slate-300 ml-1">
+                          {displayConfig.labels.teacher}
+                        </Label>
+                        <Input
+                          id="edit-teacherName"
+                          placeholder="Name of teacher or classroom"
+                          {...form.register('teacherName')}
+                          className="h-11 rounded-xl border-slate-200 dark:border-zinc-800 bg-slate-50/50 dark:bg-zinc-900/50 shadow-sm focus:ring-primary/20 font-medium"
+                        />
+                      </div>
+                    )}
+
+                    {/* Phone Number Field - Shown for Parents */}
+                    {displayConfig.showPhone && (
+                      <div className="space-y-2 order-2">
+                        <Label htmlFor="edit-phoneNumber" className="text-sm font-bold text-slate-700 dark:text-slate-300 ml-1">
+                          Parent Contact Number 📱
+                        </Label>
                         <div className="relative">
-                          <School className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400 group-focus-within:text-primary transition-colors z-10" />
+                          <Phone className="absolute left-4 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
                           <Input
-                            {...form.register('schoolName')}
-                            placeholder="Enter the school name manually..."
-                            className="h-11 pl-11 rounded-xl border-slate-200 dark:border-zinc-800 bg-slate-50/50 dark:bg-zinc-900/50 shadow-sm focus:ring-primary/20 transition-all"
+                            id="edit-phoneNumber"
+                            {...form.register('phoneNumber')}
+                            placeholder="e.g. 0123456789"
+                            className="pl-11 h-11 rounded-xl border-slate-200 dark:border-zinc-800 bg-slate-50/50 dark:bg-zinc-900/50 shadow-sm focus:ring-primary/20 font-medium"
                           />
                         </div>
-                      ) : (
-                        <SchoolSelector
-                          value={form.watch('schoolName')}
-                          onChange={(val) => form.setValue('schoolName', val)}
-                        />
-                      )}
-                      {form.formState.errors.schoolName && (
-                        <p className="text-[10px] text-destructive font-bold ml-1 mt-1">⚠️ {form.formState.errors.schoolName.message}</p>
-                      )}
-                    </div>
+                      </div>
+                    )}
                   </div>
                 </div>
 
@@ -441,12 +551,12 @@ export function EditPostDialog({ post, open, onOpenChange, onSave }: EditPostDia
                     {/* Title */}
                     <div className="space-y-2">
                       <Label htmlFor="edit-title" className="text-sm font-bold text-slate-700 dark:text-slate-300 ml-1">
-                        {labels.title}
+                        {displayConfig.labels.title}
                       </Label>
                       <Input
                         id="edit-title"
                         {...form.register('title')}
-                        className="h-11 rounded-xl border-slate-200 dark:border-zinc-800 bg-slate-50/50 dark:bg-zinc-900/50 shadow-sm focus:ring-primary/20"
+                        className="h-11 rounded-xl border-slate-200 dark:border-zinc-800 bg-slate-50/50 dark:bg-zinc-900/50 shadow-sm focus:ring-primary/20 font-medium"
                       />
                       {form.formState.errors.title && (
                         <p className="text-[10px] text-destructive font-bold ml-1">⚠️ {form.formState.errors.title.message}</p>
@@ -456,7 +566,7 @@ export function EditPostDialog({ post, open, onOpenChange, onSave }: EditPostDia
                     {/* Content */}
                     <div className="space-y-2">
                       <Label htmlFor="edit-content" className="text-sm font-bold text-slate-700 dark:text-slate-300 ml-1">
-                        {labels.content}
+                        {displayConfig.labels.content}
                       </Label>
                       <Textarea
                         id="edit-content"
@@ -575,7 +685,7 @@ export function EditPostDialog({ post, open, onOpenChange, onSave }: EditPostDia
                         <div className="flex-1 space-y-3">
                           <p className="text-[10px] text-muted-foreground leading-relaxed italic">Upload a high-quality thumbnail for {categoryLabels[selectedCategory]}. Landscape orientation works best.</p>
                           <div className="flex items-center gap-3">
-                            <Input
+                            <input
                               id="image-upload"
                               type="file"
                               accept="image/*"

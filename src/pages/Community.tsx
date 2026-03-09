@@ -316,7 +316,7 @@ export default function Community() {
                                     </div>
                                 ))}
                             </div>
-                        ) : (data?.pages[0].results.length === 0) ? (
+                        ) : (data?.pages.every(page => page.results.filter(u => u.id !== currentUser?.id).length === 0)) ? (
                             <div className="flex flex-col items-center justify-center py-24 text-center text-muted-foreground">
                                 <div className="bg-muted/30 dark:bg-muted/10 p-6 rounded-full mb-4">
                                     <Search className="w-8 h-8 opacity-50" />
@@ -326,15 +326,19 @@ export default function Community() {
                             </div>
                         ) : (
                             <div className="flex flex-col divide-y divide-border/10 dark:divide-white/5">
-                                {data?.pages.map((page, i) => (
-                                    <UserListPage
-                                        key={i}
-                                        results={page.results}
-                                        handleFollow={handleFollowToggle}
-                                        activeRoleColor={getButtonClasses(activeRole)}
-                                        isAuthenticated={!!currentUser}
-                                    />
-                                ))}
+                                {data?.pages.map((page, i) => {
+                                    const filteredResults = page.results.filter(u => u.id !== currentUser?.id);
+                                    if (filteredResults.length === 0) return null;
+                                    return (
+                                        <UserListPage
+                                            key={i}
+                                            results={filteredResults}
+                                            handleFollow={handleFollowToggle}
+                                            activeRoleColor={getButtonClasses(activeRole)}
+                                            isAuthenticated={!!currentUser}
+                                        />
+                                    );
+                                })}
                                 {hasNextPage && (
                                     <div className="flex justify-center pt-8 pb-4">
                                         <Button

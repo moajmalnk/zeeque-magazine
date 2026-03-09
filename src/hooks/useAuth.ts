@@ -35,8 +35,8 @@ export function useAuth() {
     isLoading: true,
   });
 
-  // Check for existing tokens on mount
-  useEffect(() => {
+  // Sync auth state across different useAuth instances on the same page
+  const loadAuth = useCallback(() => {
     const tokens = localStorage.getItem(AUTH_KEY);
     const userData = localStorage.getItem(USER_KEY);
 
@@ -56,23 +56,45 @@ export function useAuth() {
           is_onboarded: parsedUser.is_onboarded || false,
           isLoading: false,
         });
-
-        // Ensure tokens are attached to API
-        const { access } = JSON.parse(tokens);
       } catch {
-        // Corrupt data
         localStorage.removeItem(AUTH_KEY);
         localStorage.removeItem(USER_KEY);
-        setAuthState(prev => ({ ...prev, isLoading: false }));
+        setAuthState(prev => ({ ...prev, isLoading: false, isAuthenticated: false }));
       }
     } else {
-      setAuthState(prev => ({ ...prev, isLoading: false }));
+      setAuthState({
+        isAuthenticated: false,
+        id: null,
+        email: null,
+        role: null,
+        username: null,
+        school_name: null,
+        teacher_name: null,
+        phone_number: null,
+        profile_image: null,
+        is_onboarded: false,
+        isLoading: false,
+      });
     }
   }, []);
 
+  useEffect(() => {
+    loadAuth();
+
+    // Listen for custom event to sync state across hooks
+    const handleAuthChange = () => loadAuth();
+    window.addEventListener('zeeque_auth_changed', handleAuthChange);
+    // Also listen to cross-tab storage changes
+    window.addEventListener('storage', handleAuthChange);
+
+    return () => {
+      window.removeEventListener('zeeque_auth_changed', handleAuthChange);
+      window.removeEventListener('storage', handleAuthChange);
+    };
+  }, [loadAuth]);
+
   const login = useCallback(async (email: string, password: string): Promise<boolean> => {
     try {
-      // 1. Get Tokens
       const response = await api.post('/token/', {
         email,
         password
@@ -80,11 +102,9 @@ export function useAuth() {
 
       const { access, refresh, role, username, school_name, teacher_name, phone_number, is_onboarded, id, profile_image } = response.data;
 
-      // 2. Store Tokens & User Data
       localStorage.setItem(AUTH_KEY, JSON.stringify({ access, refresh }));
       localStorage.setItem(USER_KEY, JSON.stringify({ email, role, username, school_name, teacher_name, phone_number, is_onboarded, id, profile_image }));
 
-      // 3. Update State
       setAuthState({
         isAuthenticated: true,
         id: id,
@@ -99,6 +119,8 @@ export function useAuth() {
         isLoading: false,
       });
 
+      window.dispatchEvent(new Event('zeeque_auth_changed'));
+
       return true;
     } catch (error) {
       console.error('Login failed:', error);
@@ -107,19 +129,9 @@ export function useAuth() {
   }, []);
 
   const logout = useCallback(async () => {
-    // Blacklist the refresh token on the backend so it cannot be reused
-    try {
-      const tokenString = localStorage.getItem(AUTH_KEY);
-      if (tokenString) {
-        const { refresh } = JSON.parse(tokenString);
-        if (refresh) {
-          await api.post('/token/blacklist/', { refresh });
-        }
-      }
-    } catch {
-      // Silently ignore — we still clear the local session regardless
-    }
+    const tokenString = localStorage.getItem(AUTH_KEY);
 
+    // 1. Clear state and localStorage IMMEDIATELY synchronously
     localStorage.removeItem(AUTH_KEY);
     localStorage.removeItem(USER_KEY);
     delete api.defaults.headers.common['Authorization'];
@@ -137,6 +149,20 @@ export function useAuth() {
       is_onboarded: false,
       isLoading: false,
     });
+
+    window.dispatchEvent(new Event('zeeque_auth_changed'));
+
+    // 2. Blacklist token in the background asynchronously
+    try {
+      if (tokenString) {
+        const { refresh } = JSON.parse(tokenString);
+        if (refresh) {
+          await api.post('/token/blacklist/', { refresh });
+        }
+      }
+    } catch {
+      // Silently ignore
+    }
   }, []);
 
   const user = authState.isAuthenticated ? {

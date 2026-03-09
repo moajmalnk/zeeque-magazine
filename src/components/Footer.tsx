@@ -152,12 +152,12 @@ export function Footer() {
             {/* Copyright */}
             <div className="flex flex-col md:flex-row items-center gap-2 md:gap-4 text-sm text-muted-foreground">
               <p>© {new Date().getFullYear()} ZeeQue Preschool. All rights reserved.</p>
-              <div className="hidden md:block">•</div>
-              <Link to="/guidelines" className="hover:text-primary transition-colors duration-200">
+              <div className="hidden md:block text-primary/40">•</div>
+              <Link to="/privacy-policy" className="hover:text-primary transition-colors duration-300 relative after:absolute after:bottom-0 after:left-0 after:h-[1px] after:w-full after:origin-bottom-right after:scale-x-0 hover:after:origin-bottom-left hover:after:scale-x-100 after:transition-transform after:duration-300 after:bg-primary">
                 Privacy Policy
               </Link>
-              <div className="hidden md:block">•</div>
-              <Link to="/guidelines" className="hover:text-primary transition-colors duration-200">
+              <div className="hidden md:block text-primary/40">•</div>
+              <Link to="/terms-of-service" className="hover:text-primary transition-colors duration-300 relative after:absolute after:bottom-0 after:left-0 after:h-[1px] after:w-full after:origin-bottom-right after:scale-x-0 hover:after:origin-bottom-left hover:after:scale-x-100 after:transition-transform after:duration-300 after:bg-primary">
                 Terms of Service
               </Link>
             </div>
