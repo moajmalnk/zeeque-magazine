@@ -8,7 +8,8 @@ import { Dialog, DialogContent, DialogTitle, DialogDescription, DialogHeader, Di
 import { cn } from '@/lib/utils';
 import {
   X, Calendar, User, GraduationCap, School,
-  Heart, MessageCircle, Share2, Send, Volume2, VolumeX, Smile, Play, Pause, BadgeCheck, FileText
+  Heart, MessageCircle, Share2, Send, Volume2, VolumeX, Smile, Play, Pause, BadgeCheck, FileText,
+  MoreHorizontal, Pencil, Trash2, Check
 } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import { getRoleColor, isVerifiedRole } from '@/lib/roleUtils'; // Imported
@@ -20,6 +21,10 @@ import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import api from '@/lib/api';
 import { toast } from 'sonner';
 import { Skeleton } from "@/components/ui/skeleton";
+import { CommentItem } from "@/components/CommentItem";
+import {
+  DropdownMenu, DropdownMenuTrigger, DropdownMenuContent, DropdownMenuItem, DropdownMenuSeparator
+} from '@/components/ui/dropdown-menu';
 
 // Helper function to convert video URLs to embed format
 function getVideoEmbedUrl(url: string): string | null {
@@ -92,6 +97,13 @@ export function PostCard({ post, index = 0 }: PostCardProps) {
   // Interactions state
   const [isLiked, setIsLiked] = useState(post.is_liked_by_me || false);
   const [likeCount, setLikeCount] = useState(post.likes_count || 0);
+  const [shareCount, setShareCount] = useState(post.share_count || 0);
+  const [isShared, setIsShared] = useState(post.is_shared_by_me || false);
+  const [isSharing, setIsSharing] = useState(false);
+  const [isMuted, setIsMuted] = useState(true);
+  const [isDialogPlaying, setIsDialogPlaying] = useState(true);
+  const [isYoutubeMuted, setIsYoutubeMuted] = useState(true);
+  const [commentText, setCommentText] = useState("");
 
   // Sync state with props
   useEffect(() => {
@@ -101,8 +113,7 @@ export function PostCard({ post, index = 0 }: PostCardProps) {
     setIsShared(post.is_shared_by_me || false);
   }, [post.is_liked_by_me, post.likes_count, post.share_count, post.is_shared_by_me]);
 
-  // Comments Logic
-  const [commentText, setCommentText] = useState("");
+
   const { data: comments = [], isLoading: isCommentsLoading } = useQuery({
     queryKey: ['comments', post.id],
     enabled: isOpen && !!post.id,
@@ -128,7 +139,8 @@ export function PostCard({ post, index = 0 }: PostCardProps) {
           profile_image: user?.profile_image
         },
         created_at: new Date().toISOString(),
-        replies_count: 0
+        replies_count: 0,
+        is_owner: true
       };
       queryClient.setQueryData(['comments', post.id], (old: any) => {
         const list = old && old.results ? old.results : (old || []);
@@ -152,17 +164,10 @@ export function PostCard({ post, index = 0 }: PostCardProps) {
     commentMutation.mutate(commentText);
   };
 
-  // Share state
-  const [shareCount, setShareCount] = useState(post.share_count || 0);
-  const [isShared, setIsShared] = useState(post.is_shared_by_me || false);
-  const [isSharing, setIsSharing] = useState(false);
-
-  const [isMuted, setIsMuted] = useState(true);
-  const [isDialogPlaying, setIsDialogPlaying] = useState(true);
-  const [isYoutubeMuted, setIsYoutubeMuted] = useState(true); // YouTube starts muted due to autoplay policy
   const videoRef = useRef<HTMLVideoElement>(null);
   const dialogVideoRef = useRef<HTMLVideoElement>(null);
   const youtubeIframeRef = useRef<HTMLIFrameElement>(null);
+
 
   const handleAuthAction = (action: () => void) => {
     if (isLoggedIn) {
@@ -684,36 +689,13 @@ export function PostCard({ post, index = 0 }: PostCardProps) {
                   <div className="text-center py-8 text-muted-foreground italic text-sm">No comments yet.</div>
                 ) : (
                   comments.map((comment: any) => (
-                    <div key={comment.id} className="flex gap-3 group">
-                      <div className={cn(
-                        "w-7 h-7 rounded-full shrink-0 mt-1 overflow-hidden border-2",
-                        getRoleColor(comment.user?.role).border
-                      )}>
-                        {comment.user?.profile_image ? (
-                          <img src={getImageUrl(comment.user.profile_image)} alt={comment.user.username} className="w-full h-full object-cover" />
-                        ) : (
-                          <div className="w-full h-full flex items-center justify-center font-bold text-[10px] text-slate-500">{comment.user?.username?.[0]}</div>
-                        )}
-                      </div>
-                      <div className="text-sm flex-1">
-                        <span className="font-bold text-slate-900 dark:text-zinc-100 text-sm mr-2 cursor-pointer hover:opacity-70" onClick={() => {
-                          if (!isLoggedIn) {
-                            toast.error("Please log in to view profiles.");
-                            return;
-                          }
-                          navigate(`/profile/${comment.user.id}`)
-                        }}>
-                          {comment.user?.username || 'User'}
-                        </span>
-                        <span className="text-slate-700 dark:text-zinc-300 whitespace-pre-wrap break-words">
-                          {comment.content}
-                        </span>
-                        <div className="flex gap-3 mt-1 text-xs text-slate-400 font-medium">
-                          <span>{new Date(comment.created_at).toLocaleDateString()}</span>
-                          {/* <button className="font-bold text-slate-500 hover:text-slate-800 dark:hover:text-zinc-300">Reply</button> */}
-                        </div>
-                      </div>
-                    </div>
+                    <CommentItem
+                      key={comment.id}
+                      comment={comment}
+                      postId={post.id}
+                      getRoleColor={getRoleColor}
+                      getInitials={getInitials}
+                    />
                   ))
                 )}
               </div>

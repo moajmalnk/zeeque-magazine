@@ -4,6 +4,7 @@ import { useQuery, useMutation, useQueryClient, useInfiniteQuery } from '@tansta
 import { useParams, Link, useNavigate } from 'react-router-dom';
 import { useAuth } from '@/hooks/useAuth';
 import { Header } from '@/components/Header';
+import { CommentItem } from "@/components/CommentItem";
 import { Button } from '@/components/ui/button';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
@@ -915,29 +916,14 @@ export default function PublicProfile() {
                                     ) : (
                                         <div className="space-y-6">
                                             {comments.map((comment: any) => (
-                                                <div key={comment.id} className="flex gap-4 group animate-in fade-in slide-in-from-left-2 duration-300">
-                                                    <Link to={`/profile/${comment.user?.id}`} onClick={() => setSelectedPost(null)} className="shrink-0">
-                                                        <div className={cn(
-                                                            "w-10 h-10 rounded-xl overflow-hidden border-2 shadow-sm transition-transform hover:scale-105",
-                                                            getRoleColor(comment.user?.role).border
-                                                        )}>
-                                                            {comment.user?.profile_image ? (
-                                                                <img src={comment.user.profile_image} alt={comment.user.username} className="w-full h-full object-cover" />
-                                                            ) : (
-                                                                <div className="w-full h-full flex items-center justify-center font-bold text-xs bg-muted text-muted-foreground">{comment.user?.username?.[0]?.toUpperCase()}</div>
-                                                            )}
-                                                        </div>
-                                                    </Link>
-                                                    <div className="flex-1 space-y-1">
-                                                        <div className="flex items-center gap-2">
-                                                            <Link to={`/profile/${comment.user?.id}`} onClick={() => setSelectedPost(null)} className="font-bold text-sm text-foreground hover:text-primary transition-colors">
-                                                                {comment.user?.username}
-                                                            </Link>
-                                                            <span className="text-[10px] text-muted-foreground font-mono">{new Date(comment.created_at).toLocaleDateString()}</span>
-                                                        </div>
-                                                        <p className="text-sm text-foreground/80 leading-relaxed whitespace-pre-wrap">{comment.content}</p>
-                                                    </div>
-                                                </div>
+                                                <CommentItem
+                                                    key={comment.id}
+                                                    comment={comment}
+                                                    postId={selectedPost?.id || ''}
+                                                    variant="bubble"
+                                                    getRoleColor={getRoleColor}
+                                                    getInitials={(name) => name?.[0]?.toUpperCase() || 'U'}
+                                                />
                                             ))}
                                         </div>
                                     )}

@@ -5,6 +5,7 @@ import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
 import { Header } from '@/components/Header';
 import { Footer } from '@/components/Footer';
+import { CommentItem } from "@/components/CommentItem";
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -1334,25 +1335,14 @@ export default function Profile() {
                                     ) : (
                                         <div className="space-y-6">
                                             {comments.map((comment: any) => (
-                                                <div key={comment.id} className="flex gap-4 group animate-in fade-in slide-in-from-left-2 duration-300">
-                                                    <div className={cn(
-                                                        "w-10 h-10 rounded-xl shrink-0 overflow-hidden border-2 shadow-sm",
-                                                        getRoleColor(comment.user?.role).border
-                                                    )}>
-                                                        {comment.user?.profile_image ? (
-                                                            <img src={comment.user.profile_image} alt={comment.user.username} className="w-full h-full object-cover" />
-                                                        ) : (
-                                                            <div className="w-full h-full flex items-center justify-center font-bold text-xs bg-muted text-muted-foreground">{comment.user?.username?.[0]?.toUpperCase()}</div>
-                                                        )}
-                                                    </div>
-                                                    <div className="flex-1 space-y-1">
-                                                        <div className="flex items-center gap-2">
-                                                            <span className="font-bold text-sm text-foreground">{comment.user?.username}</span>
-                                                            <span className="text-[10px] text-muted-foreground font-mono">{new Date(comment.created_at).toLocaleDateString()}</span>
-                                                        </div>
-                                                        <p className="text-sm text-foreground/80 leading-relaxed whitespace-pre-wrap">{comment.content}</p>
-                                                    </div>
-                                                </div>
+                                                <CommentItem
+                                                    key={comment.id}
+                                                    comment={comment}
+                                                    postId={selectedPost?.id || ''}
+                                                    variant="bubble"
+                                                    getRoleColor={getRoleColor}
+                                                    getInitials={getInitials}
+                                                />
                                             ))}
                                         </div>
                                     )}

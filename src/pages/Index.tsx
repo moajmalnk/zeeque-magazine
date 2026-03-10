@@ -2,6 +2,7 @@ import { useState, useMemo, useEffect, useRef } from 'react';
 import { Link, useNavigate, useSearchParams } from 'react-router-dom';
 import { useAuth } from '@/hooks/useAuth';
 import { Header } from '@/components/Header';
+import { CommentItem } from "@/components/CommentItem";
 import { Footer } from '@/components/Footer';
 import { HeroSection } from '@/components/HeroSection';
 import { CategoryFilter } from '@/components/CategoryFilter';
@@ -647,24 +648,13 @@ const SharedPostDetail = ({ post, isOpen, onClose }: { post: Post | null, isOpen
                   <div className="text-center py-8 text-muted-foreground italic text-sm">No comments yet.</div>
                 ) : (
                   comments.map((comment: any) => (
-                    <div key={comment.id} className="flex gap-3 group">
-                      <Avatar className={cn(
-                        "w-8 h-8 shrink-0 border-2",
-                        getRoleColor(comment.user?.role).border
-                      )}>
-                        <AvatarImage src={getImageUrl(comment.user?.profile_image)} />
-                        <AvatarFallback className="text-[10px] bg-slate-100 dark:bg-zinc-800 text-slate-500">
-                          {getInitials(comment.user?.username || 'U')}
-                        </AvatarFallback>
-                      </Avatar>
-                      <div className="flex flex-col gap-1 flex-1">
-                        <div className="bg-slate-50 dark:bg-zinc-900 p-3 rounded-2xl rounded-tl-none">
-                          <span className="font-bold text-xs text-slate-900 dark:text-zinc-100 mb-0.5 block">{comment.user?.username}</span>
-                          <p className="text-xs text-slate-700 dark:text-zinc-300 leading-relaxed whitespace-pre-wrap">{comment.content}</p>
-                        </div>
-                        <span className="text-[9px] text-slate-400 ml-2">{new Intl.DateTimeFormat('en-US', { month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' }).format(new Date(comment.created_at))}</span>
-                      </div>
-                    </div>
+                    <CommentItem
+                      key={comment.id}
+                      comment={comment}
+                      postId={post.id}
+                      getRoleColor={getRoleColor}
+                      getInitials={getInitials}
+                    />
                   ))
                 )}
               </div>
