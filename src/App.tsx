@@ -5,6 +5,8 @@ import { ThemeProvider } from "next-themes";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Routes, Route } from "react-router-dom";
 import ScrollToTop from "@/components/ScrollToTop";
+import { AuthPromptProvider } from "./context/AuthPromptContext";
+import { AuthPromptDialog } from "./components/AuthPromptDialog";
 import Index from "./pages/Index";
 import Submit from "./pages/Submit";
 import Editorial from "./pages/Editorial";
@@ -29,56 +31,59 @@ const App = () => (
   <QueryClientProvider client={queryClient}>
     <ThemeProvider attribute="class" defaultTheme="dark" enableSystem={false}>
       <TooltipProvider>
-        <PWAManager />
-        <Toaster />
-        <Sonner
-          position="bottom-right"
-          toastOptions={{
-            className: 'rounded-2xl shadow-card border-0',
-          }}
-        />
-        <BrowserRouter>
-          <ScrollToTop />
-          <Routes>
-            <Route path="/" element={<Index />} />
-            <Route path="/submit" element={<Submit />} />
-            <Route path="/guidelines" element={<Guidelines />} />
-            <Route path="/privacy-policy" element={<PrivacyPolicy />} />
-            <Route path="/terms-of-service" element={<TermsOfService />} />
-            <Route path="/all-creatives" element={<AllCreatives />} />
-            <Route path="/login" element={<Login />} />
-            <Route path="/signup" element={<Signup />} />
-            <Route path="/onboarding" element={<Onboarding />} />
-            <Route
-              path="/profile"
-              element={
-                <ProtectedRoute>
-                  <Profile />
-                </ProtectedRoute>
-              }
-            />
-            <Route path="/profile/:userId" element={<PublicProfile />} />
-            <Route path="/community" element={<Community />} />
-            <Route
-              path="/editorial"
-              element={
-                <ProtectedRoute allowedRoles={['ADMIN', 'EDITORIAL']}>
-                  <Editorial />
-                </ProtectedRoute>
-              }
-            />
-            <Route
-              path="/users"
-              element={
-                <ProtectedRoute allowedRoles={['ADMIN']}>
-                  <Users />
-                </ProtectedRoute>
-              }
-            />
-            {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
-            <Route path="*" element={<NotFound />} />
-          </Routes>
-        </BrowserRouter>
+        <AuthPromptProvider>
+          <PWAManager />
+          <Toaster />
+          <Sonner
+            position="bottom-right"
+            toastOptions={{
+              className: 'rounded-2xl shadow-card border-0',
+            }}
+          />
+          <BrowserRouter>
+            <AuthPromptDialog />
+            <ScrollToTop />
+            <Routes>
+              <Route path="/" element={<Index />} />
+              <Route path="/submit" element={<Submit />} />
+              <Route path="/guidelines" element={<Guidelines />} />
+              <Route path="/privacy-policy" element={<PrivacyPolicy />} />
+              <Route path="/terms-of-service" element={<TermsOfService />} />
+              <Route path="/all-creatives" element={<AllCreatives />} />
+              <Route path="/login" element={<Login />} />
+              <Route path="/signup" element={<Signup />} />
+              <Route path="/onboarding" element={<Onboarding />} />
+              <Route
+                path="/profile"
+                element={
+                  <ProtectedRoute>
+                    <Profile />
+                  </ProtectedRoute>
+                }
+              />
+              <Route path="/profile/:userId" element={<PublicProfile />} />
+              <Route path="/community" element={<Community />} />
+              <Route
+                path="/editorial"
+                element={
+                  <ProtectedRoute allowedRoles={['ADMIN', 'EDITORIAL']}>
+                    <Editorial />
+                  </ProtectedRoute>
+                }
+              />
+              <Route
+                path="/users"
+                element={
+                  <ProtectedRoute allowedRoles={['ADMIN']}>
+                    <Users />
+                  </ProtectedRoute>
+                }
+              />
+              {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
+              <Route path="*" element={<NotFound />} />
+            </Routes>
+          </BrowserRouter>
+        </AuthPromptProvider>
       </TooltipProvider>
     </ThemeProvider>
   </QueryClientProvider>

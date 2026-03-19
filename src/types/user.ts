@@ -12,6 +12,10 @@ export interface User {
     is_onboarded: boolean;
     is_active: boolean;
     teacher_name?: string;
+    place?: string;
+    district?: string;
+    state?: string;
+    country?: string;
     profile_image?: string;
     bio?: string;
     website?: string;

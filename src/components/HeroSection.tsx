@@ -2,9 +2,14 @@ import { Button } from '@/components/ui/button';
 import { Link } from 'react-router-dom';
 import { Sparkles, PenLine, BookOpen, Star, Cloud, Palette, Music } from 'lucide-react';
 import { useEffect, useState } from 'react';
+import { useAuth } from '@/hooks/useAuth';
+import { useAuthPrompt } from '@/context/AuthPromptContext';
 
 export function HeroSection() {
   const [mounted, setMounted] = useState(false);
+
+  const { isAuthenticated } = useAuth();
+  const { openAuthPrompt } = useAuthPrompt();
 
   useEffect(() => {
     setMounted(true);
@@ -55,14 +60,27 @@ export function HeroSection() {
 
             <div className="flex flex-col sm:flex-row items-center gap-4 justify-center lg:justify-start pt-4 z-30 relative">
               <Button
-                asChild
+                asChild={isAuthenticated}
                 size="xl"
                 className="rounded-full px-8 py-7 text-xl font-bold bg-primary text-white shadow-[0_10px_20px_-5px_rgba(236,72,153,0.5)] hover:shadow-[0_15px_25px_-5px_rgba(236,72,153,0.6)] hover:-translate-y-1 hover:bg-primary transition-all duration-300 w-full sm:w-auto mt-2 border-0"
+                onClick={(e) => {
+                  if (!isAuthenticated) {
+                    e.preventDefault();
+                    openAuthPrompt();
+                  }
+                }}
               >
-                <Link to="/submit" className="flex items-center gap-3">
-                  <PenLine className="w-6 h-6" />
-                  Start Creating
-                </Link>
+                {isAuthenticated ? (
+                  <Link to="/submit" className="flex items-center gap-3">
+                    <PenLine className="w-6 h-6" />
+                    Start Creating
+                  </Link>
+                ) : (
+                  <span className="flex items-center gap-3 cursor-pointer">
+                    <PenLine className="w-6 h-6" />
+                    Start Creating
+                  </span>
+                )}
               </Button>
               <Button
                 asChild

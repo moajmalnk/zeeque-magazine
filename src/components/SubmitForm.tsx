@@ -29,99 +29,9 @@ import {
   PopoverTrigger,
 } from "@/components/ui/popover";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import schoolsData from '@/data/schools.json';
 import { Skeleton } from '@/components/ui/skeleton';
+import { SchoolSelector } from '@/components/SchoolSelector';
 
-const SchoolSelector = ({
-  value,
-  onChange
-}: {
-  value?: string;
-  onChange: (value: string) => void;
-}) => {
-  const [open, setOpen] = useState(false);
-  const schools = useMemo(() => schoolsData, []);
-
-  // Find the selected school object
-  const selectedSchool = useMemo(() => {
-    return schools.find((school) => school.value === value);
-  }, [value, schools]);
-
-  return (
-    <Popover open={open} onOpenChange={setOpen}>
-      <PopoverTrigger asChild>
-        <Button
-          variant="outline"
-          role="combobox"
-          aria-expanded={open}
-          className="w-full justify-between font-normal h-12 text-base rounded-xl border-slate-200 bg-background dark:bg-slate-900 dark:border-slate-700 dark:text-white hover:bg-slate-50 dark:hover:bg-slate-800 transition-colors shadow-sm"
-        >
-          <span className={cn("truncate flex items-center gap-2", !value && "text-muted-foreground")}>
-            {value ? (
-              <>
-                <span className="font-medium text-slate-700 dark:text-slate-200">{selectedSchool?.original_name}</span>
-                {selectedSchool?.code && (
-                  <span className="text-xs bg-slate-100 dark:bg-slate-800 text-slate-500 px-1.5 py-0.5 rounded-md font-mono border border-slate-200 dark:border-slate-700">
-                    {selectedSchool.code}
-                  </span>
-                )}
-              </>
-            ) : (
-              "Select your school..."
-            )}
-          </span>
-          <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-40" />
-        </Button>
-      </PopoverTrigger>
-      <PopoverContent className="w-[--radix-popover-trigger-width] p-0 shadow-xl border-slate-200 dark:border-slate-800 rounded-xl overflow-hidden" align="start">
-        <Command className="bg-white dark:bg-slate-950">
-          <div className="flex items-center p-2 border-b border-slate-100 dark:border-slate-800">
-            <Search className="mr-2 h-4 w-4 shrink-0 text-slate-400 dark:text-slate-500 absolute left-4 z-10" />
-            <CommandPrimitive.Input
-              placeholder="Search school name or code..."
-              className="flex h-10 w-full rounded-xl bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-800 py-3 pl-9 pr-3 text-sm outline-none placeholder:text-muted-foreground disabled:cursor-not-allowed disabled:opacity-50 focus:ring-2 focus:ring-primary/20 transition-all"
-            />
-          </div>
-          <CommandList className="max-h-[300px] overflow-y-auto custom-scrollbar p-1">
-            <CommandEmpty className="py-6 text-center text-sm text-muted-foreground">
-              No school found.
-            </CommandEmpty>
-            <CommandGroup heading="Suggestions" className="px-1 text-slate-500">
-              {schools.map((school) => (
-                <CommandItem
-                  key={school.value}
-                  value={school.label} // Search matches against the full label "Name (Code)"
-                  onSelect={() => {
-                    onChange(school.value);
-                    setOpen(false);
-                  }}
-                  className="rounded-lg aria-selected:bg-slate-100 dark:aria-selected:bg-slate-800 my-0.5 py-2.5 px-3 cursor-pointer transition-colors"
-                >
-                  <Check
-                    className={cn(
-                      "mr-3 h-4 w-4 text-primary transition-opacity",
-                      value === school.value ? "opacity-100" : "opacity-0"
-                    )}
-                  />
-                  <div className="flex flex-col">
-                    <span className="font-medium text-slate-700 dark:text-slate-200 text-sm">
-                      {school.original_name}
-                    </span>
-                    {school.code && (
-                      <span className="text-xs text-slate-400 font-mono mt-0.5">
-                        {school.code}
-                      </span>
-                    )}
-                  </div>
-                </CommandItem>
-              ))}
-            </CommandGroup>
-          </CommandList>
-        </Command>
-      </PopoverContent>
-    </Popover>
-  );
-};
 // --- Form Schema ---
 // Made teacher/school optional to prevent validation blocks on hidden fields.
 // We will handle required logic in the UI or backend if needed.
@@ -672,7 +582,9 @@ export function SubmitForm() {
                       <Label className="text-base md:text-lg font-bold text-slate-700 dark:text-slate-200">I Go To School At...</Label>
                       <SchoolSelector
                         value={form.watch('schoolName')}
-                        onChange={(val) => form.setValue('schoolName', val)}
+                        onChange={(val, schoolObj) => {
+                          form.setValue('schoolName', schoolObj ? schoolObj.original_name : val);
+                        }}
                       />
                       {form.formState.errors.schoolName && <p className="text-red-500 font-bold ml-2 text-sm">⚠️ {form.formState.errors.schoolName.message}</p>}
                     </div>

@@ -48,8 +48,8 @@ import {
 } from "@/components/ui/select";
 import { User } from '@/types/user';
 import api from '@/lib/api';
-import { UserPlus, Search, School, Phone, Mail, User as UserIcon, Trash2, Edit, Calendar, BadgeCheck, Eye, EyeOff, Hash, BookOpen, GraduationCap, Users as UsersIcon, Baby, Filter, Download, ChevronLeft, ChevronRight, ChevronsLeft, ChevronsRight, X, Globe, Zap, ShieldOff, ShieldCheck, SortAsc, ArrowUpDown, ListFilter, RotateCcw, Check, ChevronsUpDown, PenLine } from 'lucide-react';
-import schoolsData from '@/data/schools.json';
+import { SchoolSelector } from '@/components/SchoolSelector';
+import { useSchools } from '@/hooks/useSchools';
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { Command, CommandEmpty, CommandGroup, CommandInput, CommandItem, CommandList } from "@/components/ui/command";
 import { Command as CommandPrimitive } from "cmdk";
@@ -68,6 +68,38 @@ import {
 import { Skeleton } from "@/components/ui/skeleton";
 import { cn } from '@/lib/utils';
 import * as XLSX from 'xlsx';
+import { 
+    Download, 
+    UserPlus, 
+    School, 
+    BookOpen, 
+    GraduationCap, 
+    Users as UsersIcon, 
+    Baby, 
+    ListFilter, 
+    SortAsc, 
+    Search, 
+    X, 
+    RotateCcw, 
+    User as UserIcon, 
+    Hash, 
+    Phone, 
+    BadgeCheck, 
+    Edit, 
+    Trash2, 
+    ChevronsLeft, 
+    ChevronsRight, 
+    Zap, 
+    ShieldOff, 
+    ShieldCheck, 
+    Calendar, 
+    PenLine, 
+    Mail, 
+    Eye, 
+    EyeOff, 
+    Globe 
+} from 'lucide-react';
+
 
 export default function Users() {
     const [searchTerm, setSearchTerm] = useState('');
@@ -108,32 +140,41 @@ export default function Users() {
         phone_number: '',
         bio: '',
         website: '',
+        place: '',
+        district: '',
+        state: '',
+        country: '',
     };
 
     const [formData, setFormData] = useState(initialFormState);
     const [isManualSchoolMode, setIsManualSchoolMode] = useState(false);
 
+    const { data: schoolsData = [] } = useSchools();
+
     // Sync manual mode when editing a school
     useEffect(() => {
         if (editingUser && activeTab === 'SCHOOL') {
-            const isKnown = schoolsData.some(s => s.code === editingUser.school_code);
+            const isKnown = (schoolsData as any[]).some(s => s.school_code === editingUser.school_code);
             setIsManualSchoolMode(!isKnown && !!editingUser.school_code);
         } else if (editingUser) {
-            const isKnown = schoolsData.some(s => s.original_name === editingUser.school_name || s.code === editingUser.school_code);
+            const isKnown = (schoolsData as any[]).some(s => s.school_name === editingUser.school_name || s.school_code === editingUser.school_code);
             setIsManualSchoolMode(!isKnown && !!editingUser.school_name);
         } else {
             setIsManualSchoolMode(false);
         }
-    }, [editingUser, activeTab]);
+    }, [editingUser, activeTab, schoolsData]);
 
-    const handleSchoolSelect = (schoolValue: string) => {
-        const school = schoolsData.find(s => s.value === schoolValue);
+    const handleSchoolSelect = (schoolId: string, school: any) => {
         if (school) {
             setFormData(prev => ({
                 ...prev,
                 ...(activeTab === 'SCHOOL' ? { username: school.original_name } : {}),
+                school_name: school.original_name,
                 school_code: school.code,
-                school_name: school.original_name
+                place: school.place || prev.place,
+                district: school.district || prev.district,
+                state: school.state || prev.state,
+                country: school.country || prev.country
             }));
         }
     };
@@ -213,17 +254,18 @@ export default function Users() {
                 ["ZeeQue User Management Report"],
                 [`Role: ${activeTab}`, `Status: ${statusFilter}`, `Export Date: ${format(new Date(), 'yyyy-MM-dd HH:mm')}`],
                 [""], // Spacer
-                ['ID', 'Username', 'Email', 'Role', 'School / Organization', 'Registration Date', 'Account Status']
+                ['Name', 'Email', 'School Code', 'Place', 'District', 'State', 'Country', 'Status']
             ];
 
             const rowData = allResults.map(user => [
-                user.id,
-                user.username,
+                user.school_name || user.username || '-',
                 user.email,
-                user.role,
-                user.school_name || 'ZeeQue Member',
-                format(new Date(user.date_joined), 'yyyy-MM-dd HH:mm'),
-                user.is_active ? (user.is_onboarded ? 'Active' : 'Pending Onboarding') : 'Blocked'
+                user.school_code || '-',
+                user.place || '-',
+                user.district || '-',
+                user.state || '-',
+                user.country || '-',
+                user.is_active ? 'ACTIVE' : 'BLOCKED'
             ]);
 
             const fullData = [...reportMetadata, ...rowData];
@@ -234,19 +276,20 @@ export default function Users() {
 
             // Professional Styling - Column Widths
             const colWidths = [
-                { wch: 36 }, // ID (UUID length)
-                { wch: 20 }, // Username
+                { wch: 35 }, // Name
                 { wch: 30 }, // Email
-                { wch: 15 }, // Role
-                { wch: 35 }, // School
-                { wch: 20 }, // Registration Date
-                { wch: 20 }, // Status
+                { wch: 15 }, // School Code
+                { wch: 20 }, // Place
+                { wch: 20 }, // District
+                { wch: 15 }, // State
+                { wch: 15 }, // Country
+                { wch: 12 }, // Status
             ];
             ws['!cols'] = colWidths;
 
             // Merge cells for the title
             ws['!merges'] = [
-                { s: { r: 0, c: 0 }, e: { r: 0, c: 6 } } // Merge A1-G1
+                { s: { r: 0, c: 0 }, e: { r: 0, c: 7 } } // Merge A1-H1
             ];
 
             // Append Worksheet to Workbook
@@ -267,7 +310,9 @@ export default function Users() {
         mutationFn: async (newUser: any) => {
             const payload = { ...newUser, role: activeTab };
             if (!payload.username) {
-                payload.username = payload.email.split('@')[0];
+                payload.username = (activeTab === 'SCHOOL' && payload.school_name) 
+                    ? payload.school_name 
+                    : payload.email.split('@')[0];
             }
             // Skip onboarding for institutional accounts created by admin
             if (['SCHOOL', 'EDITORIAL'].includes(activeTab)) {
@@ -397,6 +442,10 @@ export default function Users() {
             phone_number: user.phone_number || '',
             bio: user.bio || '',
             website: user.website || '',
+            place: user.place || '',
+            district: user.district || '',
+            state: user.state || '',
+            country: user.country || '',
         });
         setIsSheetOpen(true);
     };
@@ -602,7 +651,15 @@ export default function Users() {
                                     <TableRow className="hover:bg-transparent border-b border-border/40">
                                         <TableHead className="pl-6 h-14">Name</TableHead>
                                         <TableHead>Email</TableHead>
-                                        {activeTab === 'SCHOOL' && <TableHead>School Code</TableHead>}
+                                        {activeTab === 'SCHOOL' && (
+                                            <>
+                                                <TableHead>School Code</TableHead>
+                                                <TableHead>Place</TableHead>
+                                                <TableHead>District</TableHead>
+                                                <TableHead className="hidden lg:table-cell">State</TableHead>
+                                                <TableHead className="hidden lg:table-cell">Country</TableHead>
+                                            </>
+                                        )}
                                         {['STUDENT', 'TEACHER', 'PARENT'].includes(activeTab) && <TableHead>School</TableHead>}
                                         {activeTab === 'STUDENT' && <TableHead>Teacher</TableHead>}
                                         {['EDITORIAL', 'TEACHER', 'PARENT'].includes(activeTab) && <TableHead>Phone</TableHead>}
@@ -650,16 +707,22 @@ export default function Users() {
                                             </TableCell>
                                             <TableCell>{user.email}</TableCell>
                                             {activeTab === 'SCHOOL' && (
-                                                <TableCell>
-                                                    {user.school_code ? (
-                                                        <div className="flex items-center gap-2">
-                                                            <Hash className="w-4 h-4 text-muted-foreground" />
-                                                            {user.school_code}
-                                                        </div>
-                                                    ) : (
-                                                        <span className="text-muted-foreground italic text-sm">-</span>
-                                                    )}
-                                                </TableCell>
+                                                <>
+                                                    <TableCell>
+                                                        {user.school_code ? (
+                                                            <div className="flex items-center gap-2">
+                                                                <Hash className="w-4 h-4 text-muted-foreground" />
+                                                                {user.school_code}
+                                                            </div>
+                                                        ) : (
+                                                            <span className="text-muted-foreground italic text-sm">-</span>
+                                                        )}
+                                                    </TableCell>
+                                                    <TableCell>{user.place || <span className="text-muted-foreground italic text-sm">-</span>}</TableCell>
+                                                    <TableCell>{user.district || <span className="text-muted-foreground italic text-sm">-</span>}</TableCell>
+                                                    <TableCell className="hidden lg:table-cell">{user.state || <span className="text-muted-foreground italic text-sm">-</span>}</TableCell>
+                                                    <TableCell className="hidden lg:table-cell">{user.country || <span className="text-muted-foreground italic text-sm">-</span>}</TableCell>
+                                                </>
                                             )}
                                             {['STUDENT', 'TEACHER', 'PARENT'].includes(activeTab) && (
                                                 <TableCell>
@@ -857,7 +920,7 @@ export default function Users() {
                         <div className="flex-none md:flex-1 overflow-visible md:overflow-y-auto px-6 md:px-8 py-4 space-y-6 scrollbar-hide">
                             <form id="user-form" onSubmit={handleSubmit} className="space-y-6">
                                 <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                                    {activeTab === 'SCHOOL' && (
+                                    {['SCHOOL', 'STUDENT', 'TEACHER', 'PARENT'].includes(activeTab) && (
                                         <div className="md:col-span-2 space-y-6 bg-slate-50/50 dark:bg-zinc-900/30 p-6 rounded-[2rem] border border-border/40 mb-2">
                                             <div className="flex items-center justify-between px-1">
                                                 <div className="flex items-center gap-2">
@@ -881,7 +944,7 @@ export default function Users() {
                                                 )}
                                             </div>
 
-                                            {isManualSchoolMode && activeTab !== 'SCHOOL' ? (
+                                            {activeTab === 'SCHOOL' || isManualSchoolMode ? (
                                                 <div className="grid grid-cols-1 md:grid-cols-2 gap-6 animate-in fade-in slide-in-from-top-2 duration-300">
                                                     <div className="space-y-2">
                                                         <Label htmlFor="school_name_manual" className="text-xs font-black uppercase tracking-widest ml-1 text-muted-foreground">School Name</Label>
@@ -899,90 +962,30 @@ export default function Users() {
                                                         </div>
                                                     </div>
                                                     <div className="space-y-2">
-                                                        <Label htmlFor="school_code_manual" className="text-xs font-black uppercase tracking-widest ml-1 text-muted-foreground">Institution Code (Optional)</Label>
+                                                        <Label htmlFor="school_code_manual" className="text-xs font-black uppercase tracking-widest ml-1 text-muted-foreground">
+                                                            Institution Code {activeTab === 'SCHOOL' && <span className="text-primary">*</span>}
+                                                        </Label>
                                                         <div className="relative">
                                                             <Hash className="absolute left-4 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
                                                             <Input
                                                                 id="school_code_manual"
                                                                 name="school_code"
-                                                                placeholder="e.g. SCH-001"
+                                                                placeholder={activeTab === 'SCHOOL' ? "e.g. ZQC26/186" : "e.g. SCH-001"}
                                                                 className="pl-11 h-12 rounded-2xl border-slate-200 dark:border-zinc-800 bg-white dark:bg-zinc-950"
                                                                 value={formData.school_code}
                                                                 onChange={handleInputChange}
+                                                                required={activeTab === 'SCHOOL'}
                                                             />
                                                         </div>
                                                     </div>
                                                 </div>
                                             ) : (
-                                                <div className="space-y-4 animate-in fade-in slide-in-from-top-2 duration-300">
-                                                    <Label className="text-xs font-black uppercase tracking-widest ml-1 text-muted-foreground">Select School from Network</Label>
-                                                    <Popover>
-                                                        <PopoverTrigger asChild>
-                                                            <Button
-                                                                variant="outline"
-                                                                role="combobox"
-                                                                className="w-full justify-between h-14 rounded-2xl border-slate-200 dark:border-zinc-800 bg-white dark:bg-zinc-950 hover:bg-slate-50 dark:hover:bg-zinc-900 transition-all px-4"
-                                                            >
-                                                                <div className="flex items-center gap-3 overflow-hidden">
-                                                                    <div className="bg-primary/10 p-2 rounded-xl">
-                                                                        <School className="h-4 w-4 text-primary" />
-                                                                    </div>
-                                                                    <div className="flex flex-col items-start overflow-hidden">
-                                                                        <span className="font-bold text-sm truncate max-w-[200px] md:max-w-md">
-                                                                            {formData.school_name || "Select school institution..."}
-                                                                        </span>
-                                                                        {formData.school_code && (
-                                                                            <span className="text-[10px] font-mono text-muted-foreground uppercase">
-                                                                                Code: {formData.school_code}
-                                                                            </span>
-                                                                        )}
-                                                                    </div>
-                                                                </div>
-                                                                <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
-                                                            </Button>
-                                                        </PopoverTrigger>
-                                                        <PopoverContent className="w-[--radix-popover-trigger-width] p-0 shadow-2xl border-border rounded-3xl overflow-hidden z-[110]" align="start">
-                                                            <Command className="bg-white dark:bg-zinc-950">
-                                                                <div className="flex items-center p-3 border-b border-border/40">
-                                                                    <Search className="mr-2 h-4 w-4 shrink-0 opacity-50 absolute left-6 z-10" />
-                                                                    <CommandInput
-                                                                        placeholder="Search school name or code..."
-                                                                        className="flex h-11 w-full rounded-xl bg-slate-50 dark:bg-zinc-900 border-0 py-3 pl-10 pr-3 text-sm outline-none focus:ring-2 focus:ring-primary/20 transition-all"
-                                                                    />
-                                                                </div>
-                                                                <CommandList className="max-h-[300px] overflow-y-auto p-2">
-                                                                    <CommandEmpty className="py-6 text-center text-sm text-muted-foreground">
-                                                                        No school found.
-                                                                    </CommandEmpty>
-                                                                    <CommandGroup heading="Verified ZeeQue Institutions" className="px-1 text-slate-500 font-bold text-[10px] uppercase tracking-widest">
-                                                                        {schoolsData.map((school) => (
-                                                                            <CommandItem
-                                                                                key={school.value}
-                                                                                value={school.label}
-                                                                                onSelect={() => handleSchoolSelect(school.value)}
-                                                                                className="rounded-xl aria-selected:bg-slate-100 dark:aria-selected:bg-zinc-900 my-1 py-3 px-4 cursor-pointer transition-colors"
-                                                                            >
-                                                                                <Check
-                                                                                    className={cn(
-                                                                                        "mr-3 h-4 w-4 text-primary transition-opacity",
-                                                                                        formData.school_code === school.code ? "opacity-100" : "opacity-0"
-                                                                                    )}
-                                                                                />
-                                                                                <div className="flex flex-col">
-                                                                                    <span className="font-bold text-slate-700 dark:text-zinc-200 text-sm">
-                                                                                        {school.original_name}
-                                                                                    </span>
-                                                                                    <span className="text-[10px] text-muted-foreground font-mono mt-0.5 uppercase">
-                                                                                        Code: {school.code}
-                                                                                    </span>
-                                                                                </div>
-                                                                            </CommandItem>
-                                                                        ))}
-                                                                    </CommandGroup>
-                                                                </CommandList>
-                                                            </Command>
-                                                        </PopoverContent>
-                                                    </Popover>
+                                                <div className="space-y-4 animate-in fade-in slide-in-from-top-2 duration-300 overflow-visible">
+                                                    <Label className="text-xs font-black uppercase tracking-widest ml-1 text-muted-foreground italic">Syncing Verified Network Institution</Label>
+                                                    <SchoolSelector
+                                                        value={formData.school_code}
+                                                        onChange={handleSchoolSelect}
+                                                    />
                                                 </div>
                                             )}
                                         </div>
@@ -1076,6 +1079,62 @@ export default function Users() {
                                                 placeholder="https://..."
                                                 className="pl-11 h-12 rounded-2xl border-slate-200 dark:border-zinc-800 bg-slate-50/50 dark:bg-zinc-900/50"
                                                 value={formData.website}
+                                                onChange={handleInputChange}
+                                            />
+                                        </div>
+                                    </div>
+
+                                    {/* Regional Details */}
+                                    <div className="md:col-span-2 grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 bg-slate-50/50 dark:bg-zinc-900/30 p-6 rounded-[2rem] border border-border/40">
+                                        <div className="md:col-span-2 lg:col-span-4 flex items-center gap-2 mb-2">
+                                            <Globe className="w-4 h-4 text-primary" />
+                                            <Label className="text-[10px] font-black uppercase tracking-widest text-muted-foreground">Location & Regional Details</Label>
+                                        </div>
+                                        
+                                        <div className="space-y-2">
+                                            <Label htmlFor="place" className="text-xs font-black uppercase tracking-widest ml-1 text-muted-foreground">Place / City</Label>
+                                            <Input
+                                                id="place"
+                                                name="place"
+                                                placeholder="e.g. Koduvally"
+                                                className="h-10 rounded-xl border-slate-200 dark:border-zinc-800 bg-white dark:bg-zinc-950 px-4"
+                                                value={formData.place}
+                                                onChange={handleInputChange}
+                                            />
+                                        </div>
+                                        
+                                        <div className="space-y-2">
+                                            <Label htmlFor="district" className="text-xs font-black uppercase tracking-widest ml-1 text-muted-foreground">District</Label>
+                                            <Input
+                                                id="district"
+                                                name="district"
+                                                placeholder="e.g. Kozhikode"
+                                                className="h-10 rounded-xl border-slate-200 dark:border-zinc-800 bg-white dark:bg-zinc-950 px-4"
+                                                value={formData.district}
+                                                onChange={handleInputChange}
+                                            />
+                                        </div>
+                                        
+                                        <div className="space-y-2">
+                                            <Label htmlFor="state" className="text-xs font-black uppercase tracking-widest ml-1 text-muted-foreground">State</Label>
+                                            <Input
+                                                id="state"
+                                                name="state"
+                                                placeholder="e.g. Kerala"
+                                                className="h-10 rounded-xl border-slate-200 dark:border-zinc-800 bg-white dark:bg-zinc-950 px-4"
+                                                value={formData.state}
+                                                onChange={handleInputChange}
+                                            />
+                                        </div>
+                                        
+                                        <div className="space-y-2">
+                                            <Label htmlFor="country" className="text-xs font-black uppercase tracking-widest ml-1 text-muted-foreground">Country</Label>
+                                            <Input
+                                                id="country"
+                                                name="country"
+                                                placeholder="e.g. India"
+                                                className="h-10 rounded-xl border-slate-200 dark:border-zinc-800 bg-white dark:bg-zinc-950 px-4"
+                                                value={formData.country}
                                                 onChange={handleInputChange}
                                             />
                                         </div>
@@ -1289,6 +1348,20 @@ export default function Users() {
                                     {['EDITORIAL', 'TEACHER', 'PARENT'].includes(viewingUser?.role as any) && (
                                         <DetailItem label="Secure Contact" value={viewingUser?.phone_number} icon={Phone} />
                                     )}
+                                </div>
+                            </div>
+
+                            {/* Section: Regional & Location Details */}
+                            <div className="space-y-4">
+                                <h4 className="text-[10px] font-black uppercase tracking-[0.25em] text-teal-500 flex items-center gap-2">
+                                    <div className="w-1.5 h-1.5 rounded-full bg-current" />
+                                    Regional & Location Details
+                                </h4>
+                                <div className="grid grid-cols-1 sm:grid-cols-2 gap-x-8 gap-y-6">
+                                    <DetailItem label="Place / City" value={viewingUser?.place} icon={Globe} />
+                                    <DetailItem label="District" value={viewingUser?.district} icon={Globe} />
+                                    <DetailItem label="State" value={viewingUser?.state} icon={Globe} />
+                                    <DetailItem label="Country" value={viewingUser?.country} icon={Globe} />
                                 </div>
                             </div>
 

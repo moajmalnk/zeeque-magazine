@@ -33,98 +33,9 @@ import {
   PopoverTrigger,
 } from "@/components/ui/popover";
 import { Command as CommandPrimitive } from "cmdk";
-import schoolsData from '@/data/schools.json';
+import { SchoolSelector } from '@/components/SchoolSelector';
 
 // --- Helper: School Selector (Matching SubmitForm for consistency) ---
-const SchoolSelector = ({
-  value,
-  onChange
-}: {
-  value?: string;
-  onChange: (value: string) => void;
-}) => {
-  const [open, setOpen] = useState(false);
-  const schools = useMemo(() => schoolsData, []);
-
-  const selectedSchool = useMemo(() => {
-    return schools.find((school) => school.value === value);
-  }, [value, schools]);
-
-  return (
-    <Popover open={open} onOpenChange={setOpen}>
-      <PopoverTrigger asChild>
-        <Button
-          variant="outline"
-          role="combobox"
-          aria-expanded={open}
-          className="w-full justify-between font-normal h-11 text-base rounded-xl border-slate-200 bg-slate-50/50 dark:bg-slate-900/50 dark:border-slate-800 dark:text-white hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors shadow-sm"
-        >
-          <span className={cn("truncate flex items-center gap-2", !value && "text-muted-foreground")}>
-            {value ? (
-              <>
-                <span className="font-medium text-slate-700 dark:text-slate-200">{selectedSchool?.original_name || value}</span>
-                {selectedSchool?.code && (
-                  <span className="text-[10px] bg-primary/10 text-primary px-1.5 py-0.5 rounded-md font-mono border border-primary/10">
-                    {selectedSchool.code}
-                  </span>
-                )}
-              </>
-            ) : (
-              "Select school..."
-            )}
-          </span>
-          <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-40" />
-        </Button>
-      </PopoverTrigger>
-      <PopoverContent className="w-[--radix-popover-trigger-width] p-0 shadow-2xl border-slate-200 dark:border-slate-800 rounded-2xl overflow-hidden z-[150]" align="start">
-        <Command className="bg-white dark:bg-slate-950">
-          <div className="flex items-center p-2 border-b border-slate-100 dark:border-slate-800">
-            <Search className="mr-2 h-4 w-4 shrink-0 opacity-50 absolute left-4 z-10" />
-            <CommandPrimitive.Input
-              placeholder="Search school name or code..."
-              className="flex h-10 w-full rounded-xl bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-800 py-3 pl-9 pr-3 text-sm outline-none placeholder:text-muted-foreground disabled:cursor-not-allowed disabled:opacity-50 focus:ring-2 focus:ring-primary/20 transition-all font-sans"
-            />
-          </div>
-          <CommandList className="max-h-[300px] overflow-y-auto custom-scrollbar p-1">
-            <CommandEmpty className="py-6 text-center text-sm text-muted-foreground">
-              No school found.
-            </CommandEmpty>
-            <CommandGroup heading="ZeeQue Network" className="px-1 text-slate-500">
-              {schools.map((school) => (
-                <CommandItem
-                  key={school.value}
-                  value={school.label}
-                  onSelect={() => {
-                    onChange(school.value);
-                    setOpen(false);
-                  }}
-                  className="rounded-lg aria-selected:bg-slate-100 dark:aria-selected:bg-slate-800 my-0.5 py-2.5 px-3 cursor-pointer transition-colors"
-                >
-                  <Check
-                    className={cn(
-                      "mr-3 h-4 w-4 text-primary transition-opacity",
-                      value === school.value ? "opacity-100" : "opacity-0"
-                    )}
-                  />
-                  <div className="flex flex-col">
-                    <span className="font-medium text-slate-700 dark:text-slate-200 text-sm">
-                      {school.original_name}
-                    </span>
-                    {school.code && (
-                      <span className="text-[10px] text-slate-400 font-mono mt-0.5 uppercase tracking-tighter">
-                        Code: {school.code}
-                      </span>
-                    )}
-                  </div>
-                </CommandItem>
-              ))}
-            </CommandGroup>
-          </CommandList>
-        </Command>
-      </PopoverContent>
-    </Popover>
-  );
-};
 
 const editPostSchema = z.object({
   authorName: z.string().min(1, "Please enter a name!").max(50, "Name is too long"),
@@ -437,12 +348,13 @@ export function EditPostDialog({ post, open, onOpenChange, onSave }: EditPostDia
                                 <Check className="w-3 h-3 text-green-500" />
                               </div>
                               <SchoolSelector
-                                value={schoolsData.find(s => s.original_name === form.watch('schoolName'))?.value || form.watch('schoolName')}
-                                onChange={(val) => {
-                                  const school = schoolsData.find(s => s.value === val);
+                                value={form.watch('schoolCode') || form.watch('schoolName')}
+                                onChange={(val, school) => {
                                   if (school) {
                                     form.setValue('schoolName', school.original_name);
                                     form.setValue('schoolCode', school.code);
+                                  } else {
+                                    form.setValue('schoolName', val);
                                   }
                                 }}
                               />
