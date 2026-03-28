@@ -23,6 +23,7 @@ import {
     DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { toast } from 'sonner';
+import { authorProfileCardKeyDown, goToAuthorProfile } from '@/lib/authorProfileNav';
 import api from '@/lib/api';
 import { cn } from '@/lib/utils';
 import { Post } from '@/types/post';
@@ -500,6 +501,19 @@ export default function PublicProfile() {
         );
     }
 
+    const handleDialogProfileHeaderClick = (e: React.MouseEvent) => {
+        e.stopPropagation();
+        if (
+            goToAuthorProfile(navigate, {
+                isLoggedIn,
+                authorId: userId,
+                authorName: user?.username,
+            })
+        ) {
+            setSelectedPost(null);
+        }
+    };
+
     return (
         <div className="min-h-screen bg-background/50 flex flex-col font-sans">
             <Header />
@@ -834,7 +848,21 @@ export default function PublicProfile() {
                         <div className="flex flex-col flex-1 h-full bg-white dark:bg-black overflow-hidden shadow-2xl">
                             {/* 1. Profile Header */}
                             <div className="p-3 pr-4 border-b border-slate-100 dark:border-zinc-800 flex items-center justify-between shrink-0 h-16 bg-white/50 dark:bg-black/50 backdrop-blur-md">
-                                <div className="flex items-center gap-3">
+                                <div
+                                    role="button"
+                                    tabIndex={0}
+                                    aria-label={user?.username ? `View ${user.username}'s profile` : 'View profile'}
+                                    className="flex items-center gap-3 cursor-pointer rounded-xl focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 hover:opacity-90 transition-opacity"
+                                    onClick={handleDialogProfileHeaderClick}
+                                    onKeyDown={(e) =>
+                                        authorProfileCardKeyDown(
+                                            e,
+                                            navigate,
+                                            { isLoggedIn, authorId: userId, authorName: user?.username },
+                                            () => setSelectedPost(null),
+                                        )
+                                    }
+                                >
                                     <div className="relative">
                                         <div className={cn(
                                             "w-10 h-10 rounded-full flex items-center justify-center font-bold text-sm border-2 transition-all overflow-hidden",

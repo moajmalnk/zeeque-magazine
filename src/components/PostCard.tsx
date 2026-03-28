@@ -20,6 +20,7 @@ import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import api from '@/lib/api';
 import { toast } from 'sonner';
+import { authorProfileCardKeyDown, goToAuthorProfile } from '@/lib/authorProfileNav';
 import { Skeleton } from "@/components/ui/skeleton";
 import { CommentItem } from "@/components/CommentItem";
 import {
@@ -179,14 +180,14 @@ export function PostCard({ post, index = 0 }: PostCardProps) {
 
   const handleProfileClick = (e: React.MouseEvent) => {
     e.stopPropagation();
-    if (!isLoggedIn) {
-      toast.info("Please log in to view profiles.", {
-        action: { label: "Log In", onClick: () => navigate('/login') }
-      });
-      return;
-    }
-    if (post.author_id) {
-      navigate(`/profile/${post.author_id}`);
+    if (
+      goToAuthorProfile(navigate, {
+        isLoggedIn,
+        authorId: post.author_id,
+        authorName: post.author_name,
+      })
+    ) {
+      setIsOpen(false);
     }
   };
 
@@ -332,8 +333,19 @@ export function PostCard({ post, index = 0 }: PostCardProps) {
         {/* --- Card Header: User Info --- */}
         <div className="p-4 px-5 flex items-center justify-between">
           <div
-            className="flex items-center gap-3 cursor-pointer group/author transition-opacity hover:opacity-80"
+            role="button"
+            tabIndex={0}
+            aria-label={`View ${post.author_name}'s profile`}
+            className="flex items-center gap-3 cursor-pointer group/author transition-opacity hover:opacity-80 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 rounded-xl"
             onClick={handleProfileClick}
+            onKeyDown={(e) =>
+              authorProfileCardKeyDown(
+                e,
+                navigate,
+                { isLoggedIn, authorId: post.author_id, authorName: post.author_name },
+                () => setIsOpen(false),
+              )
+            }
           >
             {/* Role-colored avatar fallback + verified tick */}
             <div className="relative shrink-0">
@@ -616,8 +628,21 @@ export function PostCard({ post, index = 0 }: PostCardProps) {
             <div className="flex-none md:flex-1 flex flex-col bg-white dark:bg-black overflow-visible md:overflow-hidden">
               {/* 1. Header - Sticky on Desktop */}
               <div className="p-3 pr-4 border-b border-slate-100 dark:border-zinc-800 flex items-center justify-between shrink-0 h-16 bg-white dark:bg-black z-20">
-                <div className="flex items-center gap-3">
-                  {/* Avatar + tick */}
+                <div
+                  role="button"
+                  tabIndex={0}
+                  aria-label={`View ${post.author_name}'s profile`}
+                  className="flex items-center gap-3 cursor-pointer group/dialog-author rounded-xl focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
+                  onClick={handleProfileClick}
+                  onKeyDown={(e) =>
+                    authorProfileCardKeyDown(
+                      e,
+                      navigate,
+                      { isLoggedIn, authorId: post.author_id, authorName: post.author_name },
+                      () => setIsOpen(false),
+                    )
+                  }
+                >
                   <div className="relative">
                     <div className={cn(
                       "w-10 h-10 rounded-full flex items-center justify-center font-bold text-sm border-2 transition-all overflow-hidden",
@@ -637,7 +662,7 @@ export function PostCard({ post, index = 0 }: PostCardProps) {
                     )}
                   </div>
                   <div className="flex flex-col justify-center">
-                    <h3 className="font-bold text-sm text-slate-900 dark:text-zinc-100 leading-none hover:opacity-70 cursor-pointer truncate max-w-[150px]">
+                    <h3 className="font-bold text-sm text-slate-900 dark:text-zinc-100 leading-none group-hover/dialog-author:opacity-80 truncate max-w-[150px]">
                       {post.author_name}
                     </h3>
                     {post.school_name && (

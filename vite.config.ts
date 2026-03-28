@@ -33,8 +33,8 @@ export default defineConfig({
         name: 'ZeeQue | Student Creativity & Community',
         short_name: 'ZeeQue',
         description: 'A professional platform for students, teachers, and schools to share their creativity and news.',
-        theme_color: '#0ea5e9',
-        background_color: '#ffffff',
+        theme_color: '#1e1b2e',
+        background_color: '#1e1b2e',
         display: 'standalone',
         orientation: 'portrait',
         icons: [

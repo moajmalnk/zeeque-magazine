@@ -34,6 +34,7 @@ import {
 } from "@/components/ui/popover";
 import { Command as CommandPrimitive } from "cmdk";
 import { SchoolSelector } from '@/components/SchoolSelector';
+import { useSchools } from '@/hooks/useSchools';
 
 // --- Helper: School Selector (Matching SubmitForm for consistency) ---
 
@@ -65,6 +66,7 @@ interface EditPostDialogProps {
 
 export function EditPostDialog({ post, open, onOpenChange, onSave }: EditPostDialogProps) {
   const [isManualSchoolMode, setIsManualSchoolMode] = useState(false);
+  const { data: schoolsData } = useSchools();
 
   const form = useForm<EditPostFormData>({
     resolver: zodResolver(editPostSchema),
@@ -109,7 +111,7 @@ export function EditPostDialog({ post, open, onOpenChange, onSave }: EditPostDia
       // Initialize manual mode
       const role = post.author_role?.toUpperCase();
       if (role !== 'SCHOOL') {
-        const isKnown = schoolsData.some(s => s.original_name === post.school_name || s.code === post.school_code);
+        const isKnown = (schoolsData || []).some(s => s.school_name === post.school_name || s.school_code === post.school_code);
         setIsManualSchoolMode(!isKnown && !!post.school_name);
       } else {
         setIsManualSchoolMode(false);
@@ -298,18 +300,12 @@ export function EditPostDialog({ post, open, onOpenChange, onSave }: EditPostDia
                   </div>
 
                   <div className="flex flex-col gap-6">
-                    {/* Dynamic Layout: Adapts to show either 1 or 2 columns based on visibility */}
-                    <div className={cn(
-                      "grid gap-6",
-                      ((displayConfig.showTeacher && displayConfig.showAuthor) || (displayConfig.showAuthor && displayConfig.showPhone)) ? "grid-cols-1 md:grid-cols-2" : "grid-cols-1"
-                    )}>
+                    {/* School is the only child here; keep one column so the block stays full width (2-col was shrinking manual school + code into half the dialog). */}
+                    <div className="grid grid-cols-1 gap-6 min-w-0">
 
                       {/* School Field */}
                       {displayConfig.showSchool && (
-                        <div className={cn(
-                          "space-y-4",
-                          displayConfig.isSchool ? "order-1 md:col-span-1" : "order-3 md:col-span-1"
-                        )}>
+                        <div className="space-y-4 min-w-0">
                           <div className="relative px-1">
                             <Label className="text-sm font-bold text-slate-700 dark:text-slate-300">
                               {displayConfig.labels.school}
@@ -317,26 +313,26 @@ export function EditPostDialog({ post, open, onOpenChange, onSave }: EditPostDia
                           </div>
 
                           {isManualSchoolMode && !displayConfig.isSchool ? (
-                            <div className="grid grid-cols-1 md:grid-cols-2 gap-4 animate-in fade-in slide-in-from-top-2 duration-300">
-                              <div className="space-y-2">
+                            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 min-w-0 animate-in fade-in slide-in-from-top-2 duration-300">
+                              <div className="space-y-2 min-w-0">
                                 <Label className="text-[10px] uppercase font-bold text-muted-foreground ml-1">Manual School Name</Label>
-                                <div className="relative">
-                                  <School className="absolute left-4 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+                                <div className="relative min-w-0">
+                                  <School className="absolute left-4 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground pointer-events-none" />
                                   <Input
                                     {...form.register('schoolName')}
                                     placeholder="Enter school name"
-                                    className="pl-11 h-11 rounded-xl border-slate-200 dark:border-zinc-800 bg-white"
+                                    className="w-full min-w-0 pl-11 h-11 rounded-xl border-slate-200 dark:border-zinc-800 bg-white dark:bg-zinc-950"
                                   />
                                 </div>
                               </div>
-                              <div className="space-y-2">
+                              <div className="space-y-2 min-w-0">
                                 <Label className="text-[10px] uppercase font-bold text-muted-foreground ml-1">Institution Code (Optional)</Label>
-                                <div className="relative">
-                                  <Hash className="absolute left-4 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+                                <div className="relative min-w-0">
+                                  <Hash className="absolute left-4 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground pointer-events-none" />
                                   <Input
                                     {...form.register('schoolCode')}
                                     placeholder="e.g. SCH-001"
-                                    className="pl-11 h-11 rounded-xl border-slate-200 dark:border-zinc-800 bg-white"
+                                    className="w-full min-w-0 pl-11 h-11 rounded-xl border-slate-200 dark:border-zinc-800 bg-white dark:bg-zinc-950"
                                   />
                                 </div>
                               </div>

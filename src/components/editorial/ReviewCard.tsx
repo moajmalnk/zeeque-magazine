@@ -1,22 +1,12 @@
-import { useState, useRef } from 'react';
-import { useNavigate } from 'react-router-dom';
-import { useAuth } from '@/hooks/useAuth';
+import { useState } from 'react';
 import { Post, categoryLabels, categoryIcons } from '@/types/post';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardFooter, CardHeader } from '@/components/ui/card';
-import { DialogDescription } from '@/components/ui/dialog';
 import { Badge } from '@/components/ui/badge';
-import { Check, X, RotateCcw, Trash2, Edit, Play, Pause, Volume2, VolumeX, Grid3x3, Sparkles, User, School, FileText, EyeOff } from 'lucide-react';
+import { Check, X, RotateCcw, Trash2, Edit, EyeOff } from 'lucide-react';
 import { toast } from 'sonner';
 import { cn } from '@/lib/utils';
 import { format } from 'date-fns';
-import {
-  Dialog,
-  DialogContent,
-  DialogHeader,
-  DialogTitle,
-  DialogTrigger,
-} from '@/components/ui/dialog';
 import {
   AlertDialog,
   AlertDialogAction,
@@ -29,6 +19,7 @@ import {
 } from '@/components/ui/alert-dialog';
 import { EditPostDialog } from './EditPostDialog';
 import { ApproveDialog } from './ApproveDialog';
+import { EditorialPostPreviewDialog } from './EditorialPostPreviewDialog';
 
 interface ReviewCardProps {
   post: Post;
@@ -51,17 +42,6 @@ const categoryStyles: Record<string, string> = {
 };
 
 // Helper to convert video URLs to embed format with strict parameters for clean UI (autoplay, mute, loop, no controls)
-const getCategoryColor = (category: string) => {
-  switch (category) {
-    case 'stories': return 'from-indigo-600 to-violet-700';
-    case 'poems': return 'from-rose-500 to-pink-600';
-    case 'drawings': return 'from-amber-400 to-orange-500';
-    case 'news': return 'from-emerald-500 to-teal-600';
-    case 'video': return 'from-blue-500 to-indigo-600';
-    default: return 'from-slate-600 to-slate-700';
-  }
-};
-
 const getVideoEmbedUrl = (url: string): string | null => {
   try {
     const urlObj = new URL(url);
@@ -80,137 +60,7 @@ const getVideoEmbedUrl = (url: string): string | null => {
   }
 };
 
-interface VideoPlayerProps {
-  src?: string;
-  url?: string;
-  alwaysShowControls?: boolean;
-}
-
-const VideoPlayer = ({ src, url, alwaysShowControls = false }: VideoPlayerProps) => {
-  const videoRef = useRef<HTMLVideoElement>(null);
-  const youtubeIframeRef = useRef<HTMLIFrameElement>(null);
-  const [isPlaying, setIsPlaying] = useState(false);
-  const [isMuted, setIsMuted] = useState(false);
-  const [isYoutubeMuted, setIsYoutubeMuted] = useState(true); // YouTube always starts muted (autoplay policy)
-
-  // Determine if it's an embeddable URL
-  const embedUrl = url ? getVideoEmbedUrl(url) : null;
-
-  const toggleYoutubeMute = (e: React.MouseEvent) => {
-    e.stopPropagation();
-    if (!youtubeIframeRef.current?.contentWindow) return;
-    const command = isYoutubeMuted ? 'unMute' : 'mute';
-    youtubeIframeRef.current.contentWindow.postMessage(
-      JSON.stringify({ event: 'command', func: command, args: [] }),
-      '*'
-    );
-    setIsYoutubeMuted(!isYoutubeMuted);
-  };
-
-  // Render iframe for embeds (YouTube etc.)
-  if (embedUrl) {
-    return (
-      <div className="relative w-full aspect-video rounded-xl overflow-hidden bg-black/5 group shadow-lg">
-        {/* iframe is pointer-events-none so clicks pass through to our overlay button */}
-        <iframe
-          ref={youtubeIframeRef}
-          src={embedUrl}
-          title="Video Preview"
-          className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[130%] h-[130%] object-cover opacity-90 group-hover:opacity-100 transition-opacity pointer-events-none"
-          allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share; compute-pressure"
-        />
-        {/* Floating Mute / Unmute button — visible on hover (or always in full dialog) */}
-        <button
-          onClick={toggleYoutubeMute}
-          title={isYoutubeMuted ? 'Unmute' : 'Mute'}
-          className={cn(
-            "absolute bottom-3 right-3 z-20 flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-black/60 hover:bg-black/80 backdrop-blur-md text-white text-xs font-semibold shadow-lg border border-white/10 transition-all hover:scale-105 active:scale-95 select-none",
-            alwaysShowControls ? "opacity-100" : "opacity-0 group-hover:opacity-100"
-          )}
-        >
-          {isYoutubeMuted ? (
-            <><VolumeX className="w-3.5 h-3.5" /><span>Unmute</span></>
-          ) : (
-            <><Volume2 className="w-3.5 h-3.5" /><span>Mute</span></>
-          )}
-        </button>
-      </div>
-    );
-  }
-
-  // Render standard video player for files
-  const videoSrc = src || url;
-  if (!videoSrc) return null;
-
-  const togglePlay = (e: React.MouseEvent) => {
-    e.stopPropagation();
-    if (videoRef.current) {
-      if (isPlaying) {
-        videoRef.current.pause();
-      } else {
-        videoRef.current.play();
-      }
-      setIsPlaying(!isPlaying);
-    }
-  };
-
-  const toggleMute = (e: React.MouseEvent) => {
-    e.stopPropagation();
-    if (videoRef.current) {
-      videoRef.current.muted = !isMuted;
-      setIsMuted(!isMuted);
-    }
-  };
-
-  return (
-    <div className="relative w-full aspect-video rounded-xl overflow-hidden bg-black group shadow-lg">
-      <video
-        ref={videoRef}
-        src={videoSrc}
-        className="w-full h-full object-contain cursor-pointer"
-        playsInline
-        onClick={togglePlay}
-        onPlay={() => setIsPlaying(true)}
-        onPause={() => setIsPlaying(false)}
-        onVolumeChange={() => setIsMuted(videoRef.current?.muted ?? false)}
-      />
-
-      {/* Professional Control Bar */}
-      <div className="absolute bottom-0 left-0 right-0 p-4 bg-gradient-to-t from-black/80 via-black/40 to-transparent opacity-0 group-hover:opacity-100 transition-all duration-300 flex items-center justify-between">
-        <Button
-          variant="ghost"
-          size="icon"
-          className="text-white hover:bg-white/20 hover:text-white rounded-full w-10 h-10 transition-colors"
-          onClick={togglePlay}
-        >
-          {isPlaying ? <Pause className="w-5 h-5 fill-current" /> : <Play className="w-5 h-5 fill-current ml-0.5" />}
-        </Button>
-
-        <Button
-          variant="ghost"
-          size="icon"
-          className="text-white hover:bg-white/20 hover:text-white rounded-full w-10 h-10 transition-colors"
-          onClick={toggleMute}
-        >
-          {isMuted ? <VolumeX className="w-5 h-5" /> : <Volume2 className="w-5 h-5" />}
-        </Button>
-      </div>
-
-      {/* Center Play Button Overlay (only when paused) */}
-      {!isPlaying && (
-        <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
-          <div className="w-16 h-16 rounded-full bg-black/40 backdrop-blur-sm flex items-center justify-center shadow-lg transform transition-transform group-hover:scale-110">
-            <Play className="w-8 h-8 text-white fill-white ml-1" />
-          </div>
-        </div>
-      )}
-    </div>
-  );
-};
-
 export function ReviewCard({ post, onApprove, onReject, onRestore, onUnpublish, onDelete, onEdit, onToggleFeature }: ReviewCardProps) {
-  const navigate = useNavigate();
-  const { isAuthenticated: isLoggedIn } = useAuth();
   const submittedDate = format(new Date(post.created_at), 'MMM d, yyyy');
   const [showApproveDialog, setShowApproveDialog] = useState(false);
   const [showRejectDialog, setShowRejectDialog] = useState(false);
@@ -220,19 +70,6 @@ export function ReviewCard({ post, onApprove, onReject, onRestore, onUnpublish, 
   const [showPreviewDialog, setShowPreviewDialog] = useState(false);
   const [showEditDialog, setShowEditDialog] = useState(false);
   const [showFeatureDialog, setShowFeatureDialog] = useState(false);
-
-  const handleProfileClick = (e: React.MouseEvent) => {
-    e.stopPropagation();
-    if (!isLoggedIn) {
-      toast.info("Please log in to view profiles.", {
-        action: { label: "Log In", onClick: () => navigate('/login') }
-      });
-      return;
-    }
-    if (post.author_id) {
-      navigate(`/profile/${post.author_id}`);
-    }
-  };
 
   const handleApprove = (featured: boolean) => {
     if (!onApprove) return;
@@ -348,8 +185,7 @@ export function ReviewCard({ post, onApprove, onReject, onRestore, onUnpublish, 
 
   return (
     <>
-      <Dialog open={showPreviewDialog} onOpenChange={setShowPreviewDialog}>
-        <div className="relative group h-full w-full max-w-full">
+      <div className="relative group h-full w-full max-w-full">
           {/* Decorative background blur for modern feel */}
           <div className="absolute inset-0 bg-gradient-to-br from-primary/10 to-purple-500/10 rounded-[2rem] transform translate-y-2 scale-[0.95] blur-xl opacity-0 group-hover:opacity-100 transition-all duration-500" />
 
@@ -540,217 +376,27 @@ export function ReviewCard({ post, onApprove, onReject, onRestore, onUnpublish, 
           </Card>
         </div>
 
-        <DialogContent
-          noContentWrapper
-          hideCloseButton
-          className="max-w-[1100px] w-[95vw] h-[92vh] md:h-[80vh] p-0 border dark:border-white/10 rounded-2xl md:!rounded-2xl bg-white dark:bg-zinc-950 shadow-2xl overflow-y-auto md:overflow-hidden flex flex-col z-[100] outline-none scrollbar-hide"
-        >
-          <div className="flex flex-col md:flex-row h-auto md:h-full overflow-visible md:overflow-hidden">
-            {/* Left Column: Media & Branding - Responsive height */}
-            <div className={cn(
-              "relative w-full md:w-[45%] h-[400px] md:h-full shrink-0 overflow-hidden group/media",
-              `bg-gradient-to-br ${getCategoryColor(post.category)}`
-            )}>
-              {/* Background Texture Overlay */}
-              <div className="absolute inset-0 opacity-10 pointer-events-none">
-                <Grid3x3 className="w-full h-full scale-150 rotate-12" />
-              </div>
 
-              {/* Status & Category Overlays */}
-              <div className="absolute top-6 left-6 z-20 flex flex-col gap-2">
-                <Badge className={`${categoryStyles[post.category]} px-3 py-1 text-xs font-black uppercase tracking-widest border-2 border-white/20 shadow-xl backdrop-blur-md`}>
-                  {categoryIcons[post.category]} {categoryLabels[post.category]}
-                </Badge>
-                <div className={cn(
-                  "px-3 py-1 rounded-lg text-[10px] font-black uppercase tracking-wider shadow-lg backdrop-blur-md border border-white/10 w-fit",
-                  post.status === 'published' ? 'bg-emerald-500/80 text-white' :
-                    post.status === 'rejected' ? 'bg-rose-500/80 text-white' :
-                      'bg-amber-400/80 text-slate-900'
-                )}>
-                  {post.status} Status
-                </div>
-              </div>
+      <EditorialPostPreviewDialog
+        open={showPreviewDialog}
+        onOpenChange={setShowPreviewDialog}
+        post={post}
+        onOpenApproveWorkflow={onApprove ? () => setShowApproveDialog(true) : undefined}
+        onOpenRejectWorkflow={onReject ? () => setShowRejectDialog(true) : undefined}
+        onOpenRestoreWorkflow={onRestore ? () => setShowRestoreDialog(true) : undefined}
+        onOpenUnpublishWorkflow={onUnpublish ? () => setShowUnpublishDialog(true) : undefined}
+        onOpenDeleteWorkflow={onDelete ? () => setShowDeleteDialog(true) : undefined}
+        onEditFromPreview={
+          onEdit
+            ? () => {
+                setShowPreviewDialog(false);
+                setShowEditDialog(true);
+              }
+            : undefined
+        }
+      />
 
-              {/* Close Button overlay for mobile */}
-              <Button
-                variant="ghost"
-                size="icon"
-                onClick={() => setShowPreviewDialog(false)}
-                className="absolute top-6 right-6 z-20 md:hidden bg-black/20 hover:bg-black/40 text-white rounded-full backdrop-blur-md"
-              >
-                <X className="w-5 h-5" />
-              </Button>
 
-              {/* Media Container */}
-              <div className="absolute inset-0 flex items-center justify-center p-4 md:p-8">
-                <div className="relative w-full h-full rounded-2xl overflow-hidden shadow-2xl border border-white/10 bg-black/5 group-hover/media:scale-[1.02] transition-transform duration-700">
-                  {post.video_url || post.video_file ? (
-                    <VideoPlayer src={post.video_file} url={post.video_url} alwaysShowControls />
-                  ) : post.image_url ? (
-                    <img
-                      src={post.image_url}
-                      alt={post.title}
-                      className="w-full h-full object-cover"
-                    />
-                  ) : (
-                    <div className="w-full h-full flex flex-col items-center justify-center gap-4 text-white/40">
-                      <Sparkles className="w-16 h-16 opacity-20" />
-                      <span className="text-sm font-bold tracking-widest uppercase italic">The ZeeQue Masterpiece</span>
-                    </div>
-                  )}
-                </div>
-              </div>
-            </div>
-
-            {/* Right Column: Detailed View */}
-            <div className="flex-none md:flex-1 flex flex-col bg-slate-50/30 dark:bg-zinc-950/30 overflow-visible md:overflow-hidden">
-              {/* Header */}
-              <div className="p-8 pb-4 flex items-start justify-between shrink-0">
-                <div className="space-y-1 max-w-[85%]">
-                  <h2 className="text-xl md:text-3xl font-display font-black leading-tight tracking-tight text-slate-900 dark:text-white">
-                    {post.title}
-                  </h2>
-                  <div className="flex items-center gap-2">
-                    <span className="text-[10px] font-black uppercase tracking-widest text-primary/60">Submission Detail</span>
-                    <div className="h-1 w-1 rounded-full bg-slate-300" />
-                    <span className="text-[10px] text-slate-400 font-medium">#{post.id.substring(0, 8)}</span>
-                  </div>
-                </div>
-                <Button
-                  variant="ghost"
-                  size="icon"
-                  onClick={() => setShowPreviewDialog(false)}
-                  className="hidden md:flex rounded-2xl hover:bg-slate-100 dark:hover:bg-zinc-800 transition-all"
-                >
-                  <X className="w-5 h-5" />
-                </Button>
-              </div>
-
-              {/* Scrollable Body - Unified on mobile */}
-              <div className="flex-none md:flex-1 overflow-visible md:overflow-y-auto p-6 md:p-8 pt-0 space-y-8 scrollbar-elegant">
-                {/* Author Info Card */}
-                <div
-                  className="bg-white dark:bg-zinc-900/50 p-6 rounded-2xl border border-slate-100 dark:border-zinc-800/50 shadow-sm flex items-center gap-4 cursor-pointer group/author hover:bg-slate-50 dark:hover:bg-zinc-800/50 transition-all"
-                  onClick={handleProfileClick}
-                >
-                  <div className={cn("w-14 h-14 rounded-2xl flex items-center justify-center font-black text-lg tracking-tighter shadow-inner group-hover/author:scale-105 transition-transform", avatarColor)}>
-                    {getInitials(post.author_name)}
-                  </div>
-                  <div className="flex-1 min-w-0">
-                    <p className="text-[10px] font-black uppercase tracking-[0.2em] text-muted-foreground mb-0.5">Author Identity</p>
-                    <h4 className="font-bold text-slate-800 dark:text-slate-100 truncate group-hover/author:text-primary transition-colors">{post.author_name}</h4>
-                    <p className="text-xs text-slate-500 dark:text-slate-400 italic flex items-center gap-1.5">
-                      <School className="w-3 h-3 opacity-50" />
-                      {post.teacher_name || post.school_name || "Independent Creator"}
-                    </p>
-                  </div>
-                  <Badge variant="outline" className="hidden sm:flex border-slate-200 dark:border-zinc-800 rounded-lg py-1 px-3">
-                    <User className="w-3 h-3 mr-1.5 opacity-50" /> {post.author_role || "Student"}
-                  </Badge>
-                </div>
-
-                {/* Content Section */}
-                <div className="space-y-4">
-                  <div className="flex items-center gap-2 px-1">
-                    <FileText className="w-4 h-4 text-primary opacity-50" />
-                    <span className="text-[10px] font-black uppercase tracking-widest text-muted-foreground">The Narrative</span>
-                  </div>
-                  <div className="bg-white dark:bg-zinc-900/40 p-8 rounded-2xl border border-slate-100 dark:border-zinc-800/50 relative">
-                    <div className="absolute top-4 right-6 text-slate-100 dark:text-zinc-800 text-6xl font-serif pointer-events-none select-none">“</div>
-                    <p className="text-slate-600 dark:text-slate-300 text-base md:text-lg leading-relaxed whitespace-pre-wrap font-medium">
-                      {post.content}
-                    </p>
-                  </div>
-                </div>
-
-                {/* Footer Meta */}
-                <div className="flex items-center justify-between pt-4 border-t border-dashed border-slate-200 dark:border-zinc-800 px-2">
-                  <div className="flex items-center gap-4 text-[10px] font-black uppercase tracking-widest text-slate-400">
-                    <span className="flex items-center gap-1.5">
-                      <Sparkles className="w-3 h-3" /> Submitted {submittedDate}
-                    </span>
-                    {post.published_at && (
-                      <span className="flex items-center gap-1.5 text-emerald-500">
-                        <Check className="w-3 h-3" /> Live Since {format(new Date(post.published_at), 'MMM d')}
-                      </span>
-                    )}
-                  </div>
-                </div>
-              </div>
-
-              {/* Sticky Footer Actions - Professional Row */}
-              <div className="p-4 sm:p-5 bg-white/95 dark:bg-black/95 backdrop-blur-xl border-t border-slate-100 dark:border-zinc-800/50 shrink-0">
-                <div className="flex flex-col gap-3">
-                  {/* Primary Action - Always Full Width on Mobile for prominence */}
-                  {post.status === 'pending' || post.status === 'rejected' ? (
-                    <Button
-                      className="w-full h-12 px-6 rounded-2xl bg-gradient-to-r from-emerald-500 to-teal-500 hover:from-emerald-600 hover:to-teal-600 text-white font-bold shadow-xl shadow-emerald-500/20 hover:scale-[1.01] active:scale-[0.98] transition-all border-b-4 border-emerald-700/30 text-sm sm:text-base"
-                      onClick={() => setShowApproveDialog(true)}
-                    >
-                      <Check className="w-5 h-5 mr-2 stroke-[3px]" /> Approve & Publish Submission
-                    </Button>
-                  ) : (
-                    <Button
-                      variant="outline"
-                      className="w-full h-12 rounded-2xl border-orange-200 dark:border-orange-900/50 text-orange-600 dark:text-orange-400 bg-orange-50/50 dark:bg-orange-950/20 hover:bg-orange-100 dark:hover:bg-orange-900/30 font-bold transition-all"
-                      onClick={() => setShowUnpublishDialog(true)}
-                      disabled={!onUnpublish}
-                    >
-                      <EyeOff className="w-5 h-5 mr-2" /> Unpublish Post
-                    </Button>
-                  )}
-
-                  {/* Secondary Actions Group */}
-                  <div className="grid grid-cols-3 gap-2">
-                    {onEdit && (
-                      <Button
-                        variant="ghost"
-                        className="h-11 px-2 sm:px-4 rounded-xl bg-indigo-50/50 dark:bg-indigo-500/10 text-indigo-600 dark:text-indigo-400 hover:bg-indigo-100 dark:hover:bg-indigo-500/20 font-bold transition-all border border-indigo-100/50 dark:border-indigo-500/20 text-xs sm:text-sm"
-                        onClick={() => {
-                          setShowPreviewDialog(false);
-                          setShowEditDialog(true);
-                        }}
-                      >
-                        <Edit className="w-4 h-4 mr-1.5 sm:mr-2" /> Edit
-                      </Button>
-                    )}
-
-                    {post.status === 'pending' && onReject && (
-                      <Button
-                        variant="ghost"
-                        className="h-11 px-2 sm:px-4 rounded-xl bg-rose-50/50 dark:bg-rose-500/10 text-rose-600 dark:text-rose-400 hover:bg-rose-100 dark:hover:bg-rose-500/20 font-bold transition-all border border-rose-100/50 dark:border-rose-500/20 text-xs sm:text-sm"
-                        onClick={() => setShowRejectDialog(true)}
-                      >
-                        <X className="w-4 h-4 mr-1.5 sm:mr-2 stroke-[3px]" /> Reject
-                      </Button>
-                    )}
-
-                    {post.status === 'published' && onUnpublish && (
-                      <Button
-                        variant="ghost"
-                        className="h-11 px-2 sm:px-4 rounded-xl bg-orange-50/50 dark:bg-orange-500/10 text-orange-600 dark:text-orange-400 hover:bg-orange-100 dark:hover:bg-orange-500/20 font-bold transition-all border border-orange-100/50 dark:border-orange-500/20 text-xs sm:text-sm"
-                        onClick={() => setShowUnpublishDialog(true)}
-                      >
-                        <EyeOff className="w-4 h-4 mr-1.5 sm:mr-2" /> Unpublish
-                      </Button>
-                    )}
-
-                    {onDelete && (
-                      <Button
-                        variant="ghost"
-                        className="h-11 px-2 sm:px-4 rounded-xl bg-slate-50 dark:bg-white/5 text-slate-600 dark:text-slate-400 hover:bg-rose-50 hover:text-rose-600 dark:hover:bg-rose-500/10 dark:hover:text-rose-400 font-bold transition-all border border-slate-200/50 dark:border-white/5 text-xs sm:text-sm"
-                        onClick={() => setShowDeleteDialog(true)}
-                      >
-                        <Trash2 className="w-4 h-4 mr-1.5 sm:mr-2" /> Delete
-                      </Button>
-                    )}
-                  </div>
-                </div>
-              </div>
-            </div>
-          </div>
-        </DialogContent>
-      </Dialog>
 
       {/* Restore Confirmation Dialog */}
       {onRestore && (
@@ -761,12 +407,14 @@ export function ReviewCard({ post, onApprove, onReject, onRestore, onUnpublish, 
                 <RotateCcw className="w-5 h-5 text-slate-500" />
                 Restore this submission?
               </AlertDialogTitle>
-              <AlertDialogDescription className="space-y-3 pt-2">
-                <span className="block text-base font-medium text-foreground">
-                  You are about to restore "{post.title}".
-                </span>
-                <div className="p-3 rounded-lg bg-blue-50 dark:bg-blue-950/20 border border-blue-100 dark:border-blue-900/50 text-sm text-blue-700 dark:text-blue-400">
-                  ℹ️ The post will be moved back to <strong>Pending</strong> and will require review before it can be published.
+              <AlertDialogDescription asChild>
+                <div className="space-y-3 pt-2 text-sm text-muted-foreground leading-relaxed">
+                  <p className="text-base font-medium text-foreground">
+                    You are about to restore &quot;{post.title}&quot;.
+                  </p>
+                  <div className="p-3 rounded-lg bg-blue-50 dark:bg-blue-950/20 border border-blue-100 dark:border-blue-900/50 text-sm text-blue-700 dark:text-blue-400">
+                    ℹ️ The post will be moved back to <strong>Pending</strong> and will require review before it can be published.
+                  </div>
                 </div>
               </AlertDialogDescription>
             </AlertDialogHeader>
@@ -793,12 +441,14 @@ export function ReviewCard({ post, onApprove, onReject, onRestore, onUnpublish, 
                 <EyeOff className="w-5 h-5" />
                 Unpublish this post?
               </AlertDialogTitle>
-              <AlertDialogDescription className="space-y-3 pt-2">
-                <span className="block text-base font-medium text-foreground">
-                  You are about to unpublish "{post.title}".
-                </span>
-                <div className="p-3 rounded-lg bg-orange-50 dark:bg-orange-950/20 border border-orange-100 dark:border-orange-900/50 text-sm text-orange-700 dark:text-orange-400">
-                  ⚠️ This post will be removed from the public magazine and moved back to <strong>Pending</strong> for re-review. Readers will no longer see it until it is re-approved.
+              <AlertDialogDescription asChild>
+                <div className="space-y-3 pt-2 text-sm text-muted-foreground leading-relaxed">
+                  <p className="text-base font-medium text-foreground">
+                    You are about to unpublish &quot;{post.title}&quot;.
+                  </p>
+                  <div className="p-3 rounded-lg bg-orange-50 dark:bg-orange-950/20 border border-orange-100 dark:border-orange-900/50 text-sm text-orange-700 dark:text-orange-400">
+                    ⚠️ This post will be removed from the public magazine and moved back to <strong>Pending</strong> for re-review. Readers will no longer see it until it is re-approved.
+                  </div>
                 </div>
               </AlertDialogDescription>
             </AlertDialogHeader>
@@ -824,12 +474,14 @@ export function ReviewCard({ post, onApprove, onReject, onRestore, onUnpublish, 
               <Trash2 className="w-5 h-5" />
               Delete this post?
             </AlertDialogTitle>
-            <AlertDialogDescription className="space-y-3 pt-2">
-              <span className="block text-base font-medium text-foreground">
-                You are about to permanently delete "{post.title}".
-              </span>
-              <div className="p-3 rounded-lg bg-red-50 dark:bg-red-950/20 border border-red-100 dark:border-red-900/50 text-sm text-red-600 dark:text-red-400">
-                ⚠️ This action cannot be undone. The post will be permanently removed from the database.
+            <AlertDialogDescription asChild>
+              <div className="space-y-3 pt-2 text-sm text-muted-foreground leading-relaxed">
+                <p className="text-base font-medium text-foreground">
+                  You are about to permanently delete &quot;{post.title}&quot;.
+                </p>
+                <div className="p-3 rounded-lg bg-red-50 dark:bg-red-950/20 border border-red-100 dark:border-red-900/50 text-sm text-red-600 dark:text-red-400">
+                  ⚠️ This action cannot be undone. The post will be permanently removed from the database.
+                </div>
               </div>
             </AlertDialogDescription>
           </AlertDialogHeader>

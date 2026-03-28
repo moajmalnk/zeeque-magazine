@@ -23,6 +23,7 @@ import {
     DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { toast } from 'sonner';
+import { authorProfileCardKeyDown, goToAuthorProfile } from '@/lib/authorProfileNav';
 import api from '@/lib/api';
 import { useAuth } from '@/hooks/useAuth';
 import { cn, getMediaUrl } from '@/lib/utils';
@@ -518,6 +519,19 @@ export default function Profile() {
     }
 
     if (!user) return null;
+
+    const handleMyPostDialogProfileClick = (e: React.MouseEvent) => {
+        e.stopPropagation();
+        if (
+            goToAuthorProfile(navigate, {
+                isLoggedIn,
+                authorId: user.id,
+                authorName: user.username,
+            })
+        ) {
+            setSelectedPost(null);
+        }
+    };
 
     return (
         <div className="min-h-screen bg-background/50 flex flex-col font-sans">
@@ -1253,7 +1267,21 @@ export default function Profile() {
                         <div className="flex-1 flex flex-col h-full bg-white dark:bg-black overflow-hidden">
                             {/* 1. Profile Header */}
                             <div className="p-3 pr-4 border-b border-slate-100 dark:border-zinc-800 flex items-center justify-between shrink-0 h-16 bg-white/50 dark:bg-black/50 backdrop-blur-md">
-                                <div className="flex items-center gap-3">
+                                <div
+                                    role="button"
+                                    tabIndex={0}
+                                    aria-label={`View ${user.username}'s profile`}
+                                    className="flex items-center gap-3 cursor-pointer rounded-xl focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 hover:opacity-90 transition-opacity"
+                                    onClick={handleMyPostDialogProfileClick}
+                                    onKeyDown={(e) =>
+                                        authorProfileCardKeyDown(
+                                            e,
+                                            navigate,
+                                            { isLoggedIn, authorId: user.id, authorName: user.username },
+                                            () => setSelectedPost(null),
+                                        )
+                                    }
+                                >
                                     <div className="relative">
                                         <div className={cn(
                                             "w-10 h-10 rounded-full flex items-center justify-center font-bold text-sm border-2 transition-all overflow-hidden",

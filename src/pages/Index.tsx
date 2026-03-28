@@ -21,6 +21,7 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { cn } from '@/lib/utils';
 import { toast } from 'sonner';
 import { getRoleColor } from '@/lib/roleUtils';
+import { authorProfileCardKeyDown, goToAuthorProfile } from '@/lib/authorProfileNav';
 
 // Helper for category colors (Gradients)
 
@@ -105,15 +106,13 @@ const SharedPostCard = ({ post, onClick, isLatestSort = false, isFollowingSort =
 
   const { isAuthenticated } = useAuth();
 
-  const handleProfileClick = (e: React.MouseEvent, userId: string) => {
+  const handleProfileClick = (e: React.MouseEvent, userId?: string | null, authorName?: string) => {
     e.stopPropagation();
-    if (!isAuthenticated) {
-      toast.info("Please log in to view profiles.", {
-        action: { label: "Log In", onClick: () => navigate('/login') }
-      });
-      return;
-    }
-    navigate(`/profile/${userId}`);
+    goToAuthorProfile(navigate, {
+      isLoggedIn: isAuthenticated,
+      authorId: userId,
+      authorName,
+    });
   };
   // ... (rest of component) ...
   // Update usage in Index component:
@@ -199,7 +198,7 @@ const SharedPostCard = ({ post, onClick, isLatestSort = false, isFollowingSort =
                     i > 0 ? "-ml-3" : ""
                   )}
                   style={{ zIndex: 10 - i }}
-                  onClick={(e) => handleProfileClick(e, sharer.id)}
+                  onClick={(e) => handleProfileClick(e, sharer.id, sharer.username)}
                   title={sharer.username}
                 >
                   <Avatar className={cn(
@@ -224,7 +223,7 @@ const SharedPostCard = ({ post, onClick, isLatestSort = false, isFollowingSort =
           ) : topPillUser ? (
             <div
               className="flex items-center gap-2 bg-black/60 backdrop-blur-md rounded-full pl-1 pr-3 py-1 border border-white/10 shadow-sm max-w-full cursor-pointer hover:bg-black/80 transition-colors"
-              onClick={(e) => topPillUser.id && handleProfileClick(e, topPillUser.id)}
+              onClick={(e) => handleProfileClick(e, topPillUser.id, topPillUser.username)}
             >
               <Avatar className={cn(
                 "w-5 h-5 border-2",
@@ -285,7 +284,7 @@ const SharedPostCard = ({ post, onClick, isLatestSort = false, isFollowingSort =
 
         <div
           className="flex items-center gap-2 mt-1.5 cursor-pointer hover:opacity-80 transition-opacity w-fit"
-          onClick={(e) => post.author_id && handleProfileClick(e, post.author_id)}
+          onClick={(e) => handleProfileClick(e, post.author_id, post.author_name)}
         >
           <Avatar className={cn(
             "w-6 h-6 border-2 shadow-sm",
@@ -475,6 +474,19 @@ const SharedPostDetail = ({ post, isOpen, onClose }: { post: Post | null, isOpen
     ? new Intl.DateTimeFormat('en-US', { month: 'short', day: 'numeric' }).format(new Date(post.published_at))
     : '';
 
+  const handleAuthorHeaderClick = (e: React.MouseEvent) => {
+    e.stopPropagation();
+    if (
+      goToAuthorProfile(navigate, {
+        isLoggedIn,
+        authorId: post.author_id,
+        authorName: post.author_name,
+      })
+    ) {
+      onClose();
+    }
+  };
+
   return (
     <>
       <Dialog open={isOpen} onOpenChange={(open) => !open && onClose()}>
@@ -574,16 +586,19 @@ const SharedPostDetail = ({ post, isOpen, onClose }: { post: Post | null, isOpen
               {/* 1. Header - Sticky on Desktop */}
               <div className="p-3 pr-4 border-b border-slate-100 dark:border-zinc-800 flex items-center justify-between shrink-0 h-16 bg-white dark:bg-black z-20">
                 <div
-                  className="flex items-center gap-3 cursor-pointer group hover:opacity-80 transition-all"
-                  onClick={() => {
-                    if (!isLoggedIn) {
-                      toast.info("Please log in to view profiles.", {
-                        action: { label: "Log In", onClick: () => navigate('/login') }
-                      });
-                      return;
-                    }
-                    post.author_id && navigate(`/profile/${post.author_id}`);
-                  }}
+                  role="button"
+                  tabIndex={0}
+                  aria-label={`View ${post.author_name}'s profile`}
+                  className="flex items-center gap-3 cursor-pointer group hover:opacity-80 transition-all rounded-xl focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
+                  onClick={handleAuthorHeaderClick}
+                  onKeyDown={(e) =>
+                    authorProfileCardKeyDown(
+                      e,
+                      navigate,
+                      { isLoggedIn, authorId: post.author_id, authorName: post.author_name },
+                      onClose,
+                    )
+                  }
                 >
                   <div className={cn(
                     "w-8 h-8 rounded-full flex items-center justify-center font-bold text-xs border-2 transition-all overflow-hidden",
@@ -597,7 +612,7 @@ const SharedPostDetail = ({ post, isOpen, onClose }: { post: Post | null, isOpen
                     )}
                   </div>
                   <div className="flex flex-col justify-center">
-                    <h3 className="font-bold text-sm text-slate-900 dark:text-zinc-100 leading-none group-hover:text-primary transition-colors cursor-pointer truncate max-w-[150px]">
+                    <h3 className="font-bold text-sm text-slate-900 dark:text-zinc-100 leading-none group-hover:text-primary transition-colors truncate max-w-[150px]">
                       {post.author_name}
                     </h3>
                     {post.school_name && (

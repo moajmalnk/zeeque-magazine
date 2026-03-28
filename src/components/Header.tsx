@@ -483,7 +483,7 @@ export function Header() {
           <Link to="/" className="flex items-center gap-3 group transition-opacity hover:opacity-80 duration-300">
 
             <img
-              src={mounted ? (theme === 'dark' ? '/favicon-dark.png' : '/favicon-light.png') : '/favicon-light.png'}
+              src={mounted ? (theme === 'dark' ? '/favicon-dark.png' : '/favicon-light.png') : '/favicon-dark.png'}
               alt="ZeeQue Logo"
               className="h-16 md:h-20 w-auto object-contain transition-all duration-300 filter drop-shadow-sm hover:scale-105"
             />

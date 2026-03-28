@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useMemo } from 'react';
 import { Post, categoryLabels, categoryIcons, PostStatus } from '@/types/post';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
@@ -19,20 +19,13 @@ import {
   AlertDialogFooter,
   AlertDialogHeader,
   AlertDialogTitle,
-  AlertDialogTrigger,
 } from '@/components/ui/alert-dialog';
 import { Check, X, RotateCcw, Trash2, Edit } from 'lucide-react';
 import { toast } from 'sonner';
 import { format } from 'date-fns';
-import {
-  Dialog,
-  DialogContent,
-  DialogHeader,
-  DialogTitle,
-  DialogTrigger,
-} from '@/components/ui/dialog';
 import { EditPostDialog } from './EditPostDialog';
 import { ApproveDialog } from './ApproveDialog';
+import { EditorialPostPreviewDialog } from './EditorialPostPreviewDialog';
 
 interface PostsTableProps {
   posts: Post[];
@@ -75,7 +68,7 @@ export function PostsTable({
   showStatus = false,
 }: PostsTableProps) {
   const [actionState, setActionState] = useState<{
-    type: 'approve' | 'reject' | 'restore' | null;
+    type: 'reject' | 'restore' | null;
     postId: string | null;
     postTitle: string | null;
     authorName: string | null;
@@ -106,9 +99,15 @@ export function PostsTable({
     open: false,
     postId: null,
   });
+  const [deleteTargetId, setDeleteTargetId] = useState<string | null>(null);
+
+  const previewPost = useMemo(
+    () => (previewDialogState.postId ? posts.find(p => p.id === previewDialogState.postId) : undefined),
+    [posts, previewDialogState.postId],
+  );
 
   const handleActionClick = (
-    type: 'approve' | 'reject' | 'restore',
+    type: 'reject' | 'restore' | 'approve',
     postId: string,
     postTitle: string,
     authorName: string
@@ -130,6 +129,7 @@ export function PostsTable({
 
     const result = onApprove(postId, featured);
     setApproveDialogState({ open: false, postId: null });
+    setPreviewDialogState({ open: false, postId: null });
 
     if (result && 'undo' in result) {
       toast.success(
@@ -236,17 +236,11 @@ export function PostsTable({
         </TableHeader>
         <TableBody>
           {posts.map(post => (
-            <Dialog
+            <TableRow
               key={post.id}
-              open={previewDialogState.open && previewDialogState.postId === post.id}
-              onOpenChange={(open) =>
-                setPreviewDialogState({ open, postId: open ? post.id : null })
-              }
+              className="hover:bg-muted/30 cursor-pointer"
+              onClick={() => setPreviewDialogState({ open: true, postId: post.id })}
             >
-              <TableRow
-                className="hover:bg-muted/30 cursor-pointer"
-                onClick={() => setPreviewDialogState({ open: true, postId: post.id })}
-              >
                 <TableCell className="font-medium max-w-[200px] truncate">
                   {post.title}
                 </TableCell>
@@ -325,230 +319,123 @@ export function PostsTable({
                         <RotateCcw className="h-4 w-4" />
                       </Button>
                     )}
-                    <AlertDialog>
-                      <AlertDialogTrigger asChild>
-                        <Button
-                          variant="ghost"
-                          size="icon"
-                          className="h-8 w-8 text-red-600 hover:text-red-700 hover:bg-red-50"
-                          title="Delete"
-                        >
-                          <Trash2 className="h-4 w-4" />
-                        </Button>
-                      </AlertDialogTrigger>
-                      <AlertDialogContent>
-                        <AlertDialogHeader>
-                          <AlertDialogTitle>Delete this post?</AlertDialogTitle>
-                          <AlertDialogDescription className="space-y-2">
-                            <p>
-                              Are you sure you want to permanently delete <strong>"{post.title}"</strong> by {post.author_name}?
-                            </p>
-                            <p className="text-xs text-muted-foreground">
-                              This action cannot be undone. The post will be permanently removed from the system.
-                            </p>
-                          </AlertDialogDescription>
-                        </AlertDialogHeader>
-                        <AlertDialogFooter>
-                          <AlertDialogCancel>Cancel</AlertDialogCancel>
-                          <AlertDialogAction
-                            onClick={() => onDelete(post.id)}
-                            className="bg-red-600 hover:bg-red-700 focus:ring-red-600"
-                          >
-                            <Trash2 className="w-4 h-4 mr-2" />
-                            Delete Permanently
-                          </AlertDialogAction>
-                        </AlertDialogFooter>
-                      </AlertDialogContent>
-                    </AlertDialog>
+                    <Button
+                      variant="ghost"
+                      size="icon"
+                      className="h-8 w-8 text-red-600 hover:text-red-700 hover:bg-red-50"
+                      title="Delete"
+                      onClick={e => {
+                        e.stopPropagation();
+                        setDeleteTargetId(post.id);
+                      }}
+                    >
+                      <Trash2 className="h-4 w-4" />
+                    </Button>
                   </div>
                 </TableCell>
               </TableRow>
-
-              <DialogContent className="max-w-2xl">
-                <DialogHeader>
-                  <DialogTitle className="font-display">{post.title}</DialogTitle>
-                </DialogHeader>
-                <div className="space-y-4">
-                  <div className="flex items-center gap-2 flex-wrap">
-                    <Badge className={`${categoryStyles[post.category]} border`}>
-                      {categoryIcons[post.category]} {categoryLabels[post.category]}
-                    </Badge>
-                    <span className="text-sm text-muted-foreground">
-                      by {post.author_name}
-                    </span>
-                    <span className="text-xs text-muted-foreground ml-auto">
-                      {format(new Date(post.published_at || post.created_at), 'MMM d, yyyy')}
-                    </span>
-                    {showStatus && (
-                      <Badge className={`${statusStyles[post.status]} border text-xs w-full sm:w-auto`}>
-                        {statusLabels[post.status]}
-                      </Badge>
-                    )}
-                  </div>
-                  {post.video_file ? (
-                    <div className="relative w-full aspect-video rounded-xl overflow-hidden bg-black/5">
-                      <video
-                        src={post.video_file}
-                        controls
-                        className="w-full h-full object-contain"
-                      />
-                    </div>
-                  ) : post.video_url ? (() => {
-                    // Helper to convert video URLs to embed format
-                    const getVideoEmbedUrl = (url: string): string | null => {
-                      try {
-                        const urlObj = new URL(url);
-                        if (urlObj.hostname.includes('youtube.com') || urlObj.hostname.includes('youtu.be')) {
-                          const videoId = urlObj.searchParams.get('v') || urlObj.pathname.split('/').pop()?.split('?')[0];
-                          if (videoId) return `https://www.youtube.com/embed/${videoId}`;
-                        }
-                        if (urlObj.hostname.includes('vimeo.com')) {
-                          const videoId = urlObj.pathname.split('/').pop();
-                          if (videoId) return `https://player.vimeo.com/video/${videoId}`;
-                        }
-                        return url;
-                      } catch {
-                        return null;
-                      }
-                    };
-                    const embedUrl = getVideoEmbedUrl(post.video_url);
-                    return embedUrl ? (
-                      <div className="relative w-full aspect-video rounded-xl overflow-hidden bg-black/5">
-                        <iframe
-                          src={embedUrl}
-                          title={post.title}
-                          className="w-full h-full"
-                          allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share; compute-pressure"
-                          allowFullScreen
-                        />
-                      </div>
-                    ) : (
-                      <a
-                        href={post.video_url}
-                        target="_blank"
-                        rel="noopener noreferrer"
-                        className="block p-4 bg-gradient-video text-white rounded-xl text-center font-semibold hover:opacity-90"
-                      >
-                        Watch Video 🎥
-                      </a>
-                    );
-                  })() : post.image_url ? (
-                    <img
-                      src={post.image_url}
-                      alt={post.title}
-                      className="w-full rounded-xl"
-                    />
-                  ) : null}
-                  <p className="text-foreground whitespace-pre-line leading-relaxed">{post.content}</p>
-
-                  {/* Action Buttons in Preview */}
-                  {(onApprove || onReject || onRestore) && (
-                    <div className="flex gap-3 pt-4 border-t">
-                      {onApprove && post.status !== 'published' && (
-                        <Button
-                          size="default"
-                          className="flex-1 bg-green-500 hover:bg-green-600 text-white"
-                          onClick={() => {
-                            setPreviewDialogState({ open: false, postId: null });
-                            setApproveDialogState({ open: true, postId: post.id });
-                          }}
-                        >
-                          <Check className="w-4 h-4 mr-2" />
-                          Approve
-                        </Button>
-                      )}
-                      {onReject && post.status !== 'rejected' && (
-                        <Button
-                          variant="outline"
-                          size="default"
-                          className="flex-1 border-red-200 text-red-600 hover:bg-red-50 hover:text-red-700 hover:border-red-300"
-                          onClick={() => {
-                            const result = onReject(post.id);
-                            setPreviewDialogState({ open: false, postId: null });
-                            if (result && 'undo' in result) {
-                              toast.error(
-                                <div className="flex items-start gap-3">
-                                  <div className="w-10 h-10 rounded-full bg-red-500 flex items-center justify-center shrink-0">
-                                    <X className="w-5 h-5 text-white" />
-                                  </div>
-                                  <div className="flex-1">
-                                    <p className="font-semibold">Post rejected</p>
-                                    <p className="text-sm text-muted-foreground">
-                                      "{result.postTitle}" by {result.authorName} has been moved to rejected
-                                    </p>
-                                  </div>
-                                </div>,
-                                {
-                                  duration: 5000,
-                                  action: {
-                                    label: 'Undo',
-                                    onClick: () => {
-                                      result.undo();
-                                      toast.success('Action undone', {
-                                        description: 'The post has been restored to its previous state',
-                                        duration: 3000,
-                                      });
-                                    },
-                                  },
-                                }
-                              );
-                            }
-                          }}
-                        >
-                          <X className="w-4 h-4 mr-2" />
-                          Reject
-                        </Button>
-                      )}
-                      {onRestore && (
-                        <Button
-                          variant="outline"
-                          size="default"
-                          className="flex-1"
-                          onClick={() => handleActionClick('restore', post.id, post.title, post.author_name)}
-                        >
-                          <RotateCcw className="w-4 h-4 mr-2" />
-                          Restore
-                        </Button>
-                      )}
-                    </div>
-                  )}
-                </div>
-              </DialogContent>
-            </Dialog>
           ))}
         </TableBody>
       </Table>
 
-      {/* Confirmation Dialogs */}
-      <AlertDialog
-        open={actionState.type === 'approve'}
-        onOpenChange={(open) => !open && setActionState({ type: null, postId: null, postTitle: null, authorName: null })}
-      >
-        <AlertDialogContent>
+      {previewPost && (
+        <EditorialPostPreviewDialog
+          open={previewDialogState.open}
+          onOpenChange={open =>
+            setPreviewDialogState({ open, postId: open ? previewPost.id : null })
+          }
+          post={previewPost}
+          onOpenApproveWorkflow={
+            onApprove && previewPost.status !== 'published'
+              ? () => setApproveDialogState({ open: true, postId: previewPost.id })
+              : undefined
+          }
+          onOpenRejectWorkflow={
+            onReject && previewPost.status !== 'rejected'
+              ? () =>
+                  handleActionClick('reject', previewPost.id, previewPost.title, previewPost.author_name)
+              : undefined
+          }
+          onOpenRestoreWorkflow={
+            onRestore
+              ? () =>
+                  handleActionClick('restore', previewPost.id, previewPost.title, previewPost.author_name)
+              : undefined
+          }
+          onOpenUnpublishWorkflow={
+            previewPost.status === 'published' && onRestore
+              ? () =>
+                  handleActionClick('restore', previewPost.id, previewPost.title, previewPost.author_name)
+              : undefined
+          }
+          onOpenDeleteWorkflow={() => setDeleteTargetId(previewPost.id)}
+          onEditFromPreview={
+            onEdit && (previewPost.status === 'pending' || previewPost.status === 'published')
+              ? () => {
+                  setPreviewDialogState({ open: false, postId: null });
+                  setEditDialogState({ open: true, postId: previewPost.id });
+                }
+              : undefined
+          }
+        />
+      )}
+
+      <AlertDialog open={deleteTargetId !== null} onOpenChange={open => !open && setDeleteTargetId(null)}>
+        <AlertDialogContent className="z-[200]">
           <AlertDialogHeader>
-            <AlertDialogTitle>Approve and publish this post?</AlertDialogTitle>
+            <AlertDialogTitle>Delete this post?</AlertDialogTitle>
             <AlertDialogDescription className="space-y-2">
-              <p>
-                Are you sure you want to approve <strong>"{actionState.postTitle}"</strong> by {actionState.authorName}?
-              </p>
-              <p className="text-xs text-muted-foreground">
-                This post will be published and visible to all readers in the magazine.
-              </p>
+              {(() => {
+                const p = deleteTargetId ? posts.find(x => x.id === deleteTargetId) : null;
+                return p ? (
+                  <>
+                    <p>
+                      Are you sure you want to permanently delete <strong>&quot;{p.title}&quot;</strong> by{' '}
+                      {p.author_name}?
+                    </p>
+                    <p className="text-xs text-muted-foreground">
+                      This action cannot be undone. The post will be permanently removed from the system.
+                    </p>
+                  </>
+                ) : null;
+              })()}
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
             <AlertDialogCancel>Cancel</AlertDialogCancel>
             <AlertDialogAction
-              onClick={handleConfirmAction}
-              className="bg-green-600 hover:bg-green-700 focus:ring-green-600"
+              onClick={() => {
+                if (deleteTargetId) {
+                  onDelete(deleteTargetId);
+                  setDeleteTargetId(null);
+                  setPreviewDialogState({ open: false, postId: null });
+                }
+              }}
+              className="bg-red-600 hover:bg-red-700 focus:ring-red-600"
             >
-              <Check className="w-4 h-4 mr-2" />
-              Approve & Publish
+              <Trash2 className="w-4 h-4 mr-2" />
+              Delete Permanently
             </AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>
 
+      {approveDialogState.postId &&
+        onApprove &&
+        (() => {
+          const p = posts.find(x => x.id === approveDialogState.postId);
+          return p ? (
+            <ApproveDialog
+              key={p.id}
+              open={approveDialogState.open}
+              onOpenChange={open => setApproveDialogState({ open, postId: open ? p.id : null })}
+              post={p}
+              onApprove={handleApprove}
+            />
+          ) : null;
+        })()}
+
+      {/* Confirmation Dialogs */}
       <AlertDialog
         open={actionState.type === 'reject'}
         onOpenChange={(open) => !open && setActionState({ type: null, postId: null, postTitle: null, authorName: null })}
