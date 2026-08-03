@@ -27,6 +27,18 @@ api.interceptors.request.use(
                 localStorage.removeItem(AUTH_KEY);
             }
         }
+        // Let the browser set multipart boundary — default application/json breaks file uploads
+        if (config.data instanceof FormData) {
+            if (typeof config.headers.delete === 'function') {
+                config.headers.delete('Content-Type');
+                config.headers.delete('content-type');
+            } else {
+                delete config.headers['Content-Type'];
+                delete config.headers['content-type'];
+            }
+            // axios treats `false` as "do not set Content-Type" (browser adds boundary)
+            config.headers['Content-Type'] = false as unknown as string;
+        }
         return config;
     },
     (error) => Promise.reject(error)

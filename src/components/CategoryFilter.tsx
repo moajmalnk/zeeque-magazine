@@ -61,7 +61,7 @@ export function CategoryFilter({ selectedCategory, onCategoryChange, posts }: Ca
   }, [selectedCategory, availableCategories, onCategoryChange]);
 
   return (
-    <div className="flex flex-wrap gap-3 justify-center px-4">
+    <div className="flex flex-wrap gap-3 justify-center sm:justify-start px-4 flex-1 min-w-0">
       {availableCategories.map((category) => {
         const isSelected = selectedCategory === category;
 

@@ -609,11 +609,13 @@ export function Header() {
         </div>
       </header>
 
-      {/* Global Floating Create Button */}
-      <FloatingCreateButton
-        isAuthenticated={isAuthenticated}
-        onAuthRequired={openAuthPrompt}
-      />
+      {/* Global Floating Create Button — hidden on submit page so it doesn't block uploads */}
+      {location.pathname !== '/submit' && (
+        <FloatingCreateButton
+          isAuthenticated={isAuthenticated}
+          onAuthRequired={openAuthPrompt}
+        />
+      )}
 
     </>
   );

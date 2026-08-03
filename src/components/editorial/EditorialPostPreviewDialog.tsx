@@ -260,7 +260,7 @@ export function EditorialPostPreviewDialog({
         <DialogDescription className="sr-only">
           Editorial review for {post.title} by {post.author_name}
         </DialogDescription>
-        <div className="flex flex-col md:flex-row h-auto md:h-full overflow-visible md:overflow-hidden">
+        <div className="flex flex-col md:flex-row h-auto md:h-full overflow-visible md:overflow-hidden min-w-0">
           <div
             className={cn(
               'relative w-full md:w-[45%] h-[400px] md:h-full shrink-0 overflow-hidden group/media',
@@ -316,10 +316,10 @@ export function EditorialPostPreviewDialog({
             </div>
           </div>
 
-          <div className="flex-none md:flex-1 flex flex-col bg-slate-50/30 dark:bg-zinc-950/30 overflow-visible md:overflow-hidden">
-            <div className="p-8 pb-4 flex items-start justify-between shrink-0">
-              <div className="space-y-1 max-w-[85%]">
-                <h2 className="text-xl md:text-3xl font-display font-black leading-tight tracking-tight text-slate-900 dark:text-white">
+          <div className="flex-none md:flex-1 flex flex-col bg-slate-50/30 dark:bg-zinc-950/30 overflow-visible md:overflow-hidden min-w-0">
+            <div className="p-8 pb-4 flex items-start justify-between shrink-0 gap-4">
+              <div className="space-y-1 min-w-0 flex-1">
+                <h2 className="text-xl md:text-3xl font-display font-black leading-tight tracking-tight text-slate-900 dark:text-white break-words">
                   {post.title}
                 </h2>
                 <div className="flex items-center gap-2">
@@ -338,7 +338,7 @@ export function EditorialPostPreviewDialog({
               </Button>
             </div>
 
-            <div className="flex-none md:flex-1 overflow-visible md:overflow-y-auto p-6 md:p-8 pt-0 space-y-8 scrollbar-elegant">
+            <div className="flex-none md:flex-1 overflow-visible md:overflow-y-auto md:overflow-x-hidden p-6 md:p-8 pt-0 space-y-8 scrollbar-elegant min-w-0">
               <div
                 role="button"
                 tabIndex={0}
@@ -386,11 +386,11 @@ export function EditorialPostPreviewDialog({
                   <FileText className="w-4 h-4 text-primary opacity-50" />
                   <span className="text-[10px] font-black uppercase tracking-widest text-muted-foreground">The Narrative</span>
                 </div>
-                <div className="bg-white dark:bg-zinc-900/40 p-8 rounded-2xl border border-slate-100 dark:border-zinc-800/50 relative">
+                <div className="bg-white dark:bg-zinc-900/40 p-8 rounded-2xl border border-slate-100 dark:border-zinc-800/50 relative overflow-hidden min-w-0">
                   <div className="absolute top-4 right-6 text-slate-100 dark:text-zinc-800 text-6xl font-serif pointer-events-none select-none">
                     “
                   </div>
-                  <p className="text-slate-600 dark:text-slate-300 text-base md:text-lg leading-relaxed whitespace-pre-wrap font-medium">
+                  <p className="text-slate-600 dark:text-slate-300 text-base md:text-lg leading-relaxed whitespace-pre-wrap break-words [overflow-wrap:anywhere] font-medium">
                     {post.content}
                   </p>
                 </div>

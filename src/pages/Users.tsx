@@ -179,16 +179,25 @@ export default function Users() {
         }
     };
 
+    const getOrderingParam = () => {
+        if (sortBy === 'oldest') return 'created_at';
+        if (sortBy === 'name') return 'username';
+        return '-created_at'; // newest
+    };
+
     const { data: usersData, isLoading, isFetching } = useQuery({
         queryKey: ['users', activeTab, statusFilter, sortBy, debouncedSearch, currentPage, pageSize],
         queryFn: async () => {
-            const params: any = {
+            const params: Record<string, string | number> = {
                 role: activeTab,
-                search: debouncedSearch,
                 page: currentPage,
                 page_size: pageSize,
-                ordering: sortBy === 'oldest' ? 'date_joined' : sortBy === 'name' ? 'username' : '-date_joined'
+                ordering: getOrderingParam(),
             };
+
+            if (debouncedSearch.trim()) {
+                params.search = debouncedSearch.trim();
+            }
 
             if (statusFilter === 'ACTIVE') {
                 params.is_onboarded = 'true';
@@ -218,13 +227,16 @@ export default function Users() {
             const exportPageSize = 100;
 
             while (hasMore) {
-                const params: any = {
+                const params: Record<string, string | number> = {
                     role: activeTab,
-                    search: debouncedSearch,
                     page: nextPage,
                     page_size: exportPageSize,
-                    ordering: sortBy === 'oldest' ? 'date_joined' : sortBy === 'name' ? 'username' : '-date_joined'
+                    ordering: getOrderingParam(),
                 };
+
+                if (debouncedSearch.trim()) {
+                    params.search = debouncedSearch.trim();
+                }
 
                 if (statusFilter === 'ACTIVE') {
                     params.is_onboarded = 'true';
@@ -336,10 +348,29 @@ export default function Users() {
 
     const updateUserMutation = useMutation({
         mutationFn: async (data: any) => {
-            const { id, ...updatedData } = data;
+            const { id, ...raw } = data;
+            const updatedData: Record<string, any> = { ...raw };
+
+            // School display name in the table is `username` — keep it in sync with school_name
+            if (activeTab === 'SCHOOL' && updatedData.school_name?.trim()) {
+                updatedData.username = updatedData.school_name.trim();
+                updatedData.school_name = updatedData.school_name.trim();
+            }
+            if (typeof updatedData.school_code === 'string') {
+                updatedData.school_code = updatedData.school_code.trim();
+            }
+            if (typeof updatedData.email === 'string') {
+                updatedData.email = updatedData.email.trim();
+            }
+
             if (!updatedData.password) {
                 delete updatedData.password;
             }
+            // Empty website fails URLField validation on some backends
+            if (!updatedData.website?.trim()) {
+                updatedData.website = '';
+            }
+
             await api.patch(`/users/${id}/`, updatedData);
         },
         onSuccess: () => {
@@ -348,9 +379,17 @@ export default function Users() {
             toast.success('User updated successfully');
         },
         onError: (error: any) => {
-            const msg = error.response?.data?.detail
-                || (typeof error.response?.data === 'object' ? Object.values(error.response.data).flat().join(', ') : '')
-                || 'Failed to update user.';
+            const data = error.response?.data;
+            let msg = 'Failed to update user.';
+            if (typeof data === 'string') {
+                msg = data;
+            } else if (data?.detail) {
+                msg = Array.isArray(data.detail) ? data.detail.join(', ') : String(data.detail);
+            } else if (data && typeof data === 'object') {
+                msg = Object.entries(data)
+                    .map(([key, val]) => `${key}: ${Array.isArray(val) ? val.join(', ') : val}`)
+                    .join(' · ');
+            }
             toast.error(msg);
         }
     });
@@ -400,6 +439,17 @@ export default function Users() {
     const handleSubmit = (e: React.FormEvent) => {
         e.preventDefault();
 
+        if (activeTab === 'SCHOOL') {
+            if (!formData.school_name?.trim()) {
+                toast.error('School name is required');
+                return;
+            }
+            if (!formData.school_code?.trim()) {
+                toast.error('Institution code is required');
+                return;
+            }
+        }
+
         if (activeTab === 'EDITORIAL' && formData.phone_number && formData.phone_number.length !== 10) {
             toast.error("Phone number must be exactly 10 digits");
             return;
@@ -420,7 +470,12 @@ export default function Users() {
                 toast.error("Password must be at least 8 characters long");
                 return;
             }
-            createUserMutation.mutate(formData);
+            const payload = { ...formData };
+            if (activeTab === 'SCHOOL' && payload.school_name?.trim()) {
+                payload.username = payload.school_name.trim();
+                payload.school_name = payload.school_name.trim();
+            }
+            createUserMutation.mutate(payload);
         }
     };
 
@@ -492,64 +547,23 @@ export default function Users() {
         <div className="min-h-screen flex flex-col bg-background selection:bg-primary/20">
             <Header />
 
-            <main className="flex-1 container max-w-7xl py-12">
-                <div className="flex flex-col md:flex-row items-start md:items-center justify-between gap-6 mb-8 animate-slide-up">
-                    <div>
-                        <h1 className="text-4xl font-display font-bold tracking-tight mb-2">
-                            User Management
-                        </h1>
-                        <p className="text-muted-foreground text-lg">
-                            Manage School and Editorial accounts.
-                        </p>
-                    </div>
-
-                    <div className="flex items-center gap-3">
-                        <Button
-                            variant="outline"
-                            onClick={handleExport}
-                            className="rounded-full border-border/40 hover:bg-muted font-semibold transition-all hidden sm:flex"
-                        >
-                            <Download className="mr-2 h-4 w-4" />
-                            Export List
-                        </Button>
-                        <Button onClick={openAddSheet} size="lg" className="rounded-full shadow-lg hover:shadow-xl hover:scale-105 transition-all duration-300 bg-gradient-hero border-0">
-                            <UserPlus className="mr-2 h-5 w-5" />
-                            Add New {activeTab.charAt(0) + activeTab.slice(1).toLowerCase()}
-                        </Button>
-                    </div>
-                </div>
-
-                <Tabs defaultValue="SCHOOL" onValueChange={(val) => setActiveTab(val as 'SCHOOL' | 'EDITORIAL' | 'STUDENT' | 'TEACHER' | 'PARENT')} className="w-full animate-slide-up" style={{ animationDelay: '100ms' }}>
-                    <div className="flex flex-col md:flex-row items-center mb-8 gap-4">
-                        <TabsList className="w-full md:w-auto p-1 bg-white dark:bg-muted/50 rounded-xl md:rounded-full h-auto overflow-x-auto flex flex-nowrap justify-start md:justify-center scrollbar-hide snap-x mask-linear-fade">
-                            <TabsTrigger value="SCHOOL" className="rounded-full px-4 md:px-6 py-2.5 data-[state=active]:bg-blue-600 data-[state=active]:text-white data-[state=active]:shadow-md transition-all duration-300 flex-shrink-0 whitespace-nowrap snap-start flex items-center gap-2 font-bold">
-                                <School className="w-4 h-4" />
-                                <span>Schools</span>
-                            </TabsTrigger>
-                            <TabsTrigger value="EDITORIAL" className="rounded-full px-4 md:px-6 py-2.5 data-[state=active]:bg-yellow-500 data-[state=active]:text-white data-[state=active]:shadow-md transition-all duration-300 flex-shrink-0 whitespace-nowrap snap-start flex items-center gap-2 font-bold">
-                                <BookOpen className="w-4 h-4" />
-                                <span>Editorial</span>
-                            </TabsTrigger>
-                            <TabsTrigger value="STUDENT" className="rounded-full px-4 md:px-6 py-2.5 data-[state=active]:bg-pink-500 data-[state=active]:text-white data-[state=active]:shadow-md transition-all duration-300 flex-shrink-0 whitespace-nowrap snap-start flex items-center gap-2 font-bold">
-                                <GraduationCap className="w-4 h-4" />
-                                <span>Students</span>
-                            </TabsTrigger>
-                            <TabsTrigger value="TEACHER" className="rounded-full px-4 md:px-6 py-2.5 data-[state=active]:bg-orange-500 data-[state=active]:text-white data-[state=active]:shadow-md transition-all duration-300 flex-shrink-0 whitespace-nowrap snap-start flex items-center gap-2 font-bold">
-                                <UsersIcon className="w-4 h-4" />
-                                <span>Teachers</span>
-                            </TabsTrigger>
-                            <TabsTrigger value="PARENT" className="rounded-full px-4 md:px-6 py-2.5 data-[state=active]:bg-green-600 data-[state=active]:text-white data-[state=active]:shadow-md transition-all duration-300 flex-shrink-0 whitespace-nowrap snap-start flex items-center gap-2 font-bold">
-                                <Baby className="w-4 h-4" />
-                                <span>Parents</span>
-                            </TabsTrigger>
-                        </TabsList>
-
-                        {/* Search and Filters Toolbar */}
-                        <div className="flex flex-col lg:flex-row items-center gap-3 w-full md:flex-1 md:pl-4">
-                            <div className="flex items-center gap-2 w-full lg:w-auto">
-                                {/* Status Filter */}
+            <main className="flex-1 container max-w-7xl py-8 md:py-10">
+                <Tabs
+                    defaultValue="SCHOOL"
+                    onValueChange={(val) => {
+                        setActiveTab(val as 'SCHOOL' | 'EDITORIAL' | 'STUDENT' | 'TEACHER' | 'PARENT');
+                        // Status filter was sticky across tabs (e.g. BLOCKED), which hid matching users on the next role tab.
+                        setStatusFilter('ALL');
+                        setCurrentPage(1);
+                    }}
+                    className="w-full animate-slide-up space-y-4"
+                >
+                    {/* Row 1: filters + actions */}
+                    <div className="flex flex-col xl:flex-row xl:items-center gap-3">
+                        <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-2 flex-1 min-w-0">
+                            <div className="flex items-center gap-2 shrink-0">
                                 <Select value={statusFilter} onValueChange={(val: any) => setStatusFilter(val)}>
-                                    <SelectTrigger className="flex-1 lg:w-[140px] h-11 rounded-full border-border/40 bg-white dark:bg-muted/20 backdrop-blur-sm hover:border-primary/30 transition-all duration-300 shadow-sm pl-4">
+                                    <SelectTrigger className="flex-1 sm:w-[140px] h-11 rounded-full border-border/40 bg-white dark:bg-muted/20 backdrop-blur-sm hover:border-primary/30 transition-all duration-300 shadow-sm pl-4">
                                         <div className="flex items-center gap-2 truncate">
                                             <ListFilter className="w-4 h-4 text-primary shrink-0" />
                                             <span className="text-[11px] font-black uppercase tracking-wider truncate">
@@ -565,9 +579,8 @@ export default function Users() {
                                     </SelectContent>
                                 </Select>
 
-                                {/* Sort Control */}
                                 <Select value={sortBy} onValueChange={(val: any) => setSortBy(val)}>
-                                    <SelectTrigger className="flex-1 lg:w-[140px] h-11 rounded-full border-border/40 bg-white dark:bg-muted/20 backdrop-blur-sm hover:border-primary/30 transition-all duration-300 shadow-sm pl-4">
+                                    <SelectTrigger className="flex-1 sm:w-[140px] h-11 rounded-full border-border/40 bg-white dark:bg-muted/20 backdrop-blur-sm hover:border-primary/30 transition-all duration-300 shadow-sm pl-4">
                                         <div className="flex items-center gap-2 truncate">
                                             <SortAsc className="w-4 h-4 text-primary shrink-0" />
                                             <span className="text-[11px] font-black uppercase tracking-wider truncate">
@@ -583,45 +596,95 @@ export default function Users() {
                                 </Select>
                             </div>
 
-                            {/* Search Bar */}
-                            <div className="relative w-full group flex-1">
-                                <div className="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none z-10">
-                                    <Search className="h-4 w-4 text-slate-500 dark:text-zinc-400 group-focus-within:text-primary transition-colors" />
+                            <div className="flex items-center gap-2 flex-1 min-w-0">
+                                <div className="relative group flex-1 min-w-0">
+                                    <div className="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none z-10">
+                                        <Search className="h-4 w-4 text-slate-500 dark:text-zinc-400 group-focus-within:text-primary transition-colors" />
+                                    </div>
+                                    <Input
+                                        type="text"
+                                        placeholder={`Search ${activeTab.toLowerCase()} accounts...`}
+                                        className="pl-10 h-11 rounded-full border-border/40 bg-white dark:bg-muted/20 backdrop-blur-sm focus:dark:bg-background focus-visible:ring-2 focus-visible:ring-primary/40 transition-all duration-300 shadow-sm w-full font-medium"
+                                        value={searchTerm}
+                                        onChange={(e) => setSearchTerm(e.target.value)}
+                                    />
+                                    {searchTerm && (
+                                        <button
+                                            type="button"
+                                            onClick={() => {
+                                                setSearchTerm('');
+                                                setDebouncedSearch('');
+                                            }}
+                                            className="absolute right-4 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground transition-colors"
+                                            aria-label="Clear search"
+                                        >
+                                            <X className="h-3 w-3" />
+                                        </button>
+                                    )}
                                 </div>
-                                <Input
-                                    type="text"
-                                    placeholder={`Search ${activeTab.toLowerCase()} accounts...`}
-                                    className="pl-10 h-11 rounded-full border-border/40 bg-white dark:bg-muted/20 backdrop-blur-sm focus:dark:bg-background focus:ring-primary/20 transition-all duration-300 shadow-sm w-full font-medium"
-                                    value={searchTerm}
-                                    onChange={(e) => setSearchTerm(e.target.value)}
-                                />
-                                {searchTerm && (
-                                    <button
-                                        onClick={() => setSearchTerm('')}
-                                        className="absolute right-4 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground transition-colors"
+
+                                {(statusFilter !== 'ALL' || sortBy !== 'newest' || searchTerm) && (
+                                    <Button
+                                        type="button"
+                                        variant="outline"
+                                        size="sm"
+                                        onClick={() => {
+                                            setStatusFilter('ALL');
+                                            setSortBy('newest');
+                                            setSearchTerm('');
+                                            setDebouncedSearch('');
+                                        }}
+                                        className="h-11 shrink-0 px-4 rounded-full border-2 border-primary/50 bg-primary/15 text-foreground hover:bg-primary/25 hover:border-primary dark:bg-primary/20 dark:border-primary/60 dark:text-white dark:hover:bg-primary/30 text-[10px] font-black uppercase tracking-widest shadow-sm"
                                     >
-                                        <X className="h-3 w-3" />
-                                    </button>
+                                        <RotateCcw className="w-3.5 h-3.5 mr-2" />
+                                        Reset
+                                    </Button>
                                 )}
                             </div>
+                        </div>
 
-                            {/* Clear All Accessor */}
-                            {(statusFilter !== 'ALL' || sortBy !== 'newest' || searchTerm) && (
-                                <Button
-                                    variant="ghost"
-                                    size="sm"
-                                    onClick={() => {
-                                        setStatusFilter('ALL');
-                                        setSortBy('newest');
-                                        setSearchTerm('');
-                                    }}
-                                    className="h-11 px-4 rounded-full text-[10px] font-black uppercase tracking-widest text-primary hover:bg-primary/5 shrink-0"
-                                >
-                                    <RotateCcw className="w-3 h-3 mr-2" /> Reset
-                                </Button>
-                            )}
+                        <div className="flex items-center gap-2 shrink-0 w-full sm:w-auto sm:justify-end">
+                            <Button
+                                variant="outline"
+                                onClick={handleExport}
+                                className="rounded-full h-11 border-border/40 hover:bg-muted font-semibold transition-all flex-1 sm:flex-none"
+                            >
+                                <Download className="mr-2 h-4 w-4" />
+                                Export List
+                            </Button>
+                            <Button
+                                onClick={openAddSheet}
+                                className="rounded-full h-11 shadow-lg hover:shadow-xl hover:scale-[1.02] transition-all duration-300 bg-gradient-hero border-0 flex-1 sm:flex-none font-bold"
+                            >
+                                <UserPlus className="mr-2 h-5 w-5" />
+                                Add New {activeTab.charAt(0) + activeTab.slice(1).toLowerCase()}
+                            </Button>
                         </div>
                     </div>
+
+                    {/* Row 2: role tabs */}
+                    <TabsList className="w-full p-1 bg-white dark:bg-muted/50 rounded-xl md:rounded-full h-auto overflow-x-auto flex flex-nowrap justify-start scrollbar-hide snap-x">
+                        <TabsTrigger value="SCHOOL" className="rounded-full px-4 md:px-6 py-2.5 data-[state=active]:bg-blue-600 data-[state=active]:text-white data-[state=active]:shadow-md transition-all duration-300 flex-shrink-0 whitespace-nowrap snap-start flex items-center gap-2 font-bold">
+                            <School className="w-4 h-4" />
+                            <span>Schools</span>
+                        </TabsTrigger>
+                        <TabsTrigger value="EDITORIAL" className="rounded-full px-4 md:px-6 py-2.5 data-[state=active]:bg-yellow-500 data-[state=active]:text-white data-[state=active]:shadow-md transition-all duration-300 flex-shrink-0 whitespace-nowrap snap-start flex items-center gap-2 font-bold">
+                            <BookOpen className="w-4 h-4" />
+                            <span>Editorial</span>
+                        </TabsTrigger>
+                        <TabsTrigger value="STUDENT" className="rounded-full px-4 md:px-6 py-2.5 data-[state=active]:bg-pink-500 data-[state=active]:text-white data-[state=active]:shadow-md transition-all duration-300 flex-shrink-0 whitespace-nowrap snap-start flex items-center gap-2 font-bold">
+                            <GraduationCap className="w-4 h-4" />
+                            <span>Students</span>
+                        </TabsTrigger>
+                        <TabsTrigger value="TEACHER" className="rounded-full px-4 md:px-6 py-2.5 data-[state=active]:bg-orange-500 data-[state=active]:text-white data-[state=active]:shadow-md transition-all duration-300 flex-shrink-0 whitespace-nowrap snap-start flex items-center gap-2 font-bold">
+                            <UsersIcon className="w-4 h-4" />
+                            <span>Teachers</span>
+                        </TabsTrigger>
+                        <TabsTrigger value="PARENT" className="rounded-full px-4 md:px-6 py-2.5 data-[state=active]:bg-green-600 data-[state=active]:text-white data-[state=active]:shadow-md transition-all duration-300 flex-shrink-0 whitespace-nowrap snap-start flex items-center gap-2 font-bold">
+                            <Baby className="w-4 h-4" />
+                            <span>Parents</span>
+                        </TabsTrigger>
+                    </TabsList>
 
                     <div className="rounded-3xl border border-border/40 bg-white dark:bg-card/50 backdrop-blur-sm shadow-card overflow-hidden">
                         {(isLoading || (isFetching && results.length === 0)) ? (
@@ -642,8 +705,30 @@ export default function Users() {
                                 </div>
                                 <h3 className="text-lg font-semibold mb-2">No {activeTab.toLowerCase()}s found</h3>
                                 <p className="text-muted-foreground max-w-sm mx-auto">
-                                    {searchTerm ? "Try adjusting your search terms." : `Get started by adding your first ${activeTab.toLowerCase()} account.`}
+                                    {statusFilter !== 'ALL' && searchTerm
+                                        ? `No ${statusFilter.toLowerCase()} ${activeTab.toLowerCase()}s match “${searchTerm}”. Try Status → All, or clear search.`
+                                        : statusFilter !== 'ALL'
+                                            ? `No ${statusFilter.toLowerCase()} ${activeTab.toLowerCase()}s in this list. Try Status → All.`
+                                            : searchTerm
+                                                ? "Try adjusting your search terms, or search by name, email, or phone."
+                                                : `Get started by adding your first ${activeTab.toLowerCase()} account.`}
                                 </p>
+                                {(statusFilter !== 'ALL' || searchTerm) && (
+                                    <Button
+                                        variant="outline"
+                                        size="sm"
+                                        className="mt-5 rounded-full font-bold"
+                                        onClick={() => {
+                                            setStatusFilter('ALL');
+                                            setSortBy('newest');
+                                            setSearchTerm('');
+                                            setDebouncedSearch('');
+                                        }}
+                                    >
+                                        <RotateCcw className="w-3.5 h-3.5 mr-2" />
+                                        Clear filters
+                                    </Button>
+                                )}
                             </div>
                         ) : (
                             <Table>
@@ -702,7 +787,11 @@ export default function Users() {
                                                             </div>
                                                         )}
                                                     </div>
-                                                    <span className="font-semibold text-slate-700 dark:text-zinc-200">{user.username}</span>
+                                                    <span className="font-semibold text-slate-700 dark:text-zinc-200">
+                                                        {activeTab === 'SCHOOL'
+                                                            ? (user.school_name || user.username)
+                                                            : user.username}
+                                                    </span>
                                                 </div>
                                             </TableCell>
                                             <TableCell>{user.email}</TableCell>
@@ -879,7 +968,7 @@ export default function Users() {
                 <DialogContent
                     noContentWrapper
                     aria-describedby={undefined}
-                    className="max-w-[1100px] w-[95vw] md:w-[95vw] h-[92vh] md:h-[80vh] p-0 border dark:border-white/10 rounded-[2.5rem] bg-white dark:bg-zinc-950 shadow-2xl overflow-y-auto md:overflow-hidden flex flex-col md:flex-row transition-all duration-500 z-[100] outline-none scrollbar-hide"
+                    className="max-w-[1100px] w-[95vw] md:w-[95vw] h-[92vh] md:h-[80vh] p-0 border dark:border-white/10 rounded-[2.5rem] bg-white dark:bg-zinc-950 shadow-2xl overflow-y-auto md:overflow-hidden flex flex-col md:flex-row transition-all duration-500 z-[100] outline-none scrollbar-modal"
                 >
                     <DialogTitle className="sr-only">Account Management</DialogTitle>
                     {/* Left Sidebar: Context Branding - Responsive Stacking */}
@@ -907,7 +996,7 @@ export default function Users() {
                     </div>
 
                     {/* Right Pane: Form Content */}
-                    <div className="flex-none md:flex-1 flex flex-col bg-white dark:bg-zinc-950 overflow-visible md:overflow-hidden">
+                    <div className="flex-1 flex flex-col bg-white dark:bg-zinc-950 min-h-0 overflow-hidden">
                         <div className="p-6 md:p-8 pb-4 shrink-0">
                             <div>
                                 <DialogTitle className="text-xl md:text-2xl font-display font-bold tracking-tight">
@@ -917,8 +1006,8 @@ export default function Users() {
                             </div>
                         </div>
 
-                        <div className="flex-none md:flex-1 overflow-visible md:overflow-y-auto px-6 md:px-8 py-4 space-y-6 scrollbar-hide">
-                            <form id="user-form" onSubmit={handleSubmit} className="space-y-6">
+                        <div className="flex-1 min-h-0 overflow-y-auto overscroll-contain px-6 md:px-8 py-4 space-y-6 scrollbar-modal">
+                            <form id="user-form" onSubmit={handleSubmit} className="space-y-6 pr-1">
                                 <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                                     {['SCHOOL', 'STUDENT', 'TEACHER', 'PARENT'].includes(activeTab) && (
                                         <div className="md:col-span-2 space-y-6 bg-slate-50/50 dark:bg-zinc-900/30 p-6 rounded-[2rem] border border-border/40 mb-2">
@@ -1163,6 +1252,15 @@ export default function Users() {
                                 type="submit"
                                 form="user-form"
                                 disabled={createUserMutation.isPending || updateUserMutation.isPending}
+                                onClick={(e) => {
+                                    // Ensure submit works when the footer button sits outside the scrollable form
+                                    const form = document.getElementById('user-form') as HTMLFormElement | null;
+                                    if (!form) return;
+                                    if (!form.checkValidity()) {
+                                        e.preventDefault();
+                                        form.reportValidity();
+                                    }
+                                }}
                                 className="w-full md:w-auto h-12 px-10 rounded-2xl bg-primary text-white font-bold shadow-xl shadow-primary/20 transition-all active:scale-95 order-1 md:order-2"
                             >
                                 {(createUserMutation.isPending || updateUserMutation.isPending) && (
@@ -1237,7 +1335,7 @@ export default function Users() {
                 <DialogContent
                     noContentWrapper
                     aria-describedby={undefined}
-                    className="max-w-[1100px] w-[95vw] md:w-[95vw] h-[92vh] md:h-[80vh] p-0 border dark:border-white/10 rounded-[2.5rem] bg-white dark:bg-zinc-950 shadow-2xl overflow-y-auto md:overflow-hidden flex flex-col md:flex-row transition-all duration-500 z-[250] outline-none scrollbar-hide"
+                    className="max-w-[1100px] w-[95vw] md:w-[95vw] h-[92vh] md:h-[80vh] p-0 border dark:border-white/10 rounded-[2.5rem] bg-white dark:bg-zinc-950 shadow-2xl overflow-y-auto md:overflow-hidden flex flex-col md:flex-row transition-all duration-500 z-[250] outline-none scrollbar-modal"
                 >
                     <DialogTitle className="sr-only">User Profile Details</DialogTitle>
                     {/* Left Sidebar: Identity & Branding - Responsive height */}
@@ -1307,7 +1405,7 @@ export default function Users() {
                     </div>
 
                     {/* Right Pane: Details & Actions */}
-                    <div className="flex-none md:flex-1 flex flex-col bg-white dark:bg-zinc-950 overflow-visible md:overflow-hidden">
+                    <div className="flex-1 flex flex-col bg-white dark:bg-zinc-950 min-h-0 overflow-hidden">
                         <div className="p-6 md:p-8 pb-4 shrink-0 flex items-center justify-between">
                             <div>
                                 <DialogTitle className="text-xl md:text-2xl font-display font-bold tracking-tight">Full Account Details</DialogTitle>
@@ -1315,7 +1413,7 @@ export default function Users() {
                             </div>
                         </div>
 
-                        <div className="flex-none md:flex-1 overflow-visible md:overflow-y-auto px-6 md:px-8 pb-8 space-y-8 scrollbar-hide">
+                        <div className="flex-1 min-h-0 overflow-y-auto overscroll-contain px-6 md:px-8 pb-8 space-y-8 scrollbar-modal pr-2">
                             {/* Section: Basic Info */}
                             <div className="space-y-4">
                                 <h4 className="text-[10px] font-black uppercase tracking-[0.25em] text-primary/70 flex items-center gap-2">

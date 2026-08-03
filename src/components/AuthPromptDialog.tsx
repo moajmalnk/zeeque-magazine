@@ -17,11 +17,13 @@ export function AuthPromptDialog() {
 
   return (
     <Dialog open={isOpen} onOpenChange={(open) => !open && closeAuthPrompt()}>
-      <DialogContent className="max-w-md w-full p-0 overflow-hidden bg-white dark:bg-black border-0 rounded-[2rem] shadow-2xl z-[200]">
-        <div className="relative h-48 w-full bg-gradient-to-br from-primary/20 to-primary/5 flex items-center justify-center overflow-hidden">
+      <DialogContent
+        noContentWrapper
+        className="max-w-md w-[calc(100%-1.5rem)] sm:w-full p-0 gap-0 bg-white dark:bg-black border-0 rounded-[2rem] shadow-2xl z-[200] max-h-[min(720px,calc(100dvh-1.5rem))] overflow-y-auto overflow-x-hidden scrollbar-modal"
+      >
+        <div className="relative h-36 sm:h-44 w-full shrink-0 bg-gradient-to-br from-primary/20 to-primary/5 flex items-center justify-center overflow-hidden">
           <div className="absolute inset-0 bg-[url('/grid.svg')] opacity-10" />
 
-          {/* Morphing Background shapes */}
           <motion.div
             animate={{ rotate: 360 }}
             transition={{ duration: 20, repeat: Infinity, ease: "linear" }}
@@ -33,28 +35,27 @@ export function AuthPromptDialog() {
             className="absolute -bottom-20 -left-20 w-40 h-40 bg-teal-400/20 blur-3xl rounded-full pointer-events-none"
           />
 
-          {/* Mascot Image */}
           <img
             src="/images/mascot1.png"
             alt="Join Community Mascot"
-            className="relative z-10 h-40 object-contain drop-shadow-2xl hover:scale-105 transition-transform duration-500"
+            className="relative z-10 h-28 sm:h-36 object-contain drop-shadow-2xl"
           />
         </div>
 
-        <div className="p-8 space-y-6 text-center bg-white dark:bg-black">
-          <DialogHeader>
+        <div className="p-6 sm:p-8 pb-[max(1.5rem,env(safe-area-inset-bottom))] space-y-5 sm:space-y-6 text-center bg-white dark:bg-black">
+          <DialogHeader className="space-y-2 sm:space-y-3">
             <DialogTitle className="text-2xl font-display font-black text-foreground">
               Join to Create
             </DialogTitle>
-            <DialogDescription className="text-sm text-foreground/70 leading-relaxed pt-2">
+            <DialogDescription className="text-sm text-foreground/70 leading-relaxed">
               We'd love to see your ideas! Sign in or create an account to start publishing your posts, interacting with the community, and building your creative portfolio.
             </DialogDescription>
           </DialogHeader>
 
-          <div className="flex flex-col gap-3 pt-4">
+          <div className="flex flex-col gap-3">
             <Button
               onClick={() => { closeAuthPrompt(); navigate('/login'); }}
-              className="w-full h-12 rounded-xl font-bold bg-primary hover:bg-primary/90 text-white shadow-lg shadow-primary/20 transition-all hover:-translate-y-1"
+              className="w-full h-12 rounded-xl font-bold bg-primary hover:bg-primary/90 text-white shadow-lg shadow-primary/20 transition-all hover:-translate-y-0.5"
             >
               Let's Log In <LogIn className="w-4 h-4 ml-2" />
             </Button>
@@ -67,8 +68,8 @@ export function AuthPromptDialog() {
             </Button>
           </div>
 
-          <p className="text-[10px] text-muted-foreground pt-4">
-            By joining, you agree to our Terms of Service & Privacy Policy.
+          <p className="text-[10px] text-muted-foreground leading-relaxed">
+            By joining, you agree to our Terms of Service &amp; Privacy Policy.
           </p>
         </div>
       </DialogContent>

@@ -331,12 +331,12 @@ export function PostCard({ post, index = 0 }: PostCardProps) {
         )}
       >
         {/* --- Card Header: User Info --- */}
-        <div className="p-4 px-5 flex items-center justify-between">
+        <div className="p-4 px-5 flex items-center justify-between gap-3">
           <div
             role="button"
             tabIndex={0}
             aria-label={`View ${post.author_name}'s profile`}
-            className="flex items-center gap-3 cursor-pointer group/author transition-opacity hover:opacity-80 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 rounded-xl"
+            className="flex items-center gap-3 cursor-pointer group/author transition-opacity hover:opacity-80 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 rounded-xl min-w-0 flex-1"
             onClick={handleProfileClick}
             onKeyDown={(e) =>
               authorProfileCardKeyDown(
@@ -366,13 +366,13 @@ export function PostCard({ post, index = 0 }: PostCardProps) {
                 </div>
               )}
             </div>
-            <div className="flex flex-col min-w-0">
-              <div className="flex items-center gap-2">
-                <span className="text-sm font-bold text-slate-900 dark:text-slate-100 leading-none truncate group-hover/author:text-primary transition-colors">
+            <div className="flex flex-col min-w-0 flex-1">
+              <div className="flex items-center gap-2 min-w-0">
+                <span className="text-sm font-bold text-slate-900 dark:text-slate-100 leading-none truncate min-w-0 flex-1 group-hover/author:text-primary transition-colors">
                   {post.author_name}
                 </span>
                 {post.author_role && (
-                  <span className={cn("text-[10px] px-1.5 py-0.5 rounded-full font-semibold", roleTheme.badge)}>
+                  <span className={cn("text-[10px] px-1.5 py-0.5 rounded-full font-semibold shrink-0 whitespace-nowrap", roleTheme.badge)}>
                     {post.author_role.charAt(0) + post.author_role.slice(1).toLowerCase()}
                   </span>
                 )}

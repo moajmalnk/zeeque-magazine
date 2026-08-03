@@ -1,4 +1,4 @@
-import { useState, useEffect, useMemo } from 'react';
+import { useState, useEffect, useMemo, useRef } from 'react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
@@ -35,6 +35,24 @@ import { SchoolSelector } from '@/components/SchoolSelector';
 // --- Form Schema ---
 // Made teacher/school optional to prevent validation blocks on hidden fields.
 // We will handle required logic in the UI or backend if needed.
+const contentMinMessages: Record<Category, string> = {
+  stories: 'Write a little bit more! Your story is worth it!',
+  poems: 'Write a little bit more! Your poem deserves it!',
+  drawings: 'Write a little bit more! Tell us more about your drawing!',
+  news: 'Write a little bit more! Add a few more details to your article!',
+  video: 'Write a little bit more! Tell us more about your video!',
+  other: 'Write a little bit more! We would love to hear more!',
+};
+
+const contentHintMessages: Record<Category, (remaining: number) => string> = {
+  stories: (n) => `Just ${n} more letters to go... ✍️`,
+  poems: (n) => `Just ${n} more letters for your poem... ✍️`,
+  drawings: (n) => `Just ${n} more characters — describe your drawing! ✍️`,
+  news: (n) => `Just ${n} more characters for your article... ✍️`,
+  video: (n) => `Just ${n} more characters about your video... ✍️`,
+  other: (n) => `Just ${n} more characters to go... ✍️`,
+};
+
 const submitSchema = z.object({
   authorName: z.string().min(1, "What's your name?").max(50),
   teacherName: z.string().optional(),
@@ -43,11 +61,47 @@ const submitSchema = z.object({
   phoneNumber: z.string().optional(),
   title: z.string().min(1, "Give it a title!").max(100),
   category: z.enum(['stories', 'poems', 'drawings', 'news', 'video', 'other']),
-  content: z.string().min(20, "Write a little bit more! Your story is worth it!").max(2000),
+  content: z.string().max(2000),
   videoUrl: z.string().url("Needs to be a valid link").optional().or(z.literal('')),
-});
+}).refine(
+  (data) => data.content.length >= 20,
+  (data) => ({
+    message: contentMinMessages[data.category],
+    path: ['content'],
+  }),
+);
 
 type SubmitFormData = z.infer<typeof submitSchema>;
+
+const IMAGE_UPLOAD_ID = 'submit-image-upload';
+const VIDEO_UPLOAD_ID = 'submit-video-upload';
+
+const isImageFile = (file: File) =>
+  file.type.startsWith('image/') || /\.(jpe?g|png|gif|webp|heic|heif|bmp|svg)$/i.test(file.name);
+
+const compressImageWithTimeout = async (file: File, timeoutMs = 12000): Promise<File> => {
+  const options = {
+    maxSizeMB: 1,
+    maxWidthOrHeight: 1920,
+    useWebWorker: true,
+    fileType: file.type || 'image/jpeg',
+  };
+
+  try {
+    return await Promise.race([
+      imageCompression(file, options),
+      new Promise<File>((_, reject) =>
+        setTimeout(() => reject(new Error('compression-timeout')), timeoutMs)
+      ),
+    ]);
+  } catch (firstError) {
+    try {
+      return await imageCompression(file, { ...options, useWebWorker: false });
+    } catch {
+      throw firstError;
+    }
+  }
+};
 
 const categories: Category[] = ['stories', 'poems', 'drawings', 'news', 'video', 'other'];
 
@@ -87,8 +141,10 @@ export function SubmitForm() {
   const { role, username, school_name, teacher_name, phone_number, email, isAuthenticated, isLoading: isAuthLoading } = useAuth();
   const [selectedImage, setSelectedImage] = useState<File | null>(null);
   const [imagePreview, setImagePreview] = useState<string | null>(null);
+  const imageInputRef = useRef<HTMLInputElement>(null);
   const [selectedVideo, setSelectedVideo] = useState<File | null>(null);
   const [videoPreview, setVideoPreview] = useState<string | null>(null);
+  const videoInputRef = useRef<HTMLInputElement>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [isSuccess, setIsSuccess] = useState(false);
 
@@ -308,38 +364,65 @@ export function SubmitForm() {
   // ... (Image/Video handlers omitted as they don't impact layout logic, keeping logic same)
   const handleImageChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
-    if (file) {
-      // Basic sanity check - don't try to compress massive files that might crash browser
-      if (file.size > 20 * 1024 * 1024) {
-        toast.error("File is too large! Please choose an image under 20MB.");
-        return;
-      }
+    if (!file) return;
 
-      const loadingToast = toast.loading("Optimizing your image...");
-
-      try {
-        const options = {
-          maxSizeMB: 1, // Target < 1MB to be safe with standard Nginx limits
-          maxWidthOrHeight: 1920, // Full HD standard is usually enough
-          useWebWorker: true,
-        };
-
-        const compressedFile = await imageCompression(file, options);
-
-        setSelectedImage(compressedFile);
-
-        const reader = new FileReader();
-        reader.onload = () => setImagePreview(reader.result as string);
-        reader.readAsDataURL(compressedFile);
-
-        toast.dismiss(loadingToast);
-        toast.success("Image ready!");
-      } catch (error) {
-        console.error("Image compression error:", error);
-        toast.dismiss(loadingToast);
-        toast.error("Could not process this image. Try another.");
-      }
+    if (!isImageFile(file)) {
+      toast.error('Please choose an image file (JPG, PNG, WEBP, etc.).');
+      e.target.value = '';
+      return;
     }
+
+    if (file.size > 20 * 1024 * 1024) {
+      toast.error('File is too large! Please choose an image under 20MB.');
+      e.target.value = '';
+      return;
+    }
+
+    const loadingToast = toast.loading('Preparing your image...');
+
+    try {
+      let readyFile: File = file;
+      try {
+        readyFile = await compressImageWithTimeout(file);
+      } catch (compressError) {
+        console.warn('Image compression skipped, using original file:', compressError);
+        readyFile = file;
+      }
+
+      setSelectedImage(readyFile);
+
+      const reader = new FileReader();
+      reader.onload = () => setImagePreview(reader.result as string);
+      reader.onerror = () => {
+        setImagePreview(null);
+        toast.error('Could not preview this image, but it is ready to send.');
+      };
+      reader.readAsDataURL(readyFile);
+
+      toast.dismiss(loadingToast);
+      toast.success('Image ready!');
+    } catch (error) {
+      console.error('Image processing error:', error);
+      toast.dismiss(loadingToast);
+      toast.error('Could not process this image. Try another.');
+      e.target.value = '';
+    }
+  };
+
+  const clearSelectedImage = (e?: React.MouseEvent) => {
+    e?.preventDefault();
+    e?.stopPropagation();
+    setSelectedImage(null);
+    setImagePreview(null);
+    if (imageInputRef.current) imageInputRef.current.value = '';
+  };
+
+  const clearSelectedVideo = (e?: React.MouseEvent) => {
+    e?.preventDefault();
+    e?.stopPropagation();
+    setSelectedVideo(null);
+    setVideoPreview(null);
+    if (videoInputRef.current) videoInputRef.current.value = '';
   };
 
   const handleVideoChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -366,7 +449,10 @@ export function SubmitForm() {
       return;
     }
 
-
+    if (data.category === 'drawings' && !selectedImage) {
+      toast.error("Please upload your artwork before sending!");
+      return;
+    }
 
     setIsSubmitting(true);
 
@@ -421,7 +507,10 @@ export function SubmitForm() {
         if (cat === 'video') return "Lights, camera, action! Tell us about your video.";
         return "Tell me all about your masterpiece!";
       case 5:
-        return isTeacher ? "Almost there! Upload your class files here." : "Do you have a picture or video to show us?";
+        if (cat === 'drawings') return "Almost there! Upload a photo of your drawing.";
+        if (cat === 'poems') return "Want to add a picture with your poem?";
+        if (cat === 'video') return "Add your video link or upload a file.";
+        return isTeacher ? "Almost there! Add a picture if you have one." : "Do you have a picture to show us?";
       default:
         return "Almost done! Ready to send it to the world?";
     }
@@ -709,7 +798,7 @@ export function SubmitForm() {
                         ) : (
                           (form.watch('content')?.length || 0) < 20 && (
                             <p className="text-amber-500 font-medium text-xs animate-pulse">
-                              Just {20 - (form.watch('content')?.length || 0)} more letters to go... ✍️
+                              {contentHintMessages[form.watch('category')](20 - (form.watch('content')?.length || 0))}
                             </p>
                           )
                         )}
@@ -762,69 +851,111 @@ export function SubmitForm() {
                     </TabsContent>
 
                     <TabsContent value="upload" className="mt-0 space-y-4">
-                      <div className="relative border-2 border-dashed border-slate-200 dark:border-slate-700 rounded-2xl p-8 hover:bg-slate-50 dark:hover:bg-slate-800 transition-colors text-center cursor-pointer group">
-                        <input type="file" onChange={handleVideoChange} accept="video/*" className="absolute inset-0 opacity-0 cursor-pointer z-10" />
-                        <div className="w-16 h-16 bg-primary/10 rounded-full flex items-center justify-center mx-auto mb-4 group-hover:scale-110 transition-transform">
-                          <Video className="w-8 h-8 text-primary" />
-                        </div>
-                        <p className="text-lg font-bold text-slate-700 dark:text-slate-200 mb-1">
-                          {selectedVideo ? "Video Selected! 🎥" : "Click to Upload Video"}
-                        </p>
-                        <p className="text-sm text-slate-500 mb-4">Max size 100MB</p>
-
-                        {selectedVideo && (
-                          <div className="bg-primary/5 border border-primary/20 rounded-lg p-3 inline-flex items-center gap-2 max-w-full">
-                            <Check className="w-4 h-4 text-primary shrink-0" />
-                            <span className="text-primary font-medium truncate text-sm">{selectedVideo.name}</span>
-                            <button
-                              type="button"
-                              onClick={(e) => {
-                                e.stopPropagation(); // prevent triggering file input
-                                setSelectedVideo(null);
-                                setVideoPreview(null);
-                                // Reset the file input value if needed via ref but state clear is enough for logic
-                              }}
-                              className="ml-2 hover:bg-red-100 p-1 rounded-full text-red-500 transition-colors z-20"
-                            >
-                              <X className="w-4 h-4" />
-                            </button>
+                      <div className="relative border-2 border-dashed border-slate-200 dark:border-slate-700 rounded-2xl p-8 hover:bg-slate-50 dark:hover:bg-slate-800 transition-colors text-center group">
+                        <input
+                          ref={videoInputRef}
+                          id={VIDEO_UPLOAD_ID}
+                          type="file"
+                          onChange={handleVideoChange}
+                          accept="video/*"
+                          className="hidden"
+                          aria-label="Upload video file"
+                        />
+                        {selectedVideo ? (
+                          <div className="space-y-4">
+                            <div className="w-16 h-16 bg-primary/10 rounded-full flex items-center justify-center mx-auto">
+                              <Video className="w-8 h-8 text-primary" />
+                            </div>
+                            <div className="bg-primary/5 border border-primary/20 rounded-lg p-3 inline-flex items-center gap-2 max-w-full">
+                              <Check className="w-4 h-4 text-primary shrink-0" />
+                              <span className="text-primary font-medium truncate text-sm">{selectedVideo.name}</span>
+                            </div>
+                            <div className="flex flex-wrap items-center justify-center gap-2">
+                              <label
+                                htmlFor={VIDEO_UPLOAD_ID}
+                                className="inline-flex h-9 items-center justify-center rounded-full border border-input bg-background px-3 text-sm font-medium cursor-pointer hover:bg-accent hover:text-accent-foreground"
+                              >
+                                Change video
+                              </label>
+                              <Button
+                                type="button"
+                                variant="ghost"
+                                size="sm"
+                                className="rounded-full text-destructive hover:text-destructive"
+                                onClick={clearSelectedVideo}
+                              >
+                                Remove
+                              </Button>
+                            </div>
                           </div>
+                        ) : (
+                          <label
+                            htmlFor={VIDEO_UPLOAD_ID}
+                            className="block w-full cursor-pointer text-center"
+                          >
+                            <div className="w-16 h-16 bg-primary/10 rounded-full flex items-center justify-center mx-auto mb-4 group-hover:scale-110 transition-transform">
+                              <Video className="w-8 h-8 text-primary" />
+                            </div>
+                            <p className="text-lg font-bold text-slate-700 dark:text-slate-200 mb-1">
+                              Click to Upload Video
+                            </p>
+                            <p className="text-sm text-slate-500 mb-4">Max size 100MB</p>
+                          </label>
                         )}
                       </div>
                     </TabsContent>
                   </Tabs>
                 ) : (
-                  <div className="relative border-2 border-dashed border-slate-200 dark:border-slate-700 rounded-2xl p-8 hover:bg-slate-50 dark:hover:bg-slate-800 transition-colors text-center cursor-pointer group">
-                    <input type="file" onChange={handleImageChange} accept="image/*" className="absolute inset-0 opacity-0 cursor-pointer" />
+                  <div className="relative border-2 border-dashed border-slate-200 dark:border-slate-700 rounded-2xl p-8 hover:bg-slate-50 dark:hover:bg-slate-800 transition-colors text-center group overflow-hidden">
+                    <input
+                      ref={imageInputRef}
+                      id={IMAGE_UPLOAD_ID}
+                      type="file"
+                      onChange={handleImageChange}
+                      accept="image/*,.heic,.heif"
+                      className="hidden"
+                      aria-label="Upload artwork image"
+                    />
                     {imagePreview ? (
-                      <div className="relative inline-block">
-                        <img src={imagePreview} alt="Preview" className="max-h-64 mx-auto rounded-xl shadow-lg rotate-1 border-4 border-white" />
-
-                        <button
-                          type="button"
-                          onClick={(e) => {
-                            e.stopPropagation(); // Prevent triggering the file input
-                            setSelectedImage(null);
-                            setImagePreview(null);
-                          }}
-                          className="absolute -top-3 -right-3 bg-red-500 text-white p-1.5 rounded-full shadow-md hover:bg-red-600 hover:scale-110 transition-all z-10"
-                        >
-                          <X className="w-4 h-4" />
-                        </button>
-
-                        <p className="mt-4 text-base font-bold text-green-600 bg-green-50 inline-block px-3 py-1 rounded-full border border-green-100">
-                          Looks great! 🌟
+                      <div className="space-y-4">
+                        <img
+                          src={imagePreview}
+                          alt="Preview"
+                          className="max-h-64 mx-auto rounded-xl shadow-lg rotate-1 border-4 border-white dark:border-slate-700"
+                        />
+                        <p className="text-base font-bold text-green-600 bg-green-50 dark:bg-green-900/30 dark:text-green-400 inline-block px-3 py-1 rounded-full border border-green-100 dark:border-green-800">
+                          Image ready to send
                         </p>
+                        <div className="flex flex-wrap items-center justify-center gap-2">
+                          <label
+                            htmlFor={IMAGE_UPLOAD_ID}
+                            className="inline-flex h-9 items-center justify-center rounded-full border border-input bg-background px-3 text-sm font-medium cursor-pointer hover:bg-accent hover:text-accent-foreground"
+                          >
+                            Change image
+                          </label>
+                          <Button
+                            type="button"
+                            variant="ghost"
+                            size="sm"
+                            className="rounded-full text-destructive hover:text-destructive"
+                            onClick={clearSelectedImage}
+                          >
+                            Remove
+                          </Button>
+                        </div>
                       </div>
                     ) : (
-                      <>
+                      <label
+                        htmlFor={IMAGE_UPLOAD_ID}
+                        className="block w-full cursor-pointer text-center"
+                      >
                         <div className="w-12 h-12 bg-blue-100 dark:bg-blue-900/30 rounded-full flex items-center justify-center mx-auto mb-3 group-hover:scale-110 transition-transform">
                           <Upload className="w-6 h-6 text-blue-500 dark:text-blue-400" />
                         </div>
                         <p className="text-lg font-bold text-slate-600 dark:text-slate-200 mb-1">
                           {(() => {
                             const cat = form.watch('category');
-                            if (cat === 'drawings') return 'Upload your Artwork (Optional)';
+                            if (cat === 'drawings') return 'Upload your Artwork';
                             if (cat === 'poems') return 'Add an illustration (Optional)';
                             return 'Add a Picture?';
                           })()}
@@ -832,12 +963,12 @@ export function SubmitForm() {
                         <p className="text-sm text-slate-400 dark:text-slate-500">
                           {(() => {
                             const cat = form.watch('category');
-                            if (cat === 'drawings') return 'Click to upload your drawing!';
+                            if (cat === 'drawings') return 'Tap here to choose a photo of your drawing';
                             if (cat === 'poems') return 'Upload a photo of your poem or a drawing!';
                             return 'Click here if you have a picture to go with it!';
                           })()}
                         </p>
-                      </>
+                      </label>
                     )}
                   </div>
                 )}

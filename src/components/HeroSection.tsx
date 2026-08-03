@@ -16,7 +16,7 @@ export function HeroSection() {
   }, []);
 
   return (
-    <section className="relative pt-8 pb-12 md:pt-12 md:pb-24 overflow-hidden bg-background">
+    <section className="relative pt-8 pb-24 md:pt-12 md:pb-24 lg:pb-28 overflow-hidden bg-background">
       {/* Magical Background Gradients - Stronger & more visible */}
       <div className="absolute top-0 right-0 w-[500px] h-[500px] bg-secondary/30 rounded-full blur-[100px] -translate-y-1/2 translate-x-1/2" />
       <div className="absolute bottom-0 left-0 w-[400px] h-[400px] bg-primary/30 rounded-full blur-[80px] translate-y-1/2 -translate-x-1/2" />
@@ -46,16 +46,16 @@ export function HeroSection() {
               <span className="font-bold text-primary dark:text-primary tracking-wide text-sm md:text-base">Welcome to ZeeQue World!</span>
             </div>
 
-            <h1 className="font-display text-5xl md:text-6xl lg:text-[5rem] font-bold leading-[1.1] tracking-tight text-foreground drop-shadow-sm">
-              Where Little <br />
-              <span className="text-transparent bg-clip-text bg-gradient-to-r from-primary to-accent inline-block animate-wiggle origin-bottom-right">
+            <h1 className="font-display text-5xl md:text-6xl lg:text-[5rem] font-bold leading-[1.1] tracking-tight text-foreground drop-shadow-sm text-balance">
+              Where Little{' '}
+              <span className="text-transparent bg-clip-text bg-gradient-to-r from-primary to-accent">
                 Imaginations
-              </span> <br />
+              </span>{' '}
               Run Wild! 🚀
             </h1>
 
-            <p className="text-lg md:text-2xl text-muted-foreground font-medium max-w-xl mx-auto lg:mx-0 leading-relaxed">
-              Join our magical playground where stories coming to life, drawings dance, and every child is a star! ⭐
+            <p className="text-lg md:text-2xl text-muted-foreground font-medium max-w-xl mx-auto lg:mx-0 leading-relaxed text-pretty">
+              Join our magical playground where stories come to life, drawings dance, and every child is a star! ⭐
             </p>
 
             <div className="flex flex-col sm:flex-row items-center gap-4 justify-center lg:justify-start pt-4 z-30 relative">

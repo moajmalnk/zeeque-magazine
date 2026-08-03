@@ -21,10 +21,12 @@ export const useSchools = () => {
     queryFn: async () => {
       // Fetch all users with role 'SCHOOL'
       // We set a high page_size to get all schools for selection (simple approach for now)
-      const response = await api.get<{ results: School[] }>('/users/', {
-        params: { role: 'SCHOOL', page_size: 200 }
+      const response = await api.get<any>('/users/', {
+        params: { role: 'SCHOOL', page_size: 200, is_active: 'true' }
       });
-      return response.data.results || [];
+      const payload = response.data;
+      const list = Array.isArray(payload) ? payload : (payload?.results || []);
+      return list as School[];
     },
     // Keep data fresh as new schools are added
     staleTime: 1000 * 60 * 5, // 5 minutes

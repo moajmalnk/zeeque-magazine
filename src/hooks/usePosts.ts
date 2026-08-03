@@ -70,9 +70,7 @@ export function usePosts() {
           }
         });
         const response = await api.patch(`/posts/${id}/`, formData, {
-          headers: {
-            'Content-Type': 'multipart/form-data',
-          },
+          transformRequest: [(data) => data],
         });
         return response.data;
       }
@@ -88,7 +86,9 @@ export function usePosts() {
   const createMutation = useMutation({
     mutationFn: async (newPost: any) => {
       // Check if we need to send FormData (for file uploads)
-      const hasFiles = !!newPost.image_url || !!newPost.video_file;
+      const hasFiles =
+        (newPost.image_url && newPost.image_url instanceof Blob) ||
+        (newPost.video_file && newPost.video_file instanceof Blob);
 
       if (hasFiles) {
         const formData = new FormData();
@@ -96,19 +96,15 @@ export function usePosts() {
           const value = newPost[key];
           if (value !== undefined && value !== null) {
             if ((key === 'image_url' || key === 'video_file') && value instanceof Blob) {
-              // Append with a default filename to ensure backend treats it as a file
-              const ext = value.type.split('/')[1] || 'bin';
-              // Backend Serializer expects 'image_url', so we keep the key as is.
+              const ext = (value.type.split('/')[1] || 'bin').replace('jpeg', 'jpg');
               formData.append(key, value, `upload.${ext}`);
             } else {
-              formData.append(key, value);
+              formData.append(key, String(value));
             }
           }
         });
         const response = await api.post('/posts/', formData, {
-          headers: {
-            'Content-Type': 'multipart/form-data',
-          },
+          transformRequest: [(data) => data],
         });
         return response.data;
       }

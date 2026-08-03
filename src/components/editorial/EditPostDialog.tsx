@@ -137,14 +137,14 @@ export function EditPostDialog({ post, open, onOpenChange, onSave }: EditPostDia
       isSchool,
       isParent,
       labels: {
-        author: isParent ? "Parent Name 👪" : isNews ? "Reporter Name 👋" : isTeacher ? "Teacher Name 👨‍🏫" : "Student Name 👋",
-        teacher: isTeacher ? "Assigned Classroom / Subject 🏫" : "Teacher Name 👨‍🏫",
-        school: isSchool ? "Identifying Institution 🏫" : "School Name 🏫",
-        title: isNews ? "Headline 📣" : selectedCategory === 'poems' ? "Poem Title ✨" : selectedCategory === 'drawings' ? "Artwork Title 🎨" : "Post Title ✏️",
-        content: isNews ? "News Story 📝" : selectedCategory === 'poems' ? "Your poem 📖" : selectedCategory === 'drawings' ? "About your artwork 🖌️" : "Post Content 📝",
+        author: isParent ? "Parent Name" : isNews ? "Reporter Name" : isTeacher ? "Teacher Name" : "Student Name",
+        teacher: isTeacher ? "Assigned Classroom / Subject" : "Teacher Name",
+        school: isSchool ? "Identifying Institution" : "School Name",
+        title: isNews ? "Headline" : selectedCategory === 'poems' ? "Poem Title" : selectedCategory === 'drawings' ? "Artwork Title" : "Post Title",
+        content: isNews ? "News Story" : selectedCategory === 'poems' ? "Your poem" : selectedCategory === 'drawings' ? "About your artwork" : "Post Content",
       },
       icons: {
-        section: (isSchool || isParent) ? <School className="w-4 h-4 text-primary opacity-50" /> : <User className="w-4 h-4 text-primary opacity-50" />
+        section: (isSchool || isParent) ? <School className="w-4 h-4 text-primary shrink-0" /> : <User className="w-4 h-4 text-primary shrink-0" />
       }
     };
   }, [selectedCategory, post.author_role]);
@@ -252,7 +252,7 @@ export function EditPostDialog({ post, open, onOpenChange, onSave }: EditPostDia
           </div>
 
           {/* Right: The Form Section */}
-          <div className="flex-1 flex flex-col bg-white dark:bg-zinc-950 overflow-hidden">
+          <div className="flex-1 flex flex-col bg-white dark:bg-zinc-950 overflow-hidden min-h-0 min-w-0">
             {/* Header */}
             <div className="p-6 border-b border-slate-100 dark:border-zinc-800/80 flex items-center justify-between shrink-0 h-20 bg-white/50 dark:bg-zinc-950/50 backdrop-blur-md z-20">
               <div>
@@ -273,49 +273,52 @@ export function EditPostDialog({ post, open, onOpenChange, onSave }: EditPostDia
             </div>
 
             {/* Scrollable Form Body */}
-            <div className="flex-1 overflow-y-auto p-6 md:p-8 space-y-8 scrollbar-elegant">
+            <div className="flex-1 min-h-0 overflow-y-auto p-6 md:p-8 space-y-8 scrollbar-modal">
               <form id="edit-post-form" onSubmit={form.handleSubmit(onSubmit)} className="space-y-8 pb-4">
                 {/* Section 1: Identity & Origin */}
-                <div className="space-y-6">
-                  <div className="flex items-center justify-between mb-2">
-                    <div className="flex items-center gap-2">
+                <div className="space-y-5 min-w-0">
+                  <div className="flex flex-wrap items-center justify-between gap-2">
+                    <div className="flex items-center gap-2 min-w-0">
                       {displayConfig.icons.section}
-                      <span className="text-[10px] font-black uppercase tracking-widest text-muted-foreground">Identity & Origin</span>
+                      <span className="text-xs font-bold uppercase tracking-widest text-muted-foreground">
+                        Identity & Origin
+                      </span>
                     </div>
                     {displayConfig.isSchool ? (
-                      <span className="text-[10px] bg-green-500/10 text-green-600 px-2 py-0.5 rounded-full border border-green-500/20 font-bold">ZeeQue Partner Only</span>
+                      <span className="text-[10px] bg-green-500/10 text-green-600 px-2.5 py-1 rounded-full border border-green-500/20 font-bold shrink-0">
+                        ZeeQue Partner Only
+                      </span>
                     ) : (
                       <button
                         type="button"
                         onClick={() => setIsManualSchoolMode(!isManualSchoolMode)}
-                        className="text-[10px] font-black uppercase tracking-tighter text-primary/60 hover:text-primary transition-colors flex items-center gap-1"
+                        className="inline-flex items-center gap-1.5 h-8 px-3 rounded-full border border-primary/25 bg-primary/5 text-[10px] font-bold uppercase tracking-wide text-primary hover:bg-primary/10 transition-colors shrink-0"
                       >
                         {isManualSchoolMode ? (
-                          <><GraduationCap className="w-3 h-3" /> Partner Network</>
+                          <><GraduationCap className="w-3.5 h-3.5" /> Partner Network</>
                         ) : (
-                          <><PenLine className="w-3 h-3" /> Type Manually</>
+                          <><PenLine className="w-3.5 h-3.5" /> Type Manually</>
                         )}
                       </button>
                     )}
                   </div>
 
-                  <div className="flex flex-col gap-6">
-                    {/* School is the only child here; keep one column so the block stays full width (2-col was shrinking manual school + code into half the dialog). */}
-                    <div className="grid grid-cols-1 gap-6 min-w-0">
+                  <div className="flex flex-col gap-5 min-w-0">
+                    <div className="grid grid-cols-1 gap-5 min-w-0">
 
                       {/* School Field */}
                       {displayConfig.showSchool && (
-                        <div className="space-y-4 min-w-0">
-                          <div className="relative px-1">
-                            <Label className="text-sm font-bold text-slate-700 dark:text-slate-300">
-                              {displayConfig.labels.school}
-                            </Label>
-                          </div>
+                        <div className="space-y-2 min-w-0">
+                          <Label className="flex items-center gap-2 text-sm font-semibold text-slate-700 dark:text-slate-200">
+                            <School className="w-4 h-4 text-primary/80 shrink-0" />
+                            <span>{displayConfig.labels.school}</span>
+                            <span className="text-destructive">*</span>
+                          </Label>
 
                           {isManualSchoolMode && !displayConfig.isSchool ? (
                             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 min-w-0 animate-in fade-in slide-in-from-top-2 duration-300">
                               <div className="space-y-2 min-w-0">
-                                <Label className="text-[10px] uppercase font-bold text-muted-foreground ml-1">Manual School Name</Label>
+                                <Label className="text-[10px] uppercase font-bold text-muted-foreground">Manual School Name</Label>
                                 <div className="relative min-w-0">
                                   <School className="absolute left-4 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground pointer-events-none" />
                                   <Input
@@ -326,7 +329,7 @@ export function EditPostDialog({ post, open, onOpenChange, onSave }: EditPostDia
                                 </div>
                               </div>
                               <div className="space-y-2 min-w-0">
-                                <Label className="text-[10px] uppercase font-bold text-muted-foreground ml-1">Institution Code (Optional)</Label>
+                                <Label className="text-[10px] uppercase font-bold text-muted-foreground">Institution Code (Optional)</Label>
                                 <div className="relative min-w-0">
                                   <Hash className="absolute left-4 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground pointer-events-none" />
                                   <Input
@@ -338,33 +341,39 @@ export function EditPostDialog({ post, open, onOpenChange, onSave }: EditPostDia
                               </div>
                             </div>
                           ) : (
-                            <div className="space-y-4 animate-in fade-in zoom-in-95 duration-300">
-                              <div className="flex items-center justify-between px-1">
-                                <span className="text-[10px] font-bold text-muted-foreground uppercase opacity-60">Verified Partner Selection</span>
-                                <Check className="w-3 h-3 text-green-500" />
-                              </div>
+                            <div className="space-y-2 min-w-0 animate-in fade-in zoom-in-95 duration-300">
+                              <p className="text-[10px] font-semibold uppercase tracking-wider text-muted-foreground/80">
+                                Search verified partner schools
+                              </p>
                               <SchoolSelector
                                 value={form.watch('schoolCode') || form.watch('schoolName')}
-                                onChange={(val, school) => {
+                                onChange={(_val, school) => {
                                   if (school) {
-                                    form.setValue('schoolName', school.original_name);
-                                    form.setValue('schoolCode', school.code);
+                                    const name = school.original_name || school.school_name || school.username || '';
+                                    const code = school.code || school.school_code || '';
+                                    form.setValue('schoolName', name, { shouldDirty: true, shouldValidate: true });
+                                    form.setValue('schoolCode', code, { shouldDirty: true, shouldValidate: true });
                                   } else {
-                                    form.setValue('schoolName', val);
+                                    form.setValue('schoolName', '', { shouldDirty: true, shouldValidate: true });
+                                    form.setValue('schoolCode', '', { shouldDirty: true, shouldValidate: true });
                                   }
                                 }}
                               />
                               {displayConfig.isSchool && (
                                 <div className="flex items-center gap-2 px-3 py-2 bg-slate-50 dark:bg-zinc-900 border border-dashed border-slate-200 dark:border-zinc-800 rounded-xl">
-                                  <Hash className="w-3.5 h-3.5 text-primary" />
-                                  <span className="text-[10px] font-mono font-bold text-muted-foreground">INSTITUTION CODE: {form.watch('schoolCode') || 'PENDING SELECTION'}</span>
+                                  <Hash className="w-3.5 h-3.5 text-primary shrink-0" />
+                                  <span className="text-[10px] font-mono font-bold text-muted-foreground truncate">
+                                    Institution code: {form.watch('schoolCode') || 'Pending selection'}
+                                  </span>
                                 </div>
                               )}
                             </div>
                           )}
 
                           {form.formState.errors.schoolName && (
-                            <p className="text-[10px] text-destructive font-bold ml-1 mt-1">⚠️ {form.formState.errors.schoolName.message}</p>
+                            <p className="text-[10px] text-destructive font-bold mt-1">
+                              {form.formState.errors.schoolName.message}
+                            </p>
                           )}
                         </div>
                       )}
@@ -376,7 +385,7 @@ export function EditPostDialog({ post, open, onOpenChange, onSave }: EditPostDia
                         "space-y-2",
                         displayConfig.isSchool ? "order-2" : "order-1"
                       )}>
-                        <Label htmlFor="edit-authorName" className="text-sm font-bold text-slate-700 dark:text-slate-300 ml-1">
+                        <Label htmlFor="edit-authorName" className="text-sm font-semibold text-slate-700 dark:text-slate-200">
                           {displayConfig.labels.author}
                         </Label>
                         <Input
@@ -393,7 +402,7 @@ export function EditPostDialog({ post, open, onOpenChange, onSave }: EditPostDia
                     {/* Teacher/Classroom Field - Shown conditionally */}
                     {displayConfig.showTeacher && (
                       <div className="space-y-2 order-2">
-                        <Label htmlFor="edit-teacherName" className="text-sm font-bold text-slate-700 dark:text-slate-300 ml-1">
+                        <Label htmlFor="edit-teacherName" className="text-sm font-semibold text-slate-700 dark:text-slate-200">
                           {displayConfig.labels.teacher}
                         </Label>
                         <Input
@@ -408,8 +417,9 @@ export function EditPostDialog({ post, open, onOpenChange, onSave }: EditPostDia
                     {/* Phone Number Field - Shown for Parents */}
                     {displayConfig.showPhone && (
                       <div className="space-y-2 order-2">
-                        <Label htmlFor="edit-phoneNumber" className="text-sm font-bold text-slate-700 dark:text-slate-300 ml-1">
-                          Parent Contact Number 📱
+                        <Label htmlFor="edit-phoneNumber" className="flex items-center gap-2 text-sm font-semibold text-slate-700 dark:text-slate-200">
+                          <Phone className="w-4 h-4 text-primary/80 shrink-0" />
+                          Parent Contact Number
                         </Label>
                         <div className="relative">
                           <Phone className="absolute left-4 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
@@ -435,7 +445,7 @@ export function EditPostDialog({ post, open, onOpenChange, onSave }: EditPostDia
                   <div className="grid grid-cols-1 gap-6">
                     {/* Category (Pill Selection Style) */}
                     <div className="space-y-3">
-                      <Label className="text-sm font-bold text-slate-700 dark:text-slate-300 ml-1">Category 🎨</Label>
+                      <Label className="text-sm font-semibold text-slate-700 dark:text-slate-200">Category</Label>
                       <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
                         {categories.map((cat) => (
                           <button

@@ -64,38 +64,38 @@ export default function AllCreatives() {
           </div>
 
           <div className="container max-w-7xl relative z-10">
-            <div className="flex items-center justify-between mb-8">
-              <div>
-                <Button
-                  asChild
-                  variant="ghost"
-                  className="mb-4"
-                >
-                  <Link to="/">
-                    <ArrowLeft className="w-4 h-4 mr-2" />
-                    Back to Home
-                  </Link>
-                </Button>
-                <h1 className="font-display text-4xl md:text-5xl lg:text-6xl font-bold mb-4 tracking-[-0.02em]">
-                  All <span className="text-gradient-hero bg-clip-text text-transparent">Creatives</span>
-                </h1>
-                <p className="text-lg text-muted-foreground max-w-2xl">
-                  Explore all the amazing creative works from our talented students
-                </p>
-              </div>
-              <div className="hidden md:flex items-center gap-2 text-muted-foreground">
-                <Grid3x3 className="w-5 h-5" />
-                <span className="text-sm font-medium">{filteredPosts.length} Posts</span>
-              </div>
+            <div className="mb-8">
+              <Button
+                asChild
+                variant="ghost"
+                className="mb-4"
+              >
+                <Link to="/">
+                  <ArrowLeft className="w-4 h-4 mr-2" />
+                  Back to Home
+                </Link>
+              </Button>
+              <h1 className="font-display text-4xl md:text-5xl lg:text-6xl font-bold mb-4 tracking-[-0.02em]">
+                All <span className="text-gradient-hero bg-clip-text text-transparent">Creatives</span>
+              </h1>
+              <p className="text-lg text-muted-foreground max-w-2xl">
+                Explore all the amazing creative works from our talented students
+              </p>
             </div>
 
-            {/* Category Filter */}
-            <div className="mb-8">
+            {/* Category Filter + post count on one row */}
+            <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between mb-8">
               <CategoryFilter
                 selectedCategory={selectedCategory}
                 onCategoryChange={setSelectedCategory}
                 posts={publishedPosts}
               />
+              <div className="flex items-center justify-center sm:justify-end gap-2 text-muted-foreground shrink-0">
+                <Grid3x3 className="w-5 h-5" />
+                <span className="text-sm font-medium">
+                  {filteredPosts.length} {filteredPosts.length === 1 ? 'Post' : 'Posts'}
+                </span>
+              </div>
             </div>
           </div>
         </section>

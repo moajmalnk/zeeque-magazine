@@ -1,9 +1,38 @@
 import { Link } from 'react-router-dom';
-import { Heart, Mail, Phone, MapPin, Facebook, Twitter, Instagram, Youtube, ArrowUp } from 'lucide-react';
+import { Heart, Mail, Phone, MapPin, Facebook, Instagram, Youtube, Linkedin, ArrowUp } from 'lucide-react';
 import { useTheme } from 'next-themes';
 import { useEffect, useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { useAuth } from '@/hooks/useAuth';
+import { cn } from '@/lib/utils';
+
+const socialLinks = [
+  {
+    label: 'Follow ZeeQue on Facebook',
+    href: 'https://www.facebook.com/zeequepreschool',
+    icon: Facebook,
+    className: 'bg-[#1877F2] hover:bg-[#166FE5] text-white shadow-sm shadow-[#1877F2]/30',
+  },
+  {
+    label: 'Follow ZeeQue on Instagram',
+    href: 'https://www.instagram.com/zeeque_preschool/',
+    icon: Instagram,
+    className:
+      'bg-gradient-to-br from-[#F58529] via-[#DD2A7B] to-[#8134AF] hover:opacity-90 text-white shadow-sm shadow-pink-500/25',
+  },
+  {
+    label: 'Subscribe to ZeeQue on YouTube',
+    href: 'https://www.youtube.com/@ZeeQuePreschool',
+    icon: Youtube,
+    className: 'bg-[#FF0000] hover:bg-[#CC0000] text-white shadow-sm shadow-red-500/30',
+  },
+  {
+    label: 'Connect with ZeeQue on LinkedIn',
+    href: 'https://www.linkedin.com/company/zeeque-preschool-network',
+    icon: Linkedin,
+    className: 'bg-[#0A66C2] hover:bg-[#004182] text-white shadow-sm shadow-[#0A66C2]/30',
+  },
+] as const;
 
 export function Footer() {
   const { theme } = useTheme();
@@ -166,34 +195,22 @@ export function Footer() {
             <div className="flex items-center gap-4">
               {/* Social Media Icons */}
               <div className="flex items-center gap-3">
-                <a
-                  href="#"
-                  aria-label="Facebook"
-                  className="w-9 h-9 rounded-full bg-slate-100 dark:bg-slate-800 hover:bg-primary/10 dark:hover:bg-primary/20 flex items-center justify-center text-muted-foreground dark:text-slate-400 hover:text-primary transition-all duration-200 group"
-                >
-                  <Facebook className="w-4 h-4 group-hover:scale-110 transition-transform" />
-                </a>
-                <a
-                  href="#"
-                  aria-label="Twitter"
-                  className="w-9 h-9 rounded-full bg-slate-100 dark:bg-slate-800 hover:bg-primary/10 dark:hover:bg-primary/20 flex items-center justify-center text-muted-foreground dark:text-slate-400 hover:text-primary transition-all duration-200 group"
-                >
-                  <Twitter className="w-4 h-4 group-hover:scale-110 transition-transform" />
-                </a>
-                <a
-                  href="#"
-                  aria-label="Instagram"
-                  className="w-9 h-9 rounded-full bg-slate-100 dark:bg-slate-800 hover:bg-primary/10 dark:hover:bg-primary/20 flex items-center justify-center text-muted-foreground dark:text-slate-400 hover:text-primary transition-all duration-200 group"
-                >
-                  <Instagram className="w-4 h-4 group-hover:scale-110 transition-transform" />
-                </a>
-                <a
-                  href="#"
-                  aria-label="YouTube"
-                  className="w-9 h-9 rounded-full bg-slate-100 dark:bg-slate-800 hover:bg-primary/10 dark:hover:bg-primary/20 flex items-center justify-center text-muted-foreground dark:text-slate-400 hover:text-primary transition-all duration-200 group"
-                >
-                  <Youtube className="w-4 h-4 group-hover:scale-110 transition-transform" />
-                </a>
+                {socialLinks.map(({ label, href, icon: Icon, className }) => (
+                  <a
+                    key={label}
+                    href={href}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    aria-label={label}
+                    title={label}
+                    className={cn(
+                      'w-9 h-9 rounded-full flex items-center justify-center transition-all duration-200 hover:scale-105 active:scale-95',
+                      className,
+                    )}
+                  >
+                    <Icon className="w-4 h-4" />
+                  </a>
+                ))}
               </div>
 
               {/* Scroll to Top Button */}
